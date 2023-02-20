@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block body %}
+<form name="input_form" method=POST action="{{ url_for('edit_order') }}">
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td><b>INFO</b></td>
+    </tr>
+    {% for item in order_data.info %}
+    <tr>
+        <td>
+            <b>{{ item }}</b>
+        </td>
+        <td>
+            {{ order_data.info[item] }}
+        </td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td><button type=submit>שורה חדשה</button></td>
+        <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >שמור קובץ \ הדפסה</button></td>
+        <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
+        <td><button ondblclick="location.href='\close?cancel'" type="button" class="btn btn-primary btn-block" >ביטול</button></td>
+    </tr>
+    <tr>
+        {% for item in order_data.data_to_display %}
+        <td><b>{{ item }}</b></td>
+        {% endfor %}
+    </tr>
+    <tr>
+        {% for item in order_data.data_to_display %}
+        <td>
+            {% if order_data.data_to_display[item] %}
+            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" required>
+            {% else %}
+            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus">
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% for row in order_data.order_rows %}
+    <tr>
+        {% for item in order_data.data_to_display %}
+        <td>
+            {{ order_data.order_rows[row][item] }}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</form>
+{% endblock %}

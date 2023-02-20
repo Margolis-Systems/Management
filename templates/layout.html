@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+
+    <title>Tzomet ERP</title>
+
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+
+</head>
+
+<body>
+<table dir="rtl" align="right">
+    <tr>
+        <td>
+            <img src="\static\img\logo.jpg" align="right">
+        </td>
+        <td>
+            <td>
+                <button onclick="location.href='\'" type="button">ניהול מכונות</button>
+            </td>
+            <td>
+                <button onclick="location.href='\clients'" type="button" >לקוחות</button>
+            </td>
+            <td>
+                <button onclick="location.href='/new_order_rebar'" type="button">שקילה</button>
+            </td>
+            <td>
+                <button onclick="location.href='\orders'" type="button"> הזמנות</button>
+            </td>
+            <td>
+                <button onclick="location.href='\'" type="button"> ניהול משתמשים</button>
+            </td>
+            <td>
+                <button onclick="location.href='\'" type="button">התראות</button>
+            </td>
+            <td>
+                <button onclick="location.href='\logout'" type="button">התנתק</button>
+            </td>
+        </td>
+    </tr>
+</table>
+{% block body %}
+{% endblock %}
+
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+</body>
+
+</html>

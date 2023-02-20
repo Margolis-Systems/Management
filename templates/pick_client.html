@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form name="input_form" method=POST action="{{ url_for('new_order') }}">
+        <input type="text" name="client" placeholder="Client">
+        <input type="text" name="site" placeholder="Site">
+        <input type="hidden" name="type" value="{{ order_type }}">
+        <button type="submit">SUBMIT</button>
+    </form>
+</body>
+</html>

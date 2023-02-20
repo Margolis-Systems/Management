@@ -1,0 +1,11 @@
+{
+  "_server": "127.0.0.1",
+  "server": "0.0.0.0",
+  "server_port": 10770,
+  "mongo_adr": "mongodb://localhost:27017",
+  "db_users": "users",
+  "db_main": "ERP",
+  "orders_collection": "orders",
+  "users_collection": "users",
+  "orders_reverse": true
+}

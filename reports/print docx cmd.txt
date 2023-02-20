@@ -1,0 +1,2 @@
+RUNDLL32 PRINTUI.DLL,PrintUIEntry /y /n %printer_name%
+%Word exe full path% /q /n %file name% /mFilePrintDefault /mFileCloseOrExit

@@ -1,0 +1,31 @@
+{% extends "layout_mob.html" %}
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div>
+            Scan Page
+        </div>
+        <div>
+            {% if order!="" %}
+                מספר הזמנה: {{order}}
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <form method=POST action="{{ url_for('scan') }}">
+            {% if order=="" %}
+                <input type="text" class="form-control" name="scan" placeholder="Scan QR" autofocus="autofocus">
+                <button type="submit" class="btn btn-primary btn-block">Scan</button>
+            {% else %}
+                <button type="submit" class="btn btn-primary btn-block" name="start_job"> תחילת עבודה</button>
+                <button type="submit" class="btn btn-primary btn-block" name="finish_job"> סיום עבודה</button>
+            {% endif %}
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        {{msg}}
+    </div>
+</div>
+{% endblock %}
