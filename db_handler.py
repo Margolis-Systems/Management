@@ -25,10 +25,7 @@ class DBHandle:
         db.validate_collection(collect)
         cur = db[collect].find(query,{'_id': False})
         df = pd.DataFrame(list(cur))
-        if not df.empty:
-            return df
-        else:
-            return None
+        return df
 
     def read_collection_one_var(self, collect, var_name, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(self, db_name)

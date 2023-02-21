@@ -4,6 +4,8 @@ import os
 import pandas as pd
 from datetime import datetime
 
+import main
+
 mongo = db_handler.DBHandle()
 # Data lists
 weight = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
@@ -22,23 +24,25 @@ def orders(data_to_display):
         new_df = pd.concat([orders_df['order_id'],info_df], axis=1)
         return new_df[data_to_display].to_dict('index')
     else:
-        return None
+        return []
 
 
 def edit_order(order_id):
     # Read all data of this order
     order = mongo.read_collection_df('orders', query={'order_id': order_id})
+    if order.empty:
+        return {}, ""
     info = order[order['info'].notnull()]['info'][0]
     rows = order[order['info'].isnull()].drop(['info'], axis=1).to_dict('index')
     info['order_id'] = order_id
     if info['type'] == 'rebar':
         # order_type = 'rebar_edit.html'
-        data_to_display = {'קוטר': True, 'סוג': True, 'כמות': True, 'משקל': False, 'הזמנת_ייצור': False, 'אורך': True,
-                           'רוחב': True}
+        data_to_display = {'קוטר': 3, 'סוג': 3, 'כמות': 1, 'משקל': 2, 'הזמנת_ייצור': 0, 'אורך': 1,
+                           'רוחב': 1}
     else:
         # order_type = 'edit.html'
-        data_to_display = {'מספר_ברזל': False ,'אלמנט': False, 'קוטר': True, 'צורה': True, 'כמות': True, 'משקל': False,
-                           'אורך': False}
+        data_to_display = {'מספר_ברזל': 0 ,'אלמנט': 0, 'קוטר': 3, 'צורה': 3, 'כמות': 1, 'משקל': 2,
+                           'אורך': 2}
     order_type = '/rebar_edit.html'
     # data_to_display = ['קוטר','חור','כמות','משקל','מלאי']
     # data_to_display = {'קוטר': True, 'חור': True, 'כמות': True, 'משקל': False, 'מלאי': False, 'אורך':False, 'צורה':False}
@@ -53,7 +57,7 @@ def edit_order(order_id):
 def new_order_id():
     orders_df = mongo.read_collection_df('orders', query={'info': {'$exists': True}})
     if orders_df.empty:
-        return 1
+        return "1"
     return str(int(max(orders_df['order_id'].unique().tolist())) + 1)
 
 
@@ -69,6 +73,7 @@ def new_order(info_data):
 
 
 def new_order_row(req_form_data, order_id):
+    print(req_form_data)
     new_row = {'order_id': order_id}
     special_list = ['shape_data']
     for item in req_form_data:

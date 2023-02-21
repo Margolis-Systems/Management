@@ -6,8 +6,8 @@
 </head>
 <body>
     <form name="input_form" method=POST action="{{ url_for('new_order') }}">
-        <input type="text" name="client" placeholder="Client">
-        <input type="text" name="site" placeholder="Site">
+        <input type="text" class="form-control" name="client" placeholder="Client" autofocus="autofocus" required>
+        <input type="text" class="form-control" name="site" placeholder="Site" autofocus="autofocus" required>
         <input type="hidden" name="type" value="{{ order_type }}">
         <button type="submit">SUBMIT</button>
     </form>

@@ -68,21 +68,23 @@ def orders():
 
 @app.route('/edit_order', methods=['POST', 'GET'])
 def edit_order():
-    if 'order_id' in session.keys():
+    if len(list(request.values)) == 1:
+        order_id = list(request.values)[0]
+        session['order_id'] = order_id
+    elif len(list(request.values)) > 1:
+        order_id = session['order_id']
+        pages.new_order_row(request.form, order_id)
+    elif 'order_id' in session.keys():
         order_id = session['order_id']
     else:
-        if len(list(request.values)) == 1:
-            order_id = list(request.values)[0]
-            session['order_id'] = order_id
-        elif len(list(request.values)) > 1:
-            order_id = session['order_id']
-            pages.new_order_row(request.form, order_id)
-        else:
-            return redirect('/orders')
+        return redirect('/orders')
     order_data, order_type = pages.edit_order(order_id)
     if not order_data:
         return close_order()
-    return render_template(order_type, order_data=order_data)
+    #todo: generate lists and patterns
+    patterns = {'סוג': "10X10|15X15|20X20",'קוטר': "5.5|6.5|8|10",'צורה': "1|2|3|4|5|6|7|8|9|10"}
+    lists = {'סוג': ["10X10","15X15","20X20"], 'קוטר': [5.5, 6.5, 8, 10], 'צורה': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+    return render_template(order_type, order_data=order_data, patterns=patterns, lists=lists)
 
 
 @app.route('/new_order', methods=['POST', 'GET'])

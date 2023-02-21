@@ -16,7 +16,7 @@
     </tr>
     {% endfor %}
     <tr>
-        <td><button type=submit>שורה חדשה</button></td>
+        <td><button type=submit class="btn btn-primary btn-block" >שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >שמור קובץ \ הדפסה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
         <td><button ondblclick="location.href='\close?cancel'" type="button" class="btn btn-primary btn-block" >ביטול</button></td>
@@ -29,10 +29,23 @@
     <tr>
         {% for item in order_data.data_to_display %}
         <td>
-            {% if order_data.data_to_display[item] %}
+            {% if order_data.data_to_display[item] == 0 %}
+            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus">
+            {% else %}
+            {% if order_data.data_to_display[item] == 1 %}
             <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" required>
             {% else %}
-            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus">
+            {% if order_data.data_to_display[item] == 2 %}
+            מחושב אוטומטית
+            {% else %}
+            <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+                <datalist id="{{ item }}">
+                {% for item in lists[item] %}
+                    <option value="{{ item }}">
+                {% endfor %}
+                </datalist>
+            {% endif %}
+            {% endif %}
             {% endif %}
         </td>
         {% endfor %}
