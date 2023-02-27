@@ -1,15 +1,12 @@
 import db_handler
-import json
-import os
 import pandas as pd
 from datetime import datetime
-
-import main
 
 mongo = db_handler.DBHandle()
 # Data lists
 weight = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
 shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
+rebar_catalog = mongo.read_collection_one("data_lists", {"name": "rebar_catalog"})['data']
 
 '''________________________PAGES___________________________ '''
 
@@ -21,7 +18,7 @@ def orders(data_to_display):
         # normalize json to df
         info_df = pd.json_normalize(orders_df['info'])
         # add order id from main df
-        new_df = pd.concat([orders_df['order_id'],info_df], axis=1)
+        new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
         return new_df[data_to_display].to_dict('index')
     else:
         return []
@@ -29,24 +26,16 @@ def orders(data_to_display):
 
 def edit_order(order_id):
     # Read all data of this order
-    order = mongo.read_collection_df('orders', query={'order_id': order_id})
-    if order.empty:
-        return {}, ""
-    info = order[order['info'].notnull()]['info'][0]
-    rows = order[order['info'].isnull()].drop(['info'], axis=1).to_dict('index')
-    info['order_id'] = order_id
+    rows, info = get_order_data(order_id)
     if info['type'] == 'rebar':
-        # order_type = 'rebar_edit.html'
-        data_to_display = {'קוטר': 3, 'סוג': 3, 'כמות': 1, 'משקל': 2, 'הזמנת_ייצור': 0, 'אורך': 1,
-                           'רוחב': 1}
+        data_to_display = {'שורה': 2, 'מקט': 3, 'כמות': 1, 'קוטר': 0, 'סוג': 0, 'אורך': 0, 'רוחב': 0, 'הזמנת_ייצור': 4,
+                           'משקל': 2}
+    elif info['type'] == 'rebar_special':
+        data_to_display = {'שורה': 2, 'מקט': 2, 'כמות': 1, 'קוטר_x': 1, 'קוטר_y': 1, 'סוג': 1, 'אורך': 1, 'רוחב': 1,
+                           'הזמנת_ייצור': 4, 'משקל': 2}
     else:
-        # order_type = 'edit.html'
-        data_to_display = {'מספר_ברזל': 0 ,'אלמנט': 0, 'קוטר': 3, 'צורה': 3, 'כמות': 1, 'משקל': 2,
-                           'אורך': 2}
+        data_to_display = {'שורה': 2, 'מספר_ברזל': 0, 'אלמנט': 0, 'קוטר': 3, 'צורה': 3, 'כמות': 1, 'אורך': 2, 'משקל': 2}
     order_type = '/rebar_edit.html'
-    # data_to_display = ['קוטר','חור','כמות','משקל','מלאי']
-    # data_to_display = {'קוטר': True, 'חור': True, 'כמות': True, 'משקל': False, 'מלאי': False, 'אורך':False, 'צורה':False}
-
     order_data = {'info': info, 'data_to_display': data_to_display, 'order_rows': rows}
     return order_data, order_type
 
@@ -54,11 +43,33 @@ def edit_order(order_id):
 '''_____________________FUNCTIONS___________________________'''
 
 
+def get_order_data(order_id, reverse=True):
+    order = mongo.read_collection_df('orders', query={'order_id': order_id})
+    if order.empty:
+        return False, False
+    info = order[order['info'].notnull()]['info'][0]
+    order_data = order[order['info'].isnull()].drop(['info'], axis=1).fillna("").to_dict('index')
+    rows = []
+    for key in order_data:
+        row_data = order_data[key]
+        row_data['שורה'] = key
+        rows.append(row_data)
+    info['order_id'] = order_id
+    rows.sort(key=lambda k: k['שורה'], reverse=reverse)
+    return rows, info
+
+
 def new_order_id():
+    new_id = "1"
     orders_df = mongo.read_collection_df('orders', query={'info': {'$exists': True}})
     if orders_df.empty:
-        return "1"
-    return str(int(max(orders_df['order_id'].unique().tolist())) + 1)
+        return new_id
+    order_ids_list = orders_df['order_id'].unique().tolist()
+    for _id in order_ids_list:
+        if _id.isdigit():
+            if int(_id) >= int(new_id):
+                new_id = str(int(_id) + 1)
+    return new_id
 
 
 def new_order(info_data):
@@ -67,77 +78,105 @@ def new_order(info_data):
     order_type = info_data['type']
     order_id = new_order_id()
     # order = {'order_id': order_id, 'info': info_data}
-    order = {'order_id': order_id, 'info': {'costumer': client, 'site': site, 'date_created': ts(), 'type': order_type}}
+    order = {'order_id': order_id, 'info': {'costumer_id': client, 'costumer_site': site, 'date_created': ts(),
+                                            'type': order_type}}
     mongo.insert_collection_one('orders', order)
     return order_id
 
 
 def new_order_row(req_form_data, order_id):
-    print(req_form_data)
-    new_row = {'order_id': order_id}
-    special_list = ['shape_data']
+    new_row = {'order_id': order_id, 'job_id': gen_job_id(order_id), 'status': 'New'}
+    special_list = ['shape_data', 'משקל_יח']
     for item in req_form_data:
         if item not in special_list:
             new_row[item] = req_form_data[item]
+
+    if 'מקט' in req_form_data:
+        cat_item = rebar_catalog[req_form_data['מקט']]
+        for item in cat_item:
+            if item not in special_list:
+                new_row[item] = cat_item[item]
+
     if 'shape_data' in req_form_data:
         print()
         # todo: complete
     else:
-        bars_len = calc_bars_len(req_form_data)
-        new_row['משקל'] = int(bars_len * float(req_form_data['כמות']) * weight[req_form_data['קוטר']] / 100)
+        new_row['משקל'] = round(calc_bars_weight(new_row, order_id), 1)
     # mongo.upsert_collection_one('orders', {'_id': doc_id}, new_row)
     mongo.insert_collection_one('orders', new_row)
 
 
-def calc_bars_len(req_form_data):
-    if 'שארית' in req_form_data:
-        if req_form_data['שארית'].isdigit:
-            trim = float(req_form_data['שארית'])
-        else:
-            trim = 0
-    else:
-        trim = 10
-
+def calc_bars_weight(req_form_data, order_id):
+    # if 'שארית' in req_form_data:
+    #     if req_form_data['שארית'].isdigit:
+    #         trim = float(req_form_data['שארית'])
+    #     else:
+    #         trim = 0
+    # else:
+    #     trim = 10
+    trim = 10
     if 'קוטר' in req_form_data:
         if req_form_data['קוטר'].isdigit:
-            y_diam = x_diam = int(req_form_data['קוטר'])
+            if "." in req_form_data['קוטר']:
+                y_diam = x_diam = float(req_form_data['קוטר'])
+            else:
+                y_diam = x_diam = int(req_form_data['קוטר'])
         else:
             y_diam = x_diam = 0
     else:
-        x_diam = float(req_form_data['קוטר_x'])
-        y_diam = float(req_form_data['קוטר_y'])
-
-    if 'ייצור_למלאי' in req_form_data: # todo: complete
-        creat_perepherial_order = True
+        if "." in req_form_data['קוטר_x']:
+            x_diam = float(req_form_data['קוטר_x'])
+        else:
+            x_diam = int(req_form_data['קוטר_x'])
+        if "." in req_form_data['קוטר_y']:
+            y_diam = float(req_form_data['קוטר_y'])
+        else:
+            y_diam = int(req_form_data['קוטר_y'])
+    if 'הזמנת_ייצור' in req_form_data:
+        create_peripheral_order = True
     else:
-        creat_perepherial_order = False
-
+        create_peripheral_order = False
     rebar_len = float(req_form_data['אורך'])
     rebar_width = float(req_form_data['רוחב'])
     hole = int(req_form_data['סוג'].split('X')[0])
     qnt = float(req_form_data['כמות'])
-    x_bars = {'qnt': (rebar_len / hole) * qnt, 'length': rebar_width, 'diam': x_diam}
-    y_bars = {'qnt': (rebar_width / hole - trim) * qnt, 'length': rebar_len, 'diam': y_diam}
-    if creat_perepherial_order:
-        peripheral_orders([x_bars, y_bars])
-    return (x_bars['qnt'] * x_bars['length'] * weight[str(x_bars['diam'])] +
-            y_bars['qnt'] * y_bars['length'] * weight[str(y_bars['diam'])]) / 100
+    # todo: validate actual calculation. Eli Shalit may have been wrong----------------------------
+    x_bars = {'qnt': ((rebar_len - 20) / hole) * qnt, 'length': rebar_width, 'diam': x_diam}
+    y_bars = {'qnt': ((rebar_width - trim) / hole + 1) * qnt, 'length': rebar_len, 'diam': y_diam}
+    # ---------------------------------------------------------------------------------------------
+    if create_peripheral_order:
+        peripheral_orders([x_bars, y_bars], order_id)
+    total_weight = (x_bars['qnt'] * x_bars['length'] * weight[str(x_diam)] +
+                    y_bars['qnt'] * y_bars['length'] * weight[str(y_diam)]) / 100
+    return total_weight
 
 
 def gen_client_list():
     return []
 
 
-def peripheral_orders(add_orders): # todo: complete
+def peripheral_orders(add_orders, order_id):
+    order_id += "_R"
     for order in add_orders:
-        order_id = 'מלאי'
         order_weight = float(order['length']) * float(order['qnt']) * weight[str(order['diam'])] / 100
-        info = {'costumer': 'מלאי', 'date_created': ts()}
-        mongo.upsert_collection_one('orders', {'order_id': 'מלאי'}, {'order_id': order_id, 'info': info})
+        info = {'costumer': 'צומת ברזל', 'date_created': ts(), 'type': 'regular'}
+        mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                                    {'order_id': order_id, 'info': info})
         peripheral_order = {'order_id': order_id, 'כמות': order['qnt'], 'צורה': 1, 'אורך': order['length'],
-                             'קוטר': order['diam'], 'משקל': order_weight}
+                            'קוטר': order['diam'], 'משקל': order_weight}
         mongo.insert_collection_one('orders', peripheral_order)
 
 
-def ts():
-    return datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+def ts(mode=""):
+    if not mode:
+        return datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+    elif mode == "file_name":
+        return datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
+
+
+def gen_job_id(order_id):
+    job_ids_df = mongo.read_collection_df('orders', query={'order_id': order_id, 'info': {'$exists': False}})
+    if job_ids_df.empty:
+        return "1"
+    job_ids = job_ids_df['job_id'].tolist()
+    return str(int(max(job_ids)) + 1)
