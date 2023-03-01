@@ -109,7 +109,6 @@ def new_order():
 def close_order():
     if len(list(request.values)) > 0:
         additional_func = list(request.values)[0]
-        # todo: complete functions
         if additional_func == 'delete':
             mongo.delete_many('orders', {'order_id': session['order_id']})
         elif additional_func == 'print':

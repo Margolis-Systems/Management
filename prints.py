@@ -89,7 +89,6 @@ class Reports:
         elif info['type'] == "rebar":
             total_weight = 0
             for row in rows:
-                # todo: gen QR
                 row['תיאור'] = 'shbsjdfhlskdfl'
                 qr_code = Images.gen_pdf417(row)
                 table_data.append([row['שורה'], row['מקט'], row['תיאור'], qr_code, row['כמות'], row['משקל']])
