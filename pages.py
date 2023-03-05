@@ -27,11 +27,12 @@ def orders(data_to_display):
 def edit_order(order_id):
     # Read all data of this order
     rows, info = get_order_data(order_id)
+    # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     if info['type'] == 'rebar':
-        data_to_display = {'שורה': 2, 'מקט': 3, 'כמות': 1, 'קוטר': 0, 'סוג': 0, 'אורך': 0, 'רוחב': 0, 'הזמנת_ייצור': 4,
+        data_to_display = {'שורה': 2, 'מקט': 3, 'כמות': 1, 'קוטר': 2, 'סוג': 2, 'אורך': 2, 'רוחב': 2, 'הזמנת_ייצור': 4,
                            'משקל': 2}
     elif info['type'] == 'rebar_special':
-        data_to_display = {'שורה': 2, 'מקט': 2, 'כמות': 1, 'קוטר_x': 1, 'קוטר_y': 1, 'סוג': 1, 'אורך': 1, 'רוחב': 1,
+        data_to_display = {'שורה': 2, 'מקט': 2, 'כמות': 1, 'קוטר_x': 3, 'קוטר_y': 3, 'סוג': 3, 'אורך': 1, 'רוחב': 1,
                            'הזמנת_ייצור': 4, 'משקל': 2}
     else:
         data_to_display = {'שורה': 2, 'מספר_ברזל': 0, 'אלמנט': 0, 'קוטר': 3, 'צורה': 3, 'כמות': 1, 'אורך': 2, 'משקל': 2}
@@ -78,7 +79,7 @@ def new_order(info_data):
     order_type = info_data['type']
     order_id = new_order_id()
     # order = {'order_id': order_id, 'info': info_data}
-    order = {'order_id': order_id, 'info': {'costumer_id': client, 'costumer_site': site, 'date_created': ts(),
+    order = {'order_id': order_id, 'info': {'date_created': ts(), 'costumer_id': client, 'costumer_site': site,
                                             'type': order_type}}
     mongo.insert_collection_one('orders', order)
     return order_id
@@ -159,7 +160,7 @@ def peripheral_orders(add_orders, order_id):
     order_id += "_R"
     for order in add_orders:
         order_weight = float(order['length']) * float(order['qnt']) * weight[str(order['diam'])] / 100
-        info = {'costumer': 'צומת ברזל', 'date_created': ts(), 'type': 'regular'}
+        info = {'costumer_id': 'צומת ברזל', 'date_created': ts(), 'type': 'regular'}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                     {'order_id': order_id, 'info': info})
         peripheral_order = {'order_id': order_id, 'כמות': order['qnt'], 'צורה': 1, 'אורך': order['length'],
@@ -180,3 +181,26 @@ def gen_job_id(order_id):
         return "1"
     job_ids = job_ids_df['job_id'].tolist()
     return str(int(max(job_ids)) + 1)
+
+
+def gen_patterns(order_type='rebar'):
+    # todo: complete
+    order_type = 'rebar'
+    if order_type == 'rebar':
+        catalog = mongo.read_collection_one('data_lists', query={'name': 'rebar_catalog'})['data']
+        diam = []
+        cat_num = []
+        rebar_type = []
+        for item in catalog:
+            if catalog[item]['קוטר'] not in diam:
+                diam.append(catalog[item]['קוטר'])
+            if item not in cat_num:
+                cat_num.append(item)
+            if catalog[item]['סוג'] not in rebar_type:
+                rebar_type.append(catalog[item]['סוג'])
+        diam.sort()
+        rebar_type.sort()
+        cat_num.sort()
+        patterns = {'סוג': '|'.join(rebar_type), 'קוטר': '|'.join(diam), 'מקט': '|'.join(cat_num)}
+        lists = {'סוג': rebar_type, 'קוטר': diam, 'מקט': catalog}
+        return lists, patterns

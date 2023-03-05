@@ -7,9 +7,9 @@ import json
 # ERP libs
 import db_handler
 import pages
-import prints
+import reports
 
-doc_gen = prints.Reports()
+doc_gen = reports.Reports()
 
 mongo = db_handler.DBHandle()
 with open("config.json") as config_file:
@@ -51,8 +51,8 @@ def register():
     if request.method == 'POST':
         existing_user = mongo.read_collection_one(config['users_collection'], {'name': request.form['username']})
         if existing_user is None:
-            mongo.insert_collection_one(config['users_collection'], {'name': request.form['username'],
-                                        'password': bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt())})
+            mongo.insert_collection_one(config['users_collection'], {'name': request.form['username'], 'password':
+                                        bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt())})
             session['username'] = request.form['username']
             return redirect(url_for('index'))
         message = "That username already exists!"
@@ -63,7 +63,7 @@ def register():
 def orders():
     if 'order_id' in session.keys():
         return redirect('/edit_order')
-    data_to_display = ['order_id', 'costumer_id', 'date_created']
+    data_to_display = ['costumer_id', 'date_created', 'order_id']
     orders_list = pages.orders(data_to_display)
     return render_template('orders.html', orders=orders_list, display_items=data_to_display)
 
@@ -84,11 +84,7 @@ def edit_order():
     order_data, order_type = pages.edit_order(order_id)
     if not order_data:
         return close_order()
-    # todo: generate lists and patterns
-    patterns = {'סוג': "10X10|15X15|20X20", 'קוטר': "5.5|6.5|8|10", 'צורה': "1|2|3|4|5|6|7|8|9|10",
-                'מקט': "2006080100|2006080200|2006080300"}
-    lists = {'סוג': ["10X10", "15X15", "20X20"], 'קוטר': [5.5, 6.5, 8, 10], 'צורה': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-             'מקט': ["2006080100", "2006080200", "2006080300"]}
+    lists, patterns = pages.gen_patterns(order_type)
     return render_template(order_type, order_data=order_data, patterns=patterns, lists=lists)
 
 
@@ -109,6 +105,7 @@ def new_order():
 def close_order():
     if len(list(request.values)) > 0:
         additional_func = list(request.values)[0]
+        print(additional_func)
         if additional_func == 'delete':
             mongo.delete_many('orders', {'order_id': session['order_id']})
         elif additional_func == 'print':
@@ -129,21 +126,21 @@ def scan():
     msg = ""
     if request.method == 'POST':
         if 'scan' in request.form.keys():
-            order_id = request.form['scan']
+            order_id = reports.Images.validate_qr(request.form['scan'])
             # todo: finish
             job_id = order_id
-            job = mongo.read_collection_one(config['orders_collection'], {'job_id':job_id})
+            job = mongo.read_collection_one(config['orders_collection'], {'job_id': job_id})
             if job:
                 msg = "Not found"
         else:
             job_id = request.form['order_id']
-            job = mongo.read_collection_one(config['orders_collection'], {'job_id':job_id})
+            job = mongo.read_collection_one(config['orders_collection'], {'job_id': job_id})
             if job:
                 mongo.update_one(config['orders_collection'], {'job_id': job_id},
                                  {'$set': {'status': list(request.form.keys())[1]}}, upsert=True)
             else:
                 msg = "Not found"
-    return render_template('/scan.html', order=order_id, msg=msg)
+    return render_template('/scan.html', order=order_id, msg=msg, status="Stop")
 
 
 '''

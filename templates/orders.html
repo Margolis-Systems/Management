@@ -2,13 +2,26 @@
 {% block body %}
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
-        <td height="50">
+        <td height="10">
+        </td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr class="btn btn-primary btn-block" >
+        <td style="outline: thin solid;text-align: center" onclick="location.href='/new_order?regular'">
+              הזמנה חדשה
+        </td>
+        <td></td>
+        <td style="outline: thin solid;text-align: center" onclick="location.href='/new_order?rebar'">
+            הזמנת רשת חדשה
+        </td>
+        <td></td>
+        <td style="outline: thin solid;text-align: center" onclick="location.href='/new_order?rebar_special'">
+            הזמנת רשת מיוחדת חדשה
         </td>
     </tr>
-    <tr onclick="location.href='/new_order?rebar'">
-        <td  class="btn btn-primary btn-block" width="100%" colspan="2" style="outline: thin solid;text-align: center">
-            הזמנה חדשה
-        </td>
+    <tr>
+
     </tr>
     <tr>
         {% for item in display_items %}

@@ -16,7 +16,7 @@
         <td><button type=submit class="btn btn-primary btn-block" >שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >שמור קובץ \ הדפסה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
-        <td><button ondblclick="location.href='\close?cancel'; return confirm('Are you sure?')" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>
+        <td><button ondblclick="location.href='\close?delete'; return confirm('Are you sure?')" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>
     </tr>
     <tr>
         {% for item in order_data.data_to_display %}
@@ -33,7 +33,7 @@
             <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
-            מחושב אוטומטית
+            ---
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>

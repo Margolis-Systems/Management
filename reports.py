@@ -55,6 +55,12 @@ class Images:
         img.save(file_out)
         return file_out
 
+    @staticmethod
+    def validate_qr(code):
+        print(code)
+        a = int('f')
+        # todo: complete
+        return True
 
 class Printers:
     @staticmethod
@@ -89,7 +95,6 @@ class Reports:
         elif info['type'] == "rebar":
             total_weight = 0
             for row in rows:
-                row['תיאור'] = 'shbsjdfhlskdfl'
                 qr_code = Images.gen_pdf417(row)
                 table_data.append([row['שורה'], row['מקט'], row['תיאור'], qr_code, row['כמות'], row['משקל']])
                 total_weight += int(row['משקל'])

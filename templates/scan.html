@@ -2,32 +2,23 @@
 {% block body %}
 <div class="container">
     <div class="row">
-        <div>
-            Scan Page
-        </div>
-        <div>
-            {% if order!="" %}
-                מספר הזמנה: {{order}}
-            {% endif %}
-        </div>
-    </div>
-    <div class="row">
-        <div>
+        <div class="col-md-4 col-md-offset-4">
             <form method=POST action="{{ url_for('scan') }}">
-            {% if order=="" %}
-                <input type="text" class="form-control" name="scan" placeholder="Scan QR" autofocus="autofocus">
+                {% if order!="" %}
+                <div class="form-group">
+                    <label>מספר הזמנה: {{order}}</label>
+                    <input type="hidden" name="order_id" value="{{order}}">
+                    <button type="submit" class="btn btn-primary btn-block" name="change_status">{{status}}</button>
+                </div>
+                {% else %}
+                <div class="form-group">
+                    <label>Scan barcode</label>
+                    <input type="text" class="form-control" name="scan" placeholder="Scan barcode" autofocus>
+                </div>
                 <button type="submit" class="btn btn-primary btn-block">Scan</button>
-            {% else %}
-                <input type="hidden" name="order_id" value="{{order}}">
-                <button type="submit" class="btn btn-primary btn-block" name="Started"> תחילת עבודה</button>
-                <button type="submit" class="btn btn-primary btn-block" name="Finished"> סיום עבודה</button>
-                <button ondblclick="location.href='\close?scan'" type="button" class="btn btn-primary btn-block" >ביטול</button>
-            {% endif %}
+                {% endif %}
             </form>
         </div>
-    </div>
-    <div class="row">
-        {{msg}}
     </div>
 </div>
 {% endblock %}

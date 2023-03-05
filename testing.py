@@ -1,1 +1,3 @@
-print(max(["1","21"]))
+import pages
+
+pages.gen_patterns()
