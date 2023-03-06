@@ -40,8 +40,6 @@ class Images:
         positions = shapes[shape]['positions']
         static_dir = os.path.dirname(__file__)+'\\static\\'
         img_dir = static_dir + 'images\\shapes\\' + str(shape) + '.png'
-        # todo:use this after mongo update
-        # img_dir = static_dir + shapes[shape]['img_dir']
         if os.path.exists(img_dir):
             img = Image.open(img_dir)
         else:
@@ -183,7 +181,7 @@ class Reports:
         return template_out_dir
 
     @staticmethod
-    def generate_summary(doc_dir, data, page_break=True):  # todo: finish func
+    def generate_summary(doc_dir, data, page_break=True):
         summary = {}
         total_weight = 0
         for row in data:
