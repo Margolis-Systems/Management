@@ -36,9 +36,9 @@ def edit_order(order_id):
                            'הזמנת_ייצור': 4, 'משקל': 2}
     else:
         data_to_display = {'שורה': 2, 'מספר_ברזל': 0, 'אלמנט': 0, 'קוטר': 3, 'צורה': 3, 'כמות': 1, 'אורך': 2, 'משקל': 2}
-    order_type = '/rebar_edit.html'
     order_data = {'info': info, 'data_to_display': data_to_display, 'order_rows': rows}
-    return order_data, order_type
+    lists, patterns = gen_patterns(info['type'])
+    return order_data, lists, patterns
 
 
 '''_____________________FUNCTIONS___________________________'''
@@ -183,9 +183,7 @@ def gen_job_id(order_id):
     return str(int(max(job_ids)) + 1)
 
 
-def gen_patterns(order_type='rebar'):
-    # todo: complete
-    order_type = 'rebar'
+def gen_patterns(order_type='regular'):
     if order_type == 'rebar':
         catalog = mongo.read_collection_one('data_lists', query={'name': 'rebar_catalog'})['data']
         diam = []
@@ -204,3 +202,24 @@ def gen_patterns(order_type='rebar'):
         patterns = {'סוג': '|'.join(rebar_type), 'קוטר': '|'.join(diam), 'מקט': '|'.join(cat_num)}
         lists = {'סוג': rebar_type, 'קוטר': diam, 'מקט': catalog}
         return lists, patterns
+    elif order_type == 'rebar_special':
+        catalog = mongo.read_collection_one('data_lists', query={'name': 'rebar_catalog'})['data']
+        diam = []
+        cat_num = []
+        rebar_type = []
+        for item in catalog:
+            if catalog[item]['קוטר'] not in diam:
+                diam.append(catalog[item]['קוטר'])
+            if item not in cat_num:
+                cat_num.append(item)
+            if catalog[item]['סוג'] not in rebar_type:
+                rebar_type.append(catalog[item]['סוג'])
+        diam.sort()
+        rebar_type.sort()
+        cat_num.sort()
+        patterns = {'סוג': '|'.join(rebar_type), 'קוטר_x': '|'.join(diam), 'קוטר_y': '|'.join(diam), 'מקט': '|'.join(cat_num)}
+        lists = {'סוג': rebar_type, 'קוטר_x': diam, 'קוטר_y': diam, 'מקט': catalog}
+        return lists, patterns
+    else:
+        # TODO: complete
+        return {}, {}

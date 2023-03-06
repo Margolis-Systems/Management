@@ -81,11 +81,10 @@ def edit_order():
         order_id = session['order_id']
     else:
         return redirect('/orders')
-    order_data, order_type = pages.edit_order(order_id)
+    order_data, lists, patterns = pages.edit_order(order_id)
     if not order_data:
         return close_order()
-    lists, patterns = pages.gen_patterns(order_type)
-    return render_template(order_type, order_data=order_data, patterns=patterns, lists=lists)
+    return render_template('/rebar_edit.html', order_data=order_data, patterns=patterns, lists=lists)
 
 
 @app.route('/new_order', methods=['POST', 'GET'])

@@ -74,7 +74,7 @@ class Printers:
 
 class Reports:
     @staticmethod
-    def generate_order_report(order_id, convert_to_pdf=False):
+    def generate_order_report(order_id, convert_to_pdf=False, docx2pdf=None):
         from docx2pdf import convert
 
         template_dir = "orders_template.docx"
@@ -166,7 +166,7 @@ class Reports:
         doc.save(doc_dir)
 
     @staticmethod
-    def fill_word_header(info, template_name="orders_template.docx"):
+    def fill_word_header(info, template_name="orders_template.docx", mailmerge=None):
         from mailmerge import MailMerge
         from datetime import datetime
 
