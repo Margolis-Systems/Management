@@ -1,4 +1,5 @@
 # Server
+import flask
 from flask import Flask, render_template, url_for, request, session, redirect, send_file
 from waitress import serve
 import bcrypt
@@ -19,6 +20,7 @@ app = Flask("Management system")
 
 @app.route('/')
 def index():
+    # validate_user()
     if 'username' in session:
         login_user = mongo.read_collection_one(config['users_collection'], {'name': session['username']})
         if login_user['group'] > 0:
@@ -35,7 +37,10 @@ def login():
         if login_user:
             if bcrypt.hashpw(request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
                 session['username'] = request.form['username']
-                return redirect(url_for('index'))
+                resp = flask.make_response()
+                resp.headers['location'] = url_for('index')
+                resp.set_cookie('userhash', request.form['username'])
+                return resp, 302
     return render_template('login.html', msg="סיסמה שגויה")
 
 
@@ -57,6 +62,16 @@ def register():
             return redirect(url_for('index'))
         message = "That username already exists!"
     return render_template('register.html', msg=message)
+
+
+def validate_user():
+    # todo: complete
+    username = request.cookies.get('userhash')
+    if username:
+        login_user = mongo.read_collection_one(config['users_collection'], {'name': username})
+        if login_user:
+            session['username'] = username
+            print(username)
 
 
 @app.route('/orders', methods=['GET'])
@@ -121,26 +136,40 @@ def close_order():
 
 @app.route('/scan', methods=['POST', 'GET'])
 def scan():
-    order_id = ""
+    # todo: rebuild
+    full_id = ""
     msg = ""
+    status = ""
     if request.method == 'POST':
         if 'scan' in request.form.keys():
-            order_id = reports.Images.validate_qr(request.form['scan'])
-            # todo: finish
-            job_id = order_id
-            job = mongo.read_collection_one(config['orders_collection'], {'job_id': job_id})
+            order_id, job_id = reports.Images.decode_qr(request.form['scan'])
+            job = mongo.read_collection_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id})
             if job:
                 msg = "Not found"
+            if job['status'] == 'new':
+                status = session['username'] + "__Start"
+            elif job['status'] == session['username'] + "__Start":
+                status = session['username'] + "__Finish"
         else:
-            job_id = request.form['order_id']
-            job = mongo.read_collection_one(config['orders_collection'], {'job_id': job_id})
+            order_id, job_id = request.form['order_id'].split("_")
+            print(order_id, job_id)
+            job = mongo.read_collection_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id})
             if job:
-                mongo.update_one(config['orders_collection'], {'job_id': job_id},
+                print(list(request.form))
+                mongo.update_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id},
                                  {'$set': {'status': list(request.form.keys())[1]}}, upsert=True)
             else:
                 msg = "Not found"
-    return render_template('/scan.html', order=order_id, msg=msg, status="Stop")
+        full_id = order_id + "_" + job_id
+    print(status)
+    return render_template('/scan.html', order=full_id, msg=msg, status=status)
 
+
+@app.route('/jobs', methods=['POST', 'GET'])
+def jobs():
+    # todo: complete
+    jobs_list = [{'id': "0", 'status': "new"}, {'id': "1", 'status': "new"}]
+    return render_template('/jobs.html', jobs=jobs_list)
 
 '''
 @app.route('/clients', methods=['POST'])

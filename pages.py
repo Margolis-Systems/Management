@@ -102,6 +102,8 @@ def new_order_row(req_form_data, order_id):
         print()
         # todo: complete
     else:
+        new_row['מקט'] = "2005020000"
+        new_row['תיאור'] = "רשת מיוחדת"
         new_row['משקל'] = round(calc_bars_weight(new_row, order_id), 1)
     # mongo.upsert_collection_one('orders', {'_id': doc_id}, new_row)
     mongo.insert_collection_one('orders', new_row)
@@ -157,14 +159,15 @@ def gen_client_list():
 
 
 def peripheral_orders(add_orders, order_id):
+    # todo: gen order id + write origin order_id and job_id in description
     order_id += "_R"
     for order in add_orders:
         order_weight = float(order['length']) * float(order['qnt']) * weight[str(order['diam'])] / 100
         info = {'costumer_id': 'צומת ברזל', 'date_created': ts(), 'type': 'regular'}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                     {'order_id': order_id, 'info': info})
-        peripheral_order = {'order_id': order_id, 'כמות': order['qnt'], 'צורה': 1, 'אורך': order['length'],
-                            'קוטר': order['diam'], 'משקל': order_weight}
+        peripheral_order = {'order_id': order_id, 'job_id': gen_job_id(order_id), 'status': "New", 'כמות': order['qnt'],
+                            'צורה': 1, 'אורך': order['length'], 'קוטר': order['diam'], 'משקל': order_weight}
         mongo.insert_collection_one('orders', peripheral_order)
 
 

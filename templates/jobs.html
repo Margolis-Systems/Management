@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block body %}
+<table class="table table-striped" align="center" dir="rtl">
+    <tr>
+        {% for key in jobs[0] %}
+        <td>
+            {{key}}
+        </td>
+        {% endfor %}
+    </tr>
+    {% for job in jobs%}
+    <tr>
+        {% for info in job %}
+        <td>
+            {{job[info]}}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

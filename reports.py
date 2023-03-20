@@ -54,11 +54,17 @@ class Images:
         return file_out
 
     @staticmethod
-    def validate_qr(code):
-        print(code)
-        a = int('f')
-        # todo: complete
-        return True
+    def decode_qr(qr):
+        # todo: make generic for farther uses
+        code = qr.split('@')
+        for item in code:
+            if item[0] == 'r':
+                temp = item.split('_')
+                order_id = temp[0][1:]
+                job_id = temp[1]
+                return order_id, job_id
+        return "", ""
+
 
 class Printers:
     @staticmethod
@@ -72,7 +78,7 @@ class Printers:
 
 class Reports:
     @staticmethod
-    def generate_order_report(order_id, convert_to_pdf=False, docx2pdf=None):
+    def generate_order_report(order_id, convert_to_pdf=False):
         from docx2pdf import convert
 
         template_dir = "orders_template.docx"
@@ -90,7 +96,7 @@ class Reports:
             table_data = []
             dimensions = []
             headers = []
-        elif info['type'] == "rebar":
+        elif "rebar" in info['type']:
             total_weight = 0
             for row in rows:
                 qr_code = Images.gen_pdf417(row)
@@ -99,10 +105,6 @@ class Reports:
             table_data.append(["", "", "", "", "משקל כולל", total_weight])
             headers = ['שורה', 'מקט', 'תיאור', 'ברקוד', 'כמות', 'משקל']
             dimensions = [len(rows) + 1, 1, len(headers)]
-        elif info['type'] == "rebar_special":
-            table_data = []
-            dimensions = []
-            headers = []
 
         Reports.create_table(template_dir, dimensions, table_data, headers)
         # reports.generate_summary(self, template_dir, rows)
@@ -164,7 +166,7 @@ class Reports:
         doc.save(doc_dir)
 
     @staticmethod
-    def fill_word_header(info, template_name="orders_template.docx", mailmerge=None):
+    def fill_word_header(info, template_name="orders_template.docx"):
         from mailmerge import MailMerge
         from datetime import datetime
 
