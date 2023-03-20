@@ -1,15 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    <form name="input_form" method=POST action="{{ url_for('new_order') }}">
-        <input type="text" class="form-control" name="client" placeholder="Client" autofocus="autofocus" required>
-        <input type="text" class="form-control" name="site" placeholder="Site" autofocus="autofocus" required>
-        <input type="hidden" name="type" value="{{ order_type }}">
-        <button type="submit">SUBMIT</button>
-    </form>
-</body>
-</html>
+{% extends "layout_mob.html" %}
+{% block body %}
+{{ order_type }}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <form method=POST action="{{ url_for('new_order') }}">
+                <div class="form-group">
+                    <input type="hidden" name="type" value="{{ order_type }}">
+                    {% if site == [] %}
+                    <label>בחר לקוח</label>
+                    <input list="client_list" class="form-control" name="client" placeholder="select client" autofocus="autofocus" required>
+                        <datalist id="client_list">
+                        {% for item in clients %}
+                            <option value="{{ item }}">
+                        {% endfor %}
+                        </datalist>
+                    {% else %}
+                    <label>בחר אתר לקוח</label><br>
+                    <label>{{clients}} :לקוח נבחר</label>
+                    <input type="hidden" name="client" value="{{clients}}">
+                    <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" required>
+                        <datalist id="sites_list">
+                        {% for item in site %}
+                            <option value="{{ item }}">
+                        {% endfor %}
+                        </datalist>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary btn-block">אישור</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

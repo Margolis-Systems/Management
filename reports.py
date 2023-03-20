@@ -19,10 +19,13 @@ class Images:
     @staticmethod
     def gen_pdf417(data):
         import pdf417
+        import os
         data = Images.format_qr_data(data)
         _data = pdf417.encode(data)
         img = pdf417.render_image(_data)
         name = 'static\\img\\pdf417_' + pages.ts(mode='file_name') + '.png'
+        while os.path.exists(name):
+            name = 'static\\img\\pdf417_' + pages.ts(mode='file_name') + '.png'
         img.save(name)
         return name
 

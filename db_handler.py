@@ -23,63 +23,73 @@ class DBHandle:
         db = MongoClient(mongo_adr)[db_name]
         return db
 
-    def read_collection_df(self, collect, db_name="", query={}):
+    @staticmethod
+    def read_collection_df(collect, db_name="", query={}):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         cur = db[collect].find(query, {'_id': False})
         df = pd.DataFrame(list(cur))
         return df
 
-    def read_collection_one_var(self, collect, var_name, query={}, db_name=""):
+    @staticmethod
+    def read_collection_one_var(collect, var_name, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False})
         return dic[var_name]
 
-    def read_collection_one(self, collect, query={}, db_name=""):
+    @staticmethod
+    def read_collection_one(collect, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False})
         return dic
 
-    def read_collection_last(self, collect, sort_by, query={}, db_name=""):
+    @staticmethod
+    def read_collection_last(collect, sort_by, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False}, sort=[(sort_by, -1)])
         return dic
 
-    def insert_collection_one(self, collect, doc, db_name=""):
+    @staticmethod
+    def insert_collection_one(collect, doc, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.insert_one(doc)
 
-    def upsert_collection_one(self, collect, key, doc, db_name=""):
+    @staticmethod
+    def upsert_collection_one(collect, key, doc, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.replace_one(key, doc, upsert=True)
 
-    def insert_collection_many(self, collect, df, db_name=""):
+    @staticmethod
+    def insert_collection_many(collect, df, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         res = df.to_dict('records')
         collection.insert_many(res)
 
-    def truncate_collection(self, collect, db_name=""):
+    @staticmethod
+    def truncate_collection(collect, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.delete_many({})
 
-    def delete_many(self, collect, query={}, db_name=""):
+    @staticmethod
+    def delete_many(collect, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.delete_many(query)
 
-    def update_one(self, collect, key, doc, upsert=False, db_name=""):
+    @staticmethod
+    def update_one(collect, key, doc, upsert=False, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]

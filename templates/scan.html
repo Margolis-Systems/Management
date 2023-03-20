@@ -8,7 +8,7 @@
                 <div class="form-group">
                     <label>מספר הזמנה: {{order}}</label>
                     <input type="hidden" name="order_id" value="{{order}}">
-                    <button type="submit" class="btn btn-primary btn-block" name={{status}}>{{status}}</button>
+                    <button type="submit" class="btn btn-primary btn-block" name="status" value="{{status}}">{{status}}</button>
                 </div>
                 {% else %}
                 <div class="form-group">
@@ -16,6 +16,11 @@
                     <input type="text" class="form-control" name="scan" placeholder="Scan barcode" autofocus>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Scan</button>
+                {% if msg != "" %}
+                <div>
+                    <label>{{msg}}</label>
+                </div>
+                {% endif %}
                 {% endif %}
             </form>
         </div>

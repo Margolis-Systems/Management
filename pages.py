@@ -154,8 +154,20 @@ def calc_bars_weight(req_form_data, order_id):
     return total_weight
 
 
-def gen_client_list():
-    return []
+def gen_client_list(client):
+    sites_list = []
+    client_list = []
+    client_data = {}
+    if client:
+        client_data = mongo.read_collection_one('costumers', {'name': client})
+    else:
+        costumers = mongo.read_collection_df('costumers')
+        if not costumers.empty:
+            client_list = costumers['name'].to_list()
+    if client_data:
+        sites_list = client_data['sites']
+        client_list = client
+    return client_list, sites_list
 
 
 def peripheral_orders(add_orders, order_id):
@@ -175,7 +187,7 @@ def ts(mode=""):
     if not mode:
         return datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     elif mode == "file_name":
-        return datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
+        return datetime.now().strftime('%d-%m-%Y_%H-%M-%S.%f')
 
 
 def gen_job_id(order_id):

@@ -104,22 +104,27 @@ def edit_order():
 
 @app.route('/new_order', methods=['POST', 'GET'])
 def new_order():
-    if request.method == 'POST':
-        session['order_id'] = pages.new_order(request.form)
-        return redirect('/orders')
-    else:
-        if len(list(request.values)) > 0:
-            order_type = list(request.values)[0]
+    client = ""
+    order_type = ""
+    if 'client' in request.form.keys():
+        if 'site' in request.form.keys():
+            session['order_id'] = pages.new_order(request.form)
+            return redirect('/orders')
         else:
-            order_type = ""
-        return render_template('/pick_client.html', clients=pages.gen_client_list, order_type=order_type)
+            client = request.form['client']
+    if len(list(request.values)) == 1:
+        order_type = list(request.values)[0]
+    elif 'type' in request.form.keys():
+        order_type = request.form['type']
+    client_list, sites_list = pages.gen_client_list(client)
+    return render_template('/pick_client.html', clients=client_list, site=sites_list, order_type=order_type)
 
 
 @app.route('/close', methods=['GET'])
 def close_order():
     if len(list(request.values)) > 0:
-        additional_func = list(request.values)[0]
-        print(additional_func)
+        req_vals = list(request.values)
+        additional_func = req_vals[0]
         if additional_func == 'delete':
             mongo.delete_many('orders', {'order_id': session['order_id']})
         elif additional_func == 'print':
@@ -136,32 +141,29 @@ def close_order():
 
 @app.route('/scan', methods=['POST', 'GET'])
 def scan():
-    # todo: rebuild
     full_id = ""
+    order_id = ""
     msg = ""
     status = ""
-    if request.method == 'POST':
-        if 'scan' in request.form.keys():
-            order_id, job_id = reports.Images.decode_qr(request.form['scan'])
-            job = mongo.read_collection_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id})
-            if job:
-                msg = "Not found"
-            if job['status'] == 'new':
+    if 'scan' in request.form.keys():
+        order_id, job_id = reports.Images.decode_qr(request.form['scan'])
+    elif 'order_id' in request.form.keys() and 'close' not in request.form.keys():
+        order_id, job_id = request.form['order_id'].split("_")
+        mongo.update_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id},
+                         {'$set': {'status': request.form['status']}}, upsert=True)
+    if order_id:
+        job = mongo.read_collection_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id})
+        if job:
+            full_id = order_id + "_" + job_id
+            if job['status'] == 'New':
                 status = session['username'] + "__Start"
             elif job['status'] == session['username'] + "__Start":
                 status = session['username'] + "__Finish"
-        else:
-            order_id, job_id = request.form['order_id'].split("_")
-            print(order_id, job_id)
-            job = mongo.read_collection_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id})
-            if job:
-                print(list(request.form))
-                mongo.update_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id},
-                                 {'$set': {'status': list(request.form.keys())[1]}}, upsert=True)
             else:
-                msg = "Not found"
-        full_id = order_id + "_" + job_id
-    print(status)
+                full_id = ""
+                msg = job['status']
+        else:
+            msg = "Not found"
     return render_template('/scan.html', order=full_id, msg=msg, status=status)
 
 
