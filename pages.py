@@ -38,9 +38,11 @@ def edit_order_data(order_id):
 
 
 def jobs_list():
-    all_jobs = mongo.read_collection_df('orders', query={'info': {'$exists': False}})\
-                .sort_values(by=['order_id', 'job_id'], ascending=[False, True])
-    columns = ['order_id', 'job_id', 'status', 'date_created']
+    all_jobs = mongo.read_collection_df('orders', query={'info': {'$exists': False}})
+    if all_jobs.empty:
+        return {}
+    all_jobs = all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True])
+    columns = ['order_id', 'job_id', 'status', 'date_created', 'תיאור']
     return all_jobs[columns].to_dict('records')
 
 
@@ -114,6 +116,11 @@ def new_order_row(req_form_data, order_id):
             if item not in special_list:
                 new_row[item] = cat_item[item]
         new_row['משקל'] = round(float(rebar_catalog[req_form_data['מקט']]['משקל_יח']) * float(new_row['כמות']), 1)
+        if 'הזמנת_ייצור' in req_form_data:
+            step = int(new_row['פסיעה'].split('X')[0])
+            x_bars = {'length': new_row['רוחב'], 'qnt': int(new_row['כמות']) * (int(new_row['אורך']) / step), 'diam': new_row['קוטר']}
+            y_bars = {'length': new_row['אורך'], 'qnt': int(new_row['כמות']) * (int(new_row['רוחב']) / step), 'diam': new_row['קוטר']}
+            peripheral_orders([x_bars, y_bars], order_id)
 
     if 'shape_data' in req_form_data:
         print()
@@ -187,15 +194,16 @@ def gen_client_list(client):
 
 
 def peripheral_orders(add_orders, order_id):
+    description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id
     order_id += "_R"
-    description = "הזמנת ייצור להכנת רשת. הזמנה מספר: " + order_id
     for order in add_orders:
         order_weight = float(order['length']) * float(order['qnt']) * weights[str(order['diam'])] / 100
         info = {'costumer_id': 'צומת ברזל', 'date_created': ts(), 'type': 'regular'}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                     {'order_id': order_id, 'info': info})
-        peripheral_order = {'order_id': order_id, 'job_id': gen_job_id(order_id), 'status': "New", 'תיאור': description,
-                            'כמות': order['qnt'], 'צורה': 1, 'אורך': order['length'], 'קוטר': order['diam'], 'משקל': order_weight}
+        peripheral_order = {'order_id': order_id, 'job_id': gen_job_id(order_id), 'status': "New", 'date_created': ts(),
+                            'תיאור': description, 'כמות': order['qnt'], 'צורה': 1, 'אורך': order['length'],
+                            'קוטר': order['diam'], 'משקל': order_weight}
         mongo.insert_collection_one('orders', peripheral_order)
 
 

@@ -7,7 +7,7 @@ class Images:
         import qrcode
         qr = qrcode.QRCode(
             version=1,
-            box_size=10,
+            box_size=20,
             border=5)
         qr.add_data(data)
         qr.make(fit=True)
@@ -85,7 +85,7 @@ class Printers:
 class Reports:
     @staticmethod
     def generate_order_report(order_id, convert_to_pdf=False):
-        from docx2pdf import convert
+        # from docx2pdf import convert
 
         template_dir = "orders_template.docx"
         rows, info = pages.get_order_data(order_id, reverse=False)
@@ -115,9 +115,9 @@ class Reports:
         Reports.create_table(template_dir, dimensions, table_data, headers)
         # reports.generate_summary(self, template_dir, rows)
 
-        if convert_to_pdf:
-            convert(template_dir)
-            template_dir = template_dir.replace("docx", "pdf")
+        # if convert_to_pdf:
+        #     convert(template_dir)
+        #     template_dir = template_dir.replace("docx", "pdf")
         return template_dir
 
     @staticmethod
@@ -163,7 +163,7 @@ class Reports:
                         cell = table.rows[tb_row].cells[tb_column_rv]
                         paragraph = cell.paragraphs[0]
                         run = paragraph.add_run()
-                        run.add_picture(str(data[tb_row - 1][tb_column]), width=1200000, height=600000)
+                        run.add_picture(str(data[tb_row - 1][tb_column]), width=1800000, height=600000)
                     else:
                         table.cell(tb_row, tb_column_rv).text = str(data[tb_row - 1][tb_column])
                     if (tb_row % inner_rows_count + 1) == inner_rows_count and tb_column_rv in col_merge:
