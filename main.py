@@ -78,9 +78,8 @@ def validate_user():
 def orders():
     if 'order_id' in session.keys():
         return redirect('/edit_order')
-    data_to_display = ['costumer_id', 'date_created', 'order_id']
-    orders_list = pages.orders(data_to_display)
-    return render_template('orders.html', orders=orders_list, display_items=data_to_display)
+    orders_list, display_those_keys = pages.orders()
+    return render_template('orders.html', orders=orders_list, display_items=display_those_keys)
 
 
 @app.route('/edit_order', methods=['POST', 'GET'])
@@ -96,10 +95,10 @@ def edit_order():
         order_id = session['order_id']
     else:
         return redirect('/orders')
-    order_data, lists, patterns = pages.edit_order(order_id)
+    order_data, page_data = pages.edit_order_data(order_id)
     if not order_data:
         return close_order()
-    return render_template('/rebar_edit.html', order_data=order_data, patterns=patterns, lists=lists)
+    return render_template('/rebar_edit.html', order_data=order_data, patterns=page_data[1], lists=page_data[0], dict_list=page_data[2])
 
 
 @app.route('/new_order', methods=['POST', 'GET'])
@@ -164,13 +163,14 @@ def scan():
                 msg = job['status']
         else:
             msg = "Not found"
+    else:
+        msg = "Wrong input"
     return render_template('/scan.html', order=full_id, msg=msg, status=status)
 
 
 @app.route('/jobs', methods=['POST', 'GET'])
 def jobs():
-    # todo: complete
-    jobs_list = [{'id': "0", 'status': "new"}, {'id': "1", 'status': "new"}]
+    jobs_list = pages.jobs_list()
     return render_template('/jobs.html', jobs=jobs_list)
 
 '''

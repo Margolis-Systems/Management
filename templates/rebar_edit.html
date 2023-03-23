@@ -30,7 +30,7 @@
             <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}">
             {% else %}
             {% if order_data.data_to_display[item] == 1 %} <!-- Regular required -->
-            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" required>
+            <input type="number" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
             ---
@@ -38,8 +38,8 @@
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
-                {% for item in lists[item] %}
-                    <option value="{{ item }}">
+                {% for optn in lists[item] %}
+                    <option value="{{ optn }}">{{dict_list[optn]}}</option>
                 {% endfor %}
                 </datalist>
             {% else %}

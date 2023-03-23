@@ -31,6 +31,7 @@ class Images:
 
     @staticmethod
     def format_qr_data(data):
+        # todo: complete
         formated = 'BF2D@Hj @r' + data['order_id'] + '_' + data['job_id']
         # return "BF2D@Hj @r22071206@i@p1@l4000@n200@e710@d12@g@\nGl4000@w0@\nC68@x".encode('utf-8')
         return formated.encode('utf-8')
@@ -60,12 +61,14 @@ class Images:
     def decode_qr(qr):
         # todo: make generic for farther uses
         code = qr.split('@')
-        for item in code:
-            if item[0] == 'r':
-                temp = item.split('_')
-                order_id = temp[0][1:]
-                job_id = temp[1]
-                return order_id, job_id
+        if code:
+            for item in code:
+                if item:
+                    if item[0] == 'r':
+                        temp = item.split('_')
+                        order_id = temp[0][1:]
+                        job_id = temp[1]
+                        return order_id, job_id
         return "", ""
 
 

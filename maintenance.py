@@ -1,5 +1,8 @@
 import os
 import shutil
+import db_handler
+
+mongo = db_handler.DBHandle()
 
 
 def clear_folder(folder_dir):
@@ -16,3 +19,4 @@ def clean_reports_temp():
 
 if __name__ == '__main__':
     clean_reports_temp()
+    mongo.delete_many('orders')
