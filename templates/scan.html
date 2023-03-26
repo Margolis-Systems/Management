@@ -13,8 +13,9 @@
                 {% else %}
                 <div class="form-group">
                     <label>Scan barcode</label>
-                    <input type="text" class="form-control" name="scan" placeholder="Scan barcode" autofocus>
+                    <input type="text" class="form-control" id="scan" name="scan" placeholder="Scan barcode" autofocus>
                 </div>
+                <button type="reset" class="btn btn-primary btn-block" onclick="autoFocus()">Reset</button>
                 <button type="submit" class="btn btn-primary btn-block">Scan</button>
                 {% if msg != "" %}
                 <div>
@@ -26,4 +27,10 @@
         </div>
     </div>
 </div>
+<script>
+window.onclick = autoFocus;
+function autoFocus() {
+  document.getElementById("scan").focus();
+}
+</script>
 {% endblock %}

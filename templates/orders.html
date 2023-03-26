@@ -26,14 +26,20 @@
     <tr>
         {% for item in display_items %}
         <td width="5%"  style="outline: thin solid;text-align: center">
-            <b>{{item}}</b>
+            <b>{{dictionary[item]}}</b>
         </td>
         {% endfor %}
     </tr>
     {% for order in orders %}
     <tr ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'" >
         {% for item in display_items %}
-        <td height="50" style="outline: thin solid;text-align: center">{{ orders[order][item] }}</td>
+        <td height="50" style="outline: thin solid;text-align: center">
+        {% if dictionary[orders[order][item]] %}
+            {{dictionary[orders[order][item]]}}
+        {% else %}
+            {{ orders[order][item] }}
+        {% endif %}
+        </td>
         {% endfor %}
     </tr>
     {% endfor %}

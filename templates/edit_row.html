@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}">
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_row') }}">
 <table class="table table-striped" dir="rtl" align="center">
     {% for item in order_data.info %}
     <tr>
@@ -13,10 +13,7 @@
     </tr>
     {% endfor %}
     <tr>
-        <td><button type=submit class="btn btn-primary btn-block" >שורה חדשה</button></td>
-        <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >שמור קובץ \ הדפסה</button></td>
-        <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
-        <td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>
+        <td><button type=submit class="btn btn-primary btn-block" >עדכן</button></td>
     </tr>
     <tr>
         {% for item in order_data.data_to_display %}
@@ -27,16 +24,16 @@
         {% for item in order_data.data_to_display %}
         <td>
             {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
-            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ item }}">
+            <input type="text" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ item }}">
             {% else %}
             {% if order_data.data_to_display[item] == 1 %} <!-- Regular required -->
-            <input type="number" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" required>
+            <input type="number" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ item }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
-            ---
+            {{order_data.order_rows[0][item]}}
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
-            <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+            <input list="{{ item }}" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dict_list[optn]}}</option>
@@ -45,6 +42,13 @@
             {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
             <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
+            <!--
+            {% if order_data.order_rows[0][item] == "Yes" %}
+                <input type="checkbox" value="Yes" class="form-control" name="{{ item }}" checked disabled>
+            {% else %}
+                <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
+            {% endif %}
+            -->
             {% else %}
             ------
             {% endif %}
@@ -55,6 +59,7 @@
         </td>
         {% endfor %}
     </tr>
+    <!--
     {% for row in order_data.order_rows %}
     <tr>
         {% for item in order_data.data_to_display %}
@@ -64,6 +69,7 @@
         {% endfor %}
     </tr>
     {% endfor %}
+    -->
 </table>
 </form>
 <script>

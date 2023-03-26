@@ -79,7 +79,8 @@ def orders():
     if 'order_id' in session.keys():
         return redirect('/edit_order')
     orders_list, display_those_keys = pages.orders()
-    return render_template('orders.html', orders=orders_list, display_items=display_those_keys)
+    return render_template('orders.html', orders=orders_list, display_items=display_those_keys,
+                           dictionary=pages.gen_dictionary('orders'))
 
 
 @app.route('/edit_order', methods=['POST', 'GET'])
@@ -98,7 +99,20 @@ def edit_order():
     order_data, page_data = pages.edit_order_data(order_id)
     if not order_data:
         return close_order()
-    return render_template('/rebar_edit.html', order_data=order_data, patterns=page_data[1], lists=page_data[0], dict_list=page_data[2])
+    return render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
+                           dictionary=page_data[2])
+
+
+@app.route('/edit_row', methods=['POST', 'GET'])
+def edit_row():
+    if request.method == 'GET':
+        session['order_id'], session['job_id'] = list(request.values)[0].split('job')
+        order_data, page_data = pages.edit_order_data(session['order_id'], session['job_id'])
+        if order_data:
+            return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
+                                   dictionary=page_data[2])
+    pages.new_order_row(request.form, session['order_id'], job_id=session['job_id'])
+    return redirect('/orders')
 
 
 @app.route('/new_order', methods=['POST', 'GET'])
@@ -171,7 +185,7 @@ def scan():
 @app.route('/jobs', methods=['POST', 'GET'])
 def jobs():
     jobs_list = pages.jobs_list()
-    return render_template('/jobs.html', jobs=jobs_list)
+    return render_template('/jobs.html', jobs=jobs_list, dictionary=pages.gen_dictionary('jobs'))
 
 '''
 @app.route('/clients', methods=['POST'])

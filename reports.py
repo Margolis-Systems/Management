@@ -85,7 +85,7 @@ class Printers:
 class Reports:
     @staticmethod
     def generate_order_report(order_id, convert_to_pdf=False):
-        # from docx2pdf import convert
+        from docx2pdf import convert
 
         template_dir = "orders_template.docx"
         rows, info = pages.get_order_data(order_id, reverse=False)
@@ -105,8 +105,13 @@ class Reports:
         elif "rebar" in info['type']:
             total_weight = 0
             for row in rows:
+                addon = ""
+                if row['מקט'] in pages.rebar_catalog.keys():
+                    addon += "\n:משקל יחידה\n" + pages.rebar_catalog[row['מקט']]['משקל_יח']
                 qr_code = Images.gen_pdf417(row)
-                table_data.append([row['שורה'], row['מקט'], row['תיאור'], qr_code, row['כמות'], row['משקל']])
+                table_data.append([row['שורה'], row['מקט'], row['תיאור'], qr_code,
+                                   row['כמות'] + addon,
+                                   row['משקל']])
                 total_weight += int(row['משקל'])
             table_data.append(["", "", "", "", "משקל כולל", total_weight])
             headers = ['שורה', 'מקט', 'תיאור', 'ברקוד', 'כמות', 'משקל']
@@ -145,7 +150,7 @@ class Reports:
         table.style = 'Table Grid'
         table.allow_autofit = False
         # Add data to table
-        for tb_row in range(row_count * inner_rows_count + 1):
+        for tb_row in range(row_count + 1):
             if tb_row == 0:
                 for tb_column in range(columns_count):
                     if tb_reverse:
@@ -159,13 +164,22 @@ class Reports:
                         tb_column_rv = columns_count - tb_column - 1
                     else:
                         tb_column_rv = columns_count
-                    if ".png" in str(data[tb_row - 1][tb_column]):
-                        cell = table.rows[tb_row].cells[tb_column_rv]
+                    # TODO: fix bug!!!
+                    try:
+                        temp = str(data[tb_row - 1][tb_column])
+                    except:
+                        temp = "zsdg"
+                    if ".png" in temp:
+                        cell = table.rows[(tb_row + 1) * inner_rows_count - 1].cells[tb_column_rv]
                         paragraph = cell.paragraphs[0]
                         run = paragraph.add_run()
                         run.add_picture(str(data[tb_row - 1][tb_column]), width=1800000, height=600000)
                     else:
-                        table.cell(tb_row, tb_column_rv).text = str(data[tb_row - 1][tb_column])
+                        # TODO: fix bug!!!
+                        try:
+                            table.cell((tb_row + 1) * inner_rows_count - 1, tb_column_rv).text = str(data[tb_row - 1][tb_column])
+                        except:
+                            print("sfdg")
                     if (tb_row % inner_rows_count + 1) == inner_rows_count and tb_column_rv in col_merge:
                         table.cell(tb_row, tb_column_rv).merge(table.cell(tb_row + 1 - inner_rows_count, tb_column_rv))
         # Save file

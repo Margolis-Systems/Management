@@ -4,7 +4,11 @@
     <tr>
         {% for key in jobs[0] %}
         <td>
-            {{key}}
+            {% if dictionary[key] %}
+            {{ dictionary[key] }}
+            {% else %}
+            {{ key }}
+            {% endif %}
         </td>
         {% endfor %}
     </tr>

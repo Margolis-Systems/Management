@@ -19,4 +19,4 @@ def clean_reports_temp():
 
 if __name__ == '__main__':
     clean_reports_temp()
-    mongo.delete_many('orders')
+    # mongo.delete_many('orders')
