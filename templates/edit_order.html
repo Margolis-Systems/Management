@@ -1,5 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
+<style>
+    #shape_data {
+  opacity: 0;
+  width: 0;
+  float: left; /* Reposition so the validation message shows over the label */
+}
+
+div {
+    text-align: center;
+}
+</style>
 <form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}">
 <table class="table table-striped" dir="rtl" align="center">
     {% for item in order_data.info %}
@@ -23,7 +34,7 @@
     </tr>
     {% endfor %}
     <tr>
-        <td><button type=submit class="btn btn-primary btn-block" >שורה חדשה</button></td>
+            <td><button type=submit class="btn btn-primary btn-block" >שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
         <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >העבר לייצור \ הדפסה</button></td>
         <!--<td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
@@ -53,10 +64,20 @@
                 {% endfor %}
                 </datalist>
             {% else %}
+            {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
+            <input list="{{ item }}1" id="{{ item }}" class="form-control" ondblclick='openNewWindow()' name="{{ item }}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+                <datalist id="{{ item }}1">
+                {% for optn in lists[item] %}
+                    <option value="{{ optn }}">{{dictionary[optn]}}</option>
+                {% endfor %}
+                </datalist>
+            <input name="shape_data" id="shape_data" type="text" required>
+            {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
             <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
             {% else %}
             ------
+            {% endif %}
             {% endif %}
             {% endif %}
             {% endif %}
@@ -76,12 +97,5 @@
     {% endfor %}
 </table>
 </form>
-<script>
-function confirmDel() {
-  let text = "Are you sure?";
-  if (confirm(text) == true) {
-    window.location.href = "close?delete";
-  }
-}
-</script>
+<script src="\static\js\shapes.js"></script>
 {% endblock %}

@@ -2,6 +2,8 @@ import db_handler
 import pandas as pd
 from datetime import datetime
 
+import main
+
 mongo = db_handler.DBHandle()
 # Data lists
 # rebar_weights = mongo.read_collection_one("data_lists", {"name": "rebar_weights"})['data']
@@ -26,20 +28,22 @@ def orders():
         return [], []
 
 
-def edit_order_data(order_id, job_id=""):
+def edit_order_data(order_id, username, job_id=""):
     # Read all data of this order
     rows, info = get_order_data(order_id, job_id)
     # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     keys_to_display = data_to_display['new_row_'+info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
     lists, patterns = gen_patterns(info['type'])
-    # todo: dictionaries to mongo
-    dictionary = gen_dictionary('edit_' + info['type'])
+    dictionary = get_dictionary(username)
     return order_data, [lists, patterns, dictionary]
 
 
-def jobs_list():
-    all_jobs = mongo.read_collection_df('orders', query={'info': {'$exists': False}})
+def jobs_list(order_type='regular'):
+    type_list = mongo.read_collection_df('orders', query={'info.type': order_type})
+    type_list = type_list['order_id'].to_list()
+    all_orders = mongo.read_collection_df('orders', query={'order_id': {'$in': type_list}})
+    all_jobs = all_orders[all_orders['job_id'].notna()]
     if all_jobs.empty:
         return {}
     all_jobs = all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True])
@@ -50,17 +54,10 @@ def jobs_list():
 '''_____________________FUNCTIONS___________________________'''
 
 
-def gen_dictionary(page_name):
-    dictionary = {'costumer_id': "שם לקוח", 'costumer_site': "אתר לקוח", 'date_created': "נוצר בתאריך", 'order_id': "מספר הזמנה", 'type': "סוג הזמנה"
-                  , 'regular': "רגילה", 'rebar': "רשת", 'rebar_special': "רשת מיוחדת", 'job_id': "מספר שורה", 'status': "סטטוס"}
-    if page_name == 'edit_rebar':
-        for obj in rebar_catalog:
-            dictionary[obj] = '⌀' + rebar_catalog[obj]['קוטר'] + "  " + rebar_catalog[obj]['פסיעה']
-    # todo: complete
-    # elif order_type == 'rebar_special':
-    #
-    # else:
-
+def get_dictionary(username):
+    all_dicts = mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
+    lang = mongo.read_collection_one('users', {'name': username})['lang']
+    dictionary = all_dicts[lang]
     return dictionary
 
 
@@ -114,7 +111,7 @@ def new_order_row(req_form_data, order_id, job_id=""):
         mongo.delete_many('orders', {'order_id': order_id, 'job_id': job_id})
     #     dc = ts()
     new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'New', 'date_created': ts()}
-    special_list = ['shape_data', 'משקל_יח']
+    special_list = ['shape_data', 'משקל_יח', 'כמות_בחבילה']
     for item in req_form_data:
         if item not in special_list:
             new_row[item] = req_form_data[item]
@@ -134,7 +131,7 @@ def new_order_row(req_form_data, order_id, job_id=""):
             peripheral_orders([x_bars, y_bars], order_id)
 
     if 'shape_data' in req_form_data:
-        print()
+        print(req_form_data['shape_data'])
         # todo: complete
     elif 'מקט' not in req_form_data:
         new_row['מקט'] = "2005020000"
@@ -273,7 +270,8 @@ def gen_patterns(order_type='regular'):
         patterns = {'פסיעה_x': '|'.join(rebar_type), 'פסיעה_y': '|'.join(rebar_type), 'קוטר_x': '|'.join(diam), 'קוטר_y': '|'.join(diam), 'מקט': '|'.join(cat_num)}
         lists = {'פסיעה_x': rebar_type, 'פסיעה_y': rebar_type, 'קוטר_x': diam, 'קוטר_y': diam, 'מקט': catalog}
     else:
-        # TODO: complete
-        lists = {}
-        patterns = {}
+        shapes_list = shapes.keys()
+        diam = weights.keys()
+        lists = {'קוטר': diam, 'צורה': shapes_list}
+        patterns = {'קוטר':  '|'.join(diam), 'צורה':  '|'.join(shapes_list)}
     return lists, patterns

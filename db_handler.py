@@ -13,6 +13,7 @@ class DBHandle:
     @staticmethod
     def con_to_mongo_default(db_name):
         if db_name:
+            print(db_name)
             db = MongoClient(config['mongo_adr'])[db_name]
         else:
             db = MongoClient(config['mongo_adr'])[config['db_main']]

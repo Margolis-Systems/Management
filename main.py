@@ -20,7 +20,8 @@ app = Flask("Management system")
 
 @app.route('/')
 def index():
-    # validate_user()
+    if not validate_user():
+        return logout()
     if 'username' in session:
         login_user = mongo.read_collection_one(config['users_collection'], {'name': session['username']})
         if login_user['group'] > 0:
@@ -47,17 +48,20 @@ def login():
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect('/login')
 
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    if not validate_user():
+        return logout()
     message = ""
     if request.method == 'POST':
         existing_user = mongo.read_collection_one(config['users_collection'], {'name': request.form['username']})
         if existing_user is None:
             mongo.insert_collection_one(config['users_collection'], {'name': request.form['username'], 'password':
-                                        bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt())})
+                                        bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt()),
+                                        'group': 0, 'lang': 'he'})
             session['username'] = request.form['username']
             return redirect(url_for('index'))
         message = "That username already exists!"
@@ -66,25 +70,34 @@ def register():
 
 def validate_user():
     # todo: complete
-    username = request.cookies.get('userhash')
-    if username:
-        login_user = mongo.read_collection_one(config['users_collection'], {'name': username})
-        if login_user:
-            session['username'] = username
-            print(username)
+    # username = request.cookies.get('userhash')
+    # if username:
+    #     login_user = mongo.read_collection_one(config['users_collection'], {'name': username})
+    #     if login_user:
+    #         session['username'] = username
+    #         print(username)
+    if 'username' in session.keys():
+        if mongo.read_collection_one(config['users_collection'], {'name': session['username']}):
+            return True
+    return False
 
 
 @app.route('/orders', methods=['GET'])
 def orders():
+    if not validate_user():
+        return logout()
     if 'order_id' in session.keys():
         return redirect('/edit_order')
     orders_list, display_those_keys = pages.orders()
+    dictionary = pages.get_dictionary(session['username'])
     return render_template('orders.html', orders=orders_list, display_items=display_those_keys,
-                           dictionary=pages.gen_dictionary('orders'))
+                           dictionary=dictionary)
 
 
 @app.route('/edit_order', methods=['POST', 'GET'])
 def edit_order():
+    if not validate_user():
+        return logout()
     if len(list(request.values)) == 1:
         order_id = list(request.values)[0]
         session['order_id'] = order_id
@@ -96,7 +109,7 @@ def edit_order():
         order_id = session['order_id']
     else:
         return redirect('/orders')
-    order_data, page_data = pages.edit_order_data(order_id)
+    order_data, page_data = pages.edit_order_data(order_id, session['username'])
     if not order_data:
         return close_order()
     return render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
@@ -105,6 +118,8 @@ def edit_order():
 
 @app.route('/edit_row', methods=['POST', 'GET'])
 def edit_row():
+    if not validate_user():
+        return logout()
     if request.method == 'GET':
         session['order_id'], session['job_id'] = list(request.values)[0].split('job')
         order_data, page_data = pages.edit_order_data(session['order_id'], session['job_id'])
@@ -117,6 +132,8 @@ def edit_row():
 
 @app.route('/new_order', methods=['POST', 'GET'])
 def new_order():
+    if not validate_user():
+        return logout()
     client = ""
     order_type = ""
     if 'client' in request.form.keys():
@@ -135,6 +152,8 @@ def new_order():
 
 @app.route('/close', methods=['GET'])
 def close_order():
+    if not validate_user():
+        return logout()
     if len(list(request.values)) > 0:
         req_vals = list(request.values)
         additional_func = req_vals[0]
@@ -154,6 +173,8 @@ def close_order():
 
 @app.route('/scan', methods=['POST', 'GET'])
 def scan():
+    if not validate_user():
+        return logout()
     full_id = ""
     order_id = ""
     msg = ""
@@ -184,8 +205,29 @@ def scan():
 
 @app.route('/jobs', methods=['POST', 'GET'])
 def jobs():
-    jobs_list = pages.jobs_list()
-    return render_template('/jobs.html', jobs=jobs_list, dictionary=pages.gen_dictionary('jobs'))
+    if not validate_user():
+        return logout()
+    order_type = "regular"
+    if 'order_type' in request.form.keys():
+        order_type = request.form['order_type']
+    jobs_list = pages.jobs_list(order_type)
+    dictionary = pages.get_dictionary(session['username'])
+    return render_template('/jobs.html', jobs=jobs_list, dictionary=dictionary)
+
+
+@app.route('/shape_editor', methods=['POST', 'GET'])
+def shape_editor():
+    shape_data = {}
+    if request.form:
+        shape_data['edges'] = 0
+        shape_data['shape'] = request.form['shape']
+        # todo: save temp form data
+    else:
+        req_vals = list(request.values)
+        if len(req_vals) > 0:
+            shape_data = {'shape': req_vals[0], 'edges': range(pages.shapes[req_vals[0]]['edges']), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
+    return render_template('/shape_editor.html', shapes=pages.shapes.keys(), shape_data=shape_data)
+
 
 '''
 @app.route('/clients', methods=['POST'])

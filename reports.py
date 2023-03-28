@@ -184,6 +184,7 @@ class Reports:
                         table.cell(tb_row, tb_column_rv).merge(table.cell(tb_row + 1 - inner_rows_count, tb_column_rv))
         # Save file
         doc.save(doc_dir)
+        doc.save(doc_dir)
 
     @staticmethod
     def fill_word_header(info, template_name="orders_template.docx"):
