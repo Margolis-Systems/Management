@@ -236,7 +236,7 @@ def shape_editor():
 @app.route('/mep', methods=['POST'])
 '''
 
-production = False
+production = True
 if __name__ == '__main__':
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:

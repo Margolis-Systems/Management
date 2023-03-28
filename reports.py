@@ -120,9 +120,9 @@ class Reports:
         Reports.create_table(template_dir, dimensions, table_data, headers)
         # reports.generate_summary(self, template_dir, rows)
 
-        # if convert_to_pdf:
-        #     convert(template_dir)
-        #     template_dir = template_dir.replace("docx", "pdf")
+        if convert_to_pdf:
+            convert(template_dir)
+            template_dir = template_dir.replace("docx", "pdf")
         return template_dir
 
     @staticmethod
