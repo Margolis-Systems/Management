@@ -11,7 +11,8 @@ div {
     text-align: center;
 }
 </style>
-<table class="table table-striped" dir="rtl" align="center" >
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}">
+<table class="table table-striped" dir="rtl" align="center">
     <tr>
     {% for item in order_data.info %}
         <td>
@@ -31,20 +32,14 @@ div {
     {% endfor %}
     </tr>
 </table>
-{% if order_data.include %}
-    {% include order_data.include %}
-{% endif %}
-<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
+        <td><button type=submit class="btn btn-primary btn-block" >שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" disabled>העתק שורה אחרונה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
         <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >העבר לייצור \ הדפסה</button></td>
         <!--<td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
     </tr>
-</table>
-<table class="table table-striped" dir="rtl" align="center">
     <tr>
         {% for item in order_data.data_to_display %}
         {% if dictionary[item] %}
@@ -72,15 +67,10 @@ div {
             <input type="number" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
-            <input class="form-control" name="{{ item }}" id="{{ item }}" value="---" readonly>
-            <input type="hidden" name="{{ item }}"/>
-            {% else %}<!--
-            {% if order_data.data_to_display[item] == 2.1 %} Auto calculated NOT an input1
-                {% include 'spec_rebar_editor.html' %}
-            {% else %}-->
-            {% if order_data.data_to_display[item] == 2.2 %} <!-- Auto calculated NOT an input1 -->
-            <input class="form-control" name="{{ item }}" id="{{ item }}" required readonly>
-            <input type="hidden" name="{{ item }}"/>
+            <input class="form-control" id="{{ item }}" value="---" disabled>
+            {% else %}
+            {% if order_data.data_to_display[item] == 2.1 %} <!-- Auto calculated NOT an input1 -->
+            <input class="form-control" name="{{ item }}" id="editor" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' value="לחץ פעמיים" readonly>
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
@@ -110,7 +100,6 @@ div {
             {% endif %}
             {% endif %}
             {% endif %}
-            {% endif %}
         </td>
         {% endfor %}
     </tr>
@@ -125,5 +114,5 @@ div {
     {% endfor %}
 </table>
 </form>
-<script src="\static\js\shapes.js" onload="findTotal2('amount_x', 'width', 'x_length');findTotal2('amount_y', 'length', 'y_length')"></script>
+<script src="\static\js\shapes.js"></script>
 {% endblock %}

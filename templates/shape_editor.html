@@ -1,19 +1,24 @@
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
 <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 {% if shape_data != {} %}
 {% if shape_data.edges == 0 %}
 <body onload="closeWindow({{shape_data.shape}})">
 {% else %}
+<body>
 <table class="table table-striped" dir="rtl" align="center">
     <form id="shape_form" method=POST action="{{ url_for('shape_editor') }}">
         <tr>
             <td>
-                <input type="hidden" name="shape" value="{{shape_data.shape}}">
+                <input type="hidden" name="shape_data" value="{{shape_data.shape}}">
                 <img src="{{shape_data.img_plot}}" title="{{shape_data.shape}}"/>
             </td>
             <td>
             {% for edge in shape_data.edges %}
-                <input type="number" class="amount" onblur="findTotal()" name="{{edge}}" placeholder="{{edge}}" required autofocus>
+                <input type="number" class="amount" onchange="findTotal('amount', 'length')" name="{{edge}}" placeholder="{{edge}}" required autofocus>
             {% endfor %}
             </td>
         </tr>
@@ -23,7 +28,7 @@
         </td>
         <td>
             סהכ אורך<br>
-            <input type="text" name="אורך" id="formtotal" readonly />
+            <input type="text" name="length" id="length" readonly />
         </td>
     </tr>
     </form>
@@ -40,3 +45,5 @@
 </table>
 {% endif %}
 <script src="\static\js\shapes.js"></script>
+</body>
+</html>

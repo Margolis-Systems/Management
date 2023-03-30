@@ -1,42 +1,66 @@
 {% extends "layout.html" %}
 {% block body %}
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+    {% for item in order_data.info %}
+        <td>
+            <b>
+                {% if dictionary[item] %}
+                {{ dictionary[item] }}
+                {% else %}
+                {{ item }}
+                {% endif %}:
+            </b>
+            {% if dictionary[order_data.info[item]] %}
+            {{dictionary[order_data.info[item]]}}
+            {% else %}
+            {{ order_data.info[item] }}
+            {% endif %}
+        </td>
+    {% endfor %}
+    </tr>
+</table>
+{% if order_data.include %}
+    {% include order_data.include %}
+{% endif %}
 <form name="input_form" id="input_form" method=POST action="{{ url_for('edit_row') }}">
 <table class="table table-striped" dir="rtl" align="center">
-    {% for item in order_data.info %}
-    <tr>
-        <td>
-            <b>{{ item }}</b>
-        </td>
-        <td>
-            {{ order_data.info[item] }}
-        </td>
-    </tr>
-    {% endfor %}
     <tr>
         <td><button type=submit class="btn btn-primary btn-block" >עדכן</button></td>
+        <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>
     </tr>
     <tr>
         {% for item in order_data.data_to_display %}
-        <td><b>{{ item }}</b></td>
+        {% if dictionary[item] %}
+        {% set name = dictionary[item] %}
+        {% else %}
+        {% set name = item %}
+        {% endif %}
+        <td><b>{{ name }}</b></td>
         {% endfor %}
     </tr>
     <tr>
         {% for item in order_data.data_to_display %}
+        {% if dictionary[item] %}
+        {% set name = dictionary[item] %}
+        {% else %}
+        {% set name = item %}
+        {% endif %}
         <td>
             {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
-            <input type="text" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ item }}">
+            <input type="text" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}">
             {% else %}
             {% if order_data.data_to_display[item] == 1 %} <!-- Regular required -->
-            <input type="number" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ item }}" autofocus="autofocus" required>
+            <input type="number" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
             {{order_data.order_rows[0][item]}}
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
-            <input list="{{ item }}" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ item }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+            <input list="{{ item }}" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
-                    <option value="{{ optn }}">{{dict_list[optn]}}</option>
+                    <option value="{{ optn }}">{{dictionary[optn]}}</option>
                 {% endfor %}
                 </datalist>
             {% else %}

@@ -1,0 +1,64 @@
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td>
+            <table class="table table-striped" dir="rtl" align="center">
+            <form id="x_form" method=POST action="{{ url_for('edit_order') }}">
+            <input type="hidden" id="x" name="x" value="x">
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="number" name="x_length" id="x_length" onchange="findTotal2('amount_x', 'width', 'x_length')" class="form-control" placeholder="רוחב" required>
+                    </td>
+                    <td>
+                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" required>
+                    </td>
+                </tr>
+                {% if 'mkt' not in order_data.order_rows[0] %}
+                {% for item in order_data.order_rows[0].x_pitch %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <label class="amount_x">{{order_data.order_rows[0].x_length[loop.index0]}}</label>
+                    </td>
+                    <td>
+                        <lable>{{order_data.order_rows[0].x_pitch[loop.index0]}}</lable>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+                <button type=submit class="btn btn-primary btn-block" name="x_form">הוסף מקטע רוחב</button>
+            </form>
+            </table>
+        </td>
+        <td>
+            <table class="table table-striped" dir="rtl" align="center">
+            <form id="y_form" method=POST action="{{ url_for('edit_order') }}">
+            <input type="hidden" id="y" name="y" value="y">
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="number" name="y_length" id="y_length" onchange="findTotal2('amount_y', 'length', 'y_length')" class="form-control" placeholder="אורך" required>
+                    </td>
+                    <td>
+                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" required>
+                    </td>
+                </tr>
+                {% if 'mkt' not in order_data.order_rows[0] %}
+                {% for item in order_data.order_rows[0].y_pitch %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <label class="amount_y">{{order_data.order_rows[0].y_length[loop.index0]}}</label>
+                    </td>
+                    <td>
+                        <lable>{{order_data.order_rows[0].y_pitch[loop.index0]}}</lable>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+                <button type=submit class="btn btn-primary btn-block" name="y_form">הוסף מקטע אורך</button>
+            </form>
+            </table>
+        </td>
+    </tr>
+</table>

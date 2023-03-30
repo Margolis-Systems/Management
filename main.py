@@ -1,9 +1,11 @@
 # Server
+import sys
 import flask
 from flask import Flask, render_template, url_for, request, session, redirect, send_file
 from waitress import serve
 import bcrypt
 # Python libs
+import os
 import json
 # ERP libs
 import db_handler
@@ -11,7 +13,6 @@ import pages
 import reports
 
 doc_gen = reports.Reports()
-
 mongo = db_handler.DBHandle()
 with open("config.json") as config_file:
     config = json.load(config_file)
@@ -23,8 +24,11 @@ def index():
     if not validate_user():
         return logout()
     if 'username' in session:
+        user = session['username']
+        session.clear()
+        session['username'] = user
         login_user = mongo.read_collection_one(config['users_collection'], {'name': session['username']})
-        if login_user['group'] > 0:
+        if login_user['group'] > 10:
             return render_template('main.html')
         else:
             return render_template('scan.html', order="", msg="")
@@ -53,8 +57,11 @@ def logout():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-    if not validate_user():
+    user_group = validate_user()
+    if not user_group:
         return logout()
+    elif user_group < 99:
+        return index()
     message = ""
     if request.method == 'POST':
         existing_user = mongo.read_collection_one(config['users_collection'], {'name': request.form['username']})
@@ -77,8 +84,9 @@ def validate_user():
     #         session['username'] = username
     #         print(username)
     if 'username' in session.keys():
-        if mongo.read_collection_one(config['users_collection'], {'name': session['username']}):
-            return True
+        user_data = mongo.read_collection_one(config['users_collection'], {'name': session['username']})
+        if user_data:
+            return user_data['group']
     return False
 
 
@@ -101,19 +109,18 @@ def edit_order():
     if len(list(request.values)) == 1:
         order_id = list(request.values)[0]
         session['order_id'] = order_id
-    elif len(list(request.values)) > 1:
-        order_id = session['order_id']
-        pages.new_order_row(request.form, order_id)
+    elif len(request.form.keys()) > 1:
+        pages.new_order_row()
         return redirect('/orders')
-    elif 'order_id' in session.keys():
-        order_id = session['order_id']
-    else:
+    if 'order_id' not in session.keys():
         return redirect('/orders')
-    order_data, page_data = pages.edit_order_data(order_id, session['username'])
+    order_data, page_data = pages.edit_order_data()
+
     if not order_data:
         return close_order()
+    print(order_data)
     return render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                           dictionary=page_data[2])
+                           dictionary=page_data[2], rebar_data={})
 
 
 @app.route('/edit_row', methods=['POST', 'GET'])
@@ -122,11 +129,11 @@ def edit_row():
         return logout()
     if request.method == 'GET':
         session['order_id'], session['job_id'] = list(request.values)[0].split('job')
-        order_data, page_data = pages.edit_order_data(session['order_id'], session['job_id'])
+        order_data, page_data = pages.edit_order_data()
         if order_data:
             return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                                   dictionary=page_data[2])
-    pages.new_order_row(request.form, session['order_id'], job_id=session['job_id'])
+                                   dictionary=page_data[2], rebar_data={})
+    pages.new_order_row()
     return redirect('/orders')
 
 
@@ -161,6 +168,7 @@ def close_order():
             mongo.delete_many('orders', {'order_id': session['order_id']})
         elif additional_func == 'print':
             file_name = doc_gen.generate_order_report(session['order_id'])
+
             if file_name:
                 return send_file(file_name, as_attachment=True)
         elif additional_func == 'scan':
@@ -219,14 +227,24 @@ def jobs():
 def shape_editor():
     shape_data = {}
     if request.form:
-        shape_data['edges'] = 0
-        shape_data['shape'] = request.form['shape']
-        # todo: save temp form data
+        # shape_data['edges'] = 0
+        # shape_data['shape'] = request.form['shape']
+        pages.new_order_row()
+        # ImmutableMultiDict([('shape', '4'), ('1', '20'), ('2', '50'), ('3', '30'), ('length', '100')])
+        print(request.form)
     else:
         req_vals = list(request.values)
         if len(req_vals) > 0:
-            shape_data = {'shape': req_vals[0], 'edges': range(pages.shapes[req_vals[0]]['edges']), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
+            shape_data = {'shape': req_vals[0], 'edges': range(1, pages.shapes[req_vals[0]]['edges'] + 1), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
     return render_template('/shape_editor.html', shapes=pages.shapes.keys(), shape_data=shape_data)
+
+
+# @app.route('/spec_rebar_editor', methods=['POST', 'GET'])
+# def spec_rebar_editor():
+#     if request.form:
+#         # todo: save temp form data
+#         print(request.form)
+#     return render_template('/spec_rebar_editor.html')
 
 
 '''
@@ -236,7 +254,7 @@ def shape_editor():
 @app.route('/mep', methods=['POST'])
 '''
 
-production = True
+production = False
 if __name__ == '__main__':
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:

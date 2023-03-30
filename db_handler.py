@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import gc
 from pymongo import MongoClient
 
 '''
@@ -26,6 +27,7 @@ class DBHandle:
 
     @staticmethod
     def read_collection_df(collect, db_name="", query={}):
+        gc.collect()
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         cur = db[collect].find(query, {'_id': False})

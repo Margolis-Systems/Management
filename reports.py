@@ -81,6 +81,11 @@ class Printers:
         os.system('RUNDLL32 PRINTUI.DLL,PrintUIEntry /y /n "'+printer_name+'"&"'+word_full_path+'" /q /n "'+filename +
                   '" /mFilePrintDefault /mFileCloseOrExit')
 
+    @staticmethod
+    def bartender_print(data):
+        bartender_config = ""
+        file_name = ""
+
 
 class Reports:
     @staticmethod
@@ -119,7 +124,7 @@ class Reports:
 
         Reports.create_table(template_dir, dimensions, table_data, headers)
         # reports.generate_summary(self, template_dir, rows)
-
+        # todo: insert condition + function for bar tender printer
         if convert_to_pdf:
             convert(template_dir)
             template_dir = template_dir.replace("docx", "pdf")
