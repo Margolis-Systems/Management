@@ -14,7 +14,7 @@
                     </td>
                 </tr>
                 {% if order_data.order_rows %}
-                {% if 'mkt' not in order_data.order_rows[-1] %}
+                {% if order_data.order_rows[-1]['job_id'] == "0" %}
                 {% for item in order_data.order_rows[-1].x_pitch %}
                 <tr>
                     <td>{{ loop.index }}</td>
@@ -46,7 +46,7 @@
                     </td>
                 </tr>
                 {% if order_data.order_rows %}
-                {% if 'mkt' not in order_data.order_rows[-1] %}
+                {% if order_data.order_rows[-1]['job_id'] == "0" %}
                 {% for item in order_data.order_rows[-1].y_pitch %}
                 <tr>
                     <td>{{ loop.index }}</td>

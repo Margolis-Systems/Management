@@ -114,18 +114,12 @@ def new_order_row():
     new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'New', 'date_created': ts()}
     req_form_data = main.request.form
     if 'x_form' in req_form_data.keys() or 'y_form' in req_form_data.keys() or 'shape_data' in req_form_data.keys():
-        editor_new_row = mongo.read_collection_last('orders', 'job_id', {'order_id': order_id})
-        if editor_new_row:
-            job_id = new_row['job_id']
-        else:
-            print("problem")
+        new_row['job_id'] = "0"
+        editor_new_row = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     else:
         for item in req_form_data:
             if req_form_data[item] != '---':
                 new_row[item] = req_form_data[item]
-            else:
-                if item in ['length', 'width']:
-                    return
     if 'mkt' in new_row:
         cat_item = rebar_catalog[new_row['mkt']]
         for item in cat_item:
@@ -141,11 +135,15 @@ def new_order_row():
                       'diam': new_row['diam']}
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'diam_x' in new_row:  # or 'diam_y'
-        # main.session['job_id'] = ""
+        editor_new_row = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
         new_row['mkt'] = "2005020000"
         new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_x'] + \
                                  "\n" + new_row['length'] + "X" + new_row['width']
         new_row['weight'] = round(calc_bars_weight(), 1)
+        for item in editor_new_row:
+            if item != 'job_id':
+                new_row[item] = editor_new_row[item]
+        mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
     else:
         if editor_new_row:
             new_row = editor_new_row.copy()
@@ -169,8 +167,6 @@ def new_order_row():
                 new_row['y_length'] = [req_form_data['y_length']]
         else:
             return
-    # mongo.upsert_collection_one('orders', {'_id': doc_id}, new_row)
-    # print(new_row)
     mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']}, new_row)
 
 
