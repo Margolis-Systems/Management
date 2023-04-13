@@ -6,8 +6,8 @@ import shutil
 
 
 class Watcher:
-    DIRECTORY_TO_WATCH = "c:\\copy_here"
-    dist_dir = ""
+    DIRECTORY_TO_WATCH = "H:\\NetCode"
+    # dist_dir = "C:\\listener"
 
     def __init__(self):
         self.observer = Observer()
@@ -30,6 +30,7 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def on_any_event(event):
+        dist_dir = "C:\\listener"
         if event.is_directory:
             return None
 
@@ -41,7 +42,11 @@ class Handler(FileSystemEventHandler):
             # Taken any action here when a file is modified.
             filename = os.path.basename(event.src_path)
             dist = os.path.join(dist_dir, filename)
-            shutil.copy(event.src_path, dist)
+            if '.bmp' not in dist:
+                try:
+                    shutil.copy(event.src_path, dist)
+                except Exception as e:
+                    print(e)
             print ("Received modified event - %s." % event.src_path)
 
 
