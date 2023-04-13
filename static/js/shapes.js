@@ -53,5 +53,8 @@ function findTotal2(src, target, inputId){
         if(parseFloat(arr[i].textContent))
             tot += parseFloat(arr[i].textContent);
     }
-    document.getElementById(target).value = tot;
+
+    if(tot > 0){
+        document.getElementById(target).value = tot;
+    }
 }

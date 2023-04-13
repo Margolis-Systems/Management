@@ -52,6 +52,8 @@ class DBHandle:
     def read_collection_last(collect, sort_by, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
+        query[sort_by] = {'$exists': True}
+        print(query)
         dic = db[collect].find_one(query, {'_id': False}, sort=[(sort_by, -1)])
         return dic
 

@@ -80,7 +80,6 @@ def get_order_data(order_id, job_id="", reverse=True):
             row_data['job_id'] = order_data[key]['job_id']
             rows.append(row_data)
     info['order_id'] = order_id
-    print(rows)
     rows.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return rows, info
 
@@ -113,16 +112,20 @@ def new_order_row():
     order_id = main.session['order_id']
     job_id = gen_job_id(order_id)
     new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'New', 'date_created': ts()}
-    if 'job_id' in main.session.keys():
-        if main.session['job_id']:
-            job_id = main.session['job_id']
-            new_row = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
-    main.session['job_id'] = ""
     req_form_data = main.request.form
-    editor_new_row = new_row
-    for item in req_form_data:
-        if req_form_data[item] != '---':
-            new_row[item] = req_form_data[item]
+    if 'x_form' in req_form_data.keys() or 'y_form' in req_form_data.keys() or 'shape_data' in req_form_data.keys():
+        editor_new_row = mongo.read_collection_last('orders', 'job_id', {'order_id': order_id})
+        if editor_new_row:
+            job_id = new_row['job_id']
+        else:
+            print("problem")
+    else:
+        for item in req_form_data:
+            if req_form_data[item] != '---':
+                new_row[item] = req_form_data[item]
+            else:
+                if item in ['length', 'width']:
+                    return
     if 'mkt' in new_row:
         cat_item = rebar_catalog[new_row['mkt']]
         for item in cat_item:
@@ -138,14 +141,15 @@ def new_order_row():
                       'diam': new_row['diam']}
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'diam_x' in new_row:  # or 'diam_y'
+        # main.session['job_id'] = ""
         new_row['mkt'] = "2005020000"
         new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_x'] + \
                                  "\n" + new_row['length'] + "X" + new_row['width']
         new_row['weight'] = round(calc_bars_weight(), 1)
     else:
-        new_row = editor_new_row
-        print(main.session)
-        main.session['job_id'] = job_id
+        if editor_new_row:
+            new_row = editor_new_row.copy()
+        # main.session['job_id'] = job_id
         if 'shape_data' in req_form_data:
             print(new_row['shape_data'])
             # todo: complete
@@ -156,7 +160,6 @@ def new_order_row():
             else:
                 new_row['x_pitch'] = [req_form_data['x_pitch']]
                 new_row['x_length'] = [req_form_data['x_length']]
-            print("reb_spec_edit ", req_form_data)
         elif 'y_form' in req_form_data:
             if 'y_pitch' in new_row:
                 new_row['y_pitch'].append(req_form_data['y_pitch'])
@@ -165,11 +168,10 @@ def new_order_row():
                 new_row['y_pitch'] = [req_form_data['y_pitch']]
                 new_row['y_length'] = [req_form_data['y_length']]
         else:
-            main.session['job_id'] = ""
             return
     # mongo.upsert_collection_one('orders', {'_id': doc_id}, new_row)
     # print(new_row)
-    mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': job_id}, new_row)
+    mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']}, new_row)
 
 
 def calc_bars_weight():
