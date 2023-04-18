@@ -65,11 +65,11 @@ class DBHandle:
         collection.insert_one(doc)
 
     @staticmethod
-    def upsert_collection_one(collect, key, doc, db_name=""):
+    def upsert_collection_one(collect, key, doc, db_name="", upsert=True):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
-        collection.replace_one(key, doc, upsert=True)
+        collection.replace_one(key, doc, upsert=upsert)
 
     @staticmethod
     def insert_collection_many(collect, df, db_name=""):

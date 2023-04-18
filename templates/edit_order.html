@@ -40,8 +40,8 @@ div {
         <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" disabled>העתק שורה אחרונה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
-        <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
-        <td><button ondblclick="location.href='\close?print_l'" type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
+        <td><button ondblclick="location.href='\choose_printer?page'" type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
+        <td><button ondblclick="location.href='\choose_printer?label'" type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
         <!--<td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
     </tr>
 </table>
@@ -77,18 +77,10 @@ div {
             <td width="80">
             <input class="form-control" name="{{ item }}" id="{{ item }}" value="---" readonly>
             <input type="hidden" name="{{ item }}"/>
-            {% else %}<!--
-            {% if order_data.data_to_display[item] == 2.1 %} Auto calculated NOT an input1
-                {% include 'spec_rebar_editor.html' %}
-            {% else %}-->
-            {% if order_data.data_to_display[item] == 2.2 %} <!-- Auto calculated NOT an input1 -->
-            <td>
-            <input class="form-control" name="{{ item }}" id="{{ item }}" required readonly>
-            <input type="hidden" name="{{ item }}"/>
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <td>
-            <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+            <input list="{{ item }}" type="number" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
@@ -97,13 +89,13 @@ div {
             {% else %}
             {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
             <td>
-            <input list="{{ item }}1" id="editor" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
-                <datalist id="{{ item }}1">
+            <input list="{{ item }}" type="number" id="editor" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+                <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
                 {% endfor %}
                 </datalist>
-            <input name="{{ item }}_data" id="shape_data" type="text" required>
+            <input name="{{ item }}_hid" id="shape_data" type="number" required>
             {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
             <td>
@@ -116,12 +108,11 @@ div {
             {% endif %}
             {% endif %}
             {% endif %}
-            {% endif %}
-            {% endif %}
         </td>
         {% endfor %}
     </tr>
     {% for row in order_data.order_rows %}
+    {% if row['job_id'] != "0" %}
     <tr ondblclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
         {% for item in order_data.data_to_display %}
         <td>
@@ -129,7 +120,9 @@ div {
         </td>
         {% endfor %}
     </tr>
+    {% endif %}
     {% endfor %}
 </table>
 </form>
+<script src="\static\js\shapes.js" ></script>
 {% endblock %}

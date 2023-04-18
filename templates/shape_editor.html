@@ -6,7 +6,7 @@
 <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 {% if shape_data != {} %}
 {% if shape_data.edges == 0 %}
-<body onload="closeWindow({{shape_data.shape}})">
+<body onload="closeWindow({{shape_data.shape}}, {{shape_data.tot_len}})">
 {% else %}
 <body>
 <table class="table table-striped" dir="rtl" align="center">

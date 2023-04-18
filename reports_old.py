@@ -5,6 +5,20 @@ import configs
 
 class Images:
     @staticmethod
+    def gen_qr(data):
+        import qrcode
+        qr = qrcode.QRCode(
+            version=1,
+            box_size=20,
+            border=5)
+        qr.add_data(data)
+        qr.make(fit=True)
+        img = qr.make_image(fill='black', back_color='white')
+        name = 'qrcode001.png'
+        img.save('static\\img\\qr_'+name)
+        return name
+
+    @staticmethod
     def gen_pdf417(data):
         import pdf417
         import os
@@ -57,6 +71,21 @@ class Images:
                         job_id = temp[1]
                         return order_id, job_id
         return "", ""
+
+
+class Printers:
+    @staticmethod
+    def word_print(filename=""):
+        import os
+        word_full_path = "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+        printer_name = "HP8F170F (HP DeskJet 3700 series)"
+        os.system('RUNDLL32 PRINTUI.DLL,PrintUIEntry /y /n "'+printer_name+'"&"'+word_full_path+'" /q /n "'+filename +
+                  '" /mFilePrintDefault /mFileCloseOrExit')
+
+    @staticmethod
+    def bartender_print(data):
+        bartender_config = ""
+        file_name = ""
 
 
 class Reports:
@@ -222,33 +251,31 @@ class Reports:
 
 class Bartender:
     @staticmethod
-    def net_print(order_id, printer, print_type):
+    def net_print(order_id, bt_format, printer):
+        # Bar tender btw header
+        header = '%BTW% /AF=H:\\NetCode\\Format\\' + bt_format + '.btw /D="%Trigger File Name%" /PRN=' \
+                 + printer + ' /R=3 /P /DD\n%END%\n'
+        output = configs.net_print_dir + order_id + "_" + pages.ts(mode="file_name") + ".tmp"
         # Order data
         rows, info = pages.get_order_data(order_id)
-        bt_format = configs.bartender_formats[info['type']][print_type]
-        for printt in bt_format:
-            # Bar tender btw
-            header = '%BTW% /AF=H:\\NetCode\\Format\\' + printt + '.btw /D="%Trigger File Name%" /PRN=' \
-                     + printer + ' /R=3 /P /DD\n%END%\n'
-            output = configs.net_print_dir + order_id + "_" + pages.ts(mode="file_name") + ".tmp"
-            print_data = []
-            for item in rows:
-                line = {}
-                for obj in item:
-                    line[obj] = item[obj]
-                for obj in info:
-                    line[obj] = info[obj]
-                print_data.append(line)
-            # Write btw temp file
-            with open(output, 'w') as print_file:
-                print_file.write(header)
-                for line in print_data:
-                    print_line = ""
-                    for item in configs.print_dict:
-                        if item in line.keys():
-                            print_line += str(line[item]) + '~'
-                        else:
-                            print_line += '0~'
-                    print_file.write(print_line + "\n")
-            # Rename temp to final file
-            os.rename(output, output.replace('.tmp', '.txt'))
+        print_data = []
+        for item in rows:
+            line = {}
+            for obj in item:
+                line[obj] = item[obj]
+            for obj in info:
+                line[obj] = info[obj]
+            print_data.append(line)
+        # Write btw temp file
+        with open(output, 'w') as print_file:
+            print_file.write(header)
+            for line in print_data:
+                print_line = ""
+                for item in configs.print_dict:
+                    if item in line.keys():
+                        print_line += str(line[item]) + '~'
+                    else:
+                        print_line += '0~'
+                print_file.write(print_line + "\n")
+        # Rename temp to final file
+        os.rename(output, output.replace('.tmp', '.txt'))

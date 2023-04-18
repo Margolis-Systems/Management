@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}">
+    <input list="printer" type="text" class="form-control" name="printer" placeholder="Choose printer" autofocus="autofocus" required>
+        <datalist id="printer">
+        {% for printer in printer_list %}
+            <option value="{{ printer }}">{{ printer_list.printer }}</option>
+        {% endfor %}
+        </datalist>
+    <input type="hidden" name="print_type" value="{{print_type}}">
+    <button type="submit">בחר</button>
+</form>
+</body>
+</html>

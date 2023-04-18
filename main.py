@@ -33,7 +33,7 @@ def index():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
-        login_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username']})
+        login_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username'].lower()})
         if login_user:
             if bcrypt.hashpw(request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
                 session['username'] = request.form['username']
@@ -59,9 +59,9 @@ def register():
         return index()
     message = ""
     if request.method == 'POST':
-        existing_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username']})
+        existing_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username'].lower()})
         if existing_user is None:
-            mongo.insert_collection_one(configs.users_collection, {'name': request.form['username'], 'password':
+            mongo.insert_collection_one(configs.users_collection, {'name': request.form['username'].lower(), 'password':
                                         bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt()),
                                         'group': 0, 'lang': 'he'})
             session['username'] = request.form['username']
@@ -160,18 +160,6 @@ def close_order():
         additional_func = req_vals[0]
         if additional_func == 'delete':
             mongo.delete_many('orders', {'order_id': session['order_id']})
-        elif additional_func == 'print':
-            # todo: finish
-            printer = ""
-            btw_format = ""
-            bartender.net_print(session['order_id'], btw_format, printer)
-            return redirect('/orders')
-        elif additional_func == 'print_l':
-            # todo: finish
-            printer = ""
-            btw_format = ""
-            bartender.net_print(session['order_id'], btw_format, printer)
-            return redirect('/orders')
         elif additional_func == 'scan':
             return redirect('/scan')
     user = session['username']
@@ -228,14 +216,29 @@ def jobs():
 def shape_editor():
     shape_data = {}
     if request.form:
-        shape_data['edges'] = 0
-        shape_data['shape'] = request.form['shape_data']
+        shape_data = {'edges': 0, 'shape': request.form['shape_data'], 'tot_len': 0}
+        for item in range(1, int(configs.shapes[shape_data['shape']]['edges']) + 1):
+            shape_data['tot_len'] += int(request.form[str(item)])
         pages.new_order_row()
     else:
         req_vals = list(request.values)
         if len(req_vals) > 0:
             shape_data = {'shape': req_vals[0], 'edges': range(1, configs.shapes[req_vals[0]]['edges'] + 1), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
     return render_template('/shape_editor.html', shapes=configs.shapes.keys(), shape_data=shape_data)
+
+
+@app.route('/choose_printer', methods=['POST', 'GET'])
+def choose_printer():
+    printer_list = []
+    if request.form:
+        print(request.form)
+        printer = request.form['printer']
+        bartender.net_print(session['order_id'], printer, request.form['print_type'])
+        return redirect('/orders')
+    else:
+        print_type = list(request.values)[0]
+        printer_list = configs.printers[print_type]
+    return render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type)
 
 
 '''

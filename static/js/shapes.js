@@ -8,21 +8,25 @@ const openNewWindow = (editorUrl) => {
     const params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=700,height=500,top=200,left=400`;
     if (formInput.value.length == 0||formInput.value == "undefined"){
         newWindow = window.open(editorUrl, 'sub', params);
-    };
+    }
+    else{
+        newWindow = window.open(editorUrl+"?"+formInput.value, 'sub', params);
+    }
 };
 
 const sendMessage = () => {
     newWindow.postMessage({ foo: 'bar' }, '*');
 };
 
-const closeWindow = (shape_selected) => {
-    window.opener.postMessage({shp: shape_selected}, '*');
+const closeWindow = (shape_selected, tot_len) => {
+    window.opener.postMessage({shp: shape_selected, len: tot_len}, '*');
     window.close();
 };
 
 window.addEventListener('message', (event) => {
     shapeData.value = event.data.shp;
     formInput.value = event.data.shp;
+    lengInput.value = event.data.len;
 });
 
 function confirmDel() {

@@ -8,6 +8,6 @@
   "orders_collection": "orders",
   "users_collection": "users",
   "orders_reverse": true,
-  "_net_print_dir": "H:\\NetCode\\",
-  "net_print_dir": "C:\\copy_here\\"
+  "net_print_dir": "H:\\NetCode\\",
+  "_net_print_dir": "C:\\copy_here\\"
 }
