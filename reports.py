@@ -1,5 +1,6 @@
 import pages
-
+import os
+import configs
 
 class Images:
     @staticmethod
@@ -40,8 +41,7 @@ class Images:
     def create_shape_plot(shape, data):
         import os
         from PIL import Image, ImageDraw, ImageFont
-        from pages import shapes
-        positions = shapes[shape]['positions']
+        positions = configs.shapes[shape]['positions']
         static_dir = os.path.dirname(__file__)+'\\static\\'
         img_dir = static_dir + 'images\\shapes\\' + str(shape) + '.png'
         if os.path.exists(img_dir):
@@ -246,3 +246,35 @@ class Reports:
         # table.cell(len(summary)+2, 1).merge(table.cell(len(summary)+2, 3))
         # table.cell(len(summary)+2, 4).text = "סיכום משקל ברזל"
         #
+
+
+class Bartender:
+    @staticmethod
+    def net_print(order_id, bt_format, printer):
+        # Bar tender btw header
+        header = '%BTW% /AF=H:\\NetCode\\Format\\' + bt_format + ' /D="%Trigger File Name%" /PRN=' \
+                 + printer + ' /R=3 /P /DD\n%END%\n'
+        output = configs.net_print_dir + order_id + "_" + pages.ts(mode="file_name") + ".tmp"
+        # Order data
+        rows, info = pages.get_order_data(order_id)
+        print_data = []
+        for item in rows:
+            line = {}
+            for obj in item:
+                line[obj] = item[obj]
+            for obj in info:
+                line[obj] = info[obj]
+            print_data.append(line)
+        # Write btw temp file
+        with open(output, 'w') as print_file:
+            print_file.write(header)
+            for line in print_data:
+                print_line = ""
+                for item in configs.print_dict:
+                    if item in line.keys():
+                        print_line += str(line[item]) + '~'
+                    else:
+                        print_line += '0~'
+                print_file.write(print_line + "\n")
+        # Rename temp to final file
+        os.rename(output, output.replace('.tmp', '.txt'))

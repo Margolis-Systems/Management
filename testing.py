@@ -1,9 +1,10 @@
 import bcrypt
-
-import pages
+from reports import Bartender as bt
 import db_handler
 import pandas as pd
 mongo = db_handler.DBHandle()
 
-job_ids_df = mongo.read_collection_df('orders', query={'order_id': "2_R", 'info': {'$exists': False}})
-print(job_ids_df)
+import pages
+
+rows, info = pages.get_order_data("1")
+bt.print_label(rows, info)

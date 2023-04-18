@@ -1,21 +1,16 @@
 # Server
-import sys
 import flask
 from flask import Flask, render_template, url_for, request, session, redirect, send_file
 from waitress import serve
 import bcrypt
-# Python libs
-import os
-import json
 # ERP libs
+import configs
 import db_handler
 import pages
 import reports
-
 doc_gen = reports.Reports()
+bartender = reports.Bartender()
 mongo = db_handler.DBHandle()
-with open("config.json") as config_file:
-    config = json.load(config_file)
 app = Flask("Management system")
 
 
@@ -27,7 +22,7 @@ def index():
         user = session['username']
         session.clear()
         session['username'] = user
-        login_user = mongo.read_collection_one(config['users_collection'], {'name': session['username']})
+        login_user = mongo.read_collection_one(configs.users_collection, {'name': session['username']})
         if login_user['group'] > 10:
             return render_template('main.html')
         else:
@@ -38,7 +33,7 @@ def index():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
-        login_user = mongo.read_collection_one(config['users_collection'], {'name': request.form['username']})
+        login_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username']})
         if login_user:
             if bcrypt.hashpw(request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
                 session['username'] = request.form['username']
@@ -64,9 +59,9 @@ def register():
         return index()
     message = ""
     if request.method == 'POST':
-        existing_user = mongo.read_collection_one(config['users_collection'], {'name': request.form['username']})
+        existing_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username']})
         if existing_user is None:
-            mongo.insert_collection_one(config['users_collection'], {'name': request.form['username'], 'password':
+            mongo.insert_collection_one(configs.users_collection, {'name': request.form['username'], 'password':
                                         bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt()),
                                         'group': 0, 'lang': 'he'})
             session['username'] = request.form['username']
@@ -79,12 +74,12 @@ def validate_user():
     # todo: complete
     # username = request.cookies.get('userhash')
     # if username:
-    #     login_user = mongo.read_collection_one(config['users_collection'], {'name': username})
+    #     login_user = mongo.read_collection_one(configs.users_collection, {'name': username})
     #     if login_user:
     #         session['username'] = username
     #         print(username)
     if 'username' in session.keys():
-        user_data = mongo.read_collection_one(config['users_collection'], {'name': session['username']})
+        user_data = mongo.read_collection_one(configs.users_collection, {'name': session['username']})
         if user_data:
             return user_data['group']
     return False
@@ -118,7 +113,6 @@ def edit_order():
 
     if not order_data:
         return close_order()
-    print(order_data)
     return render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                            dictionary=page_data[2], rebar_data={})
 
@@ -167,10 +161,17 @@ def close_order():
         if additional_func == 'delete':
             mongo.delete_many('orders', {'order_id': session['order_id']})
         elif additional_func == 'print':
-            file_name = doc_gen.generate_order_report(session['order_id'])
-
-            if file_name:
-                return send_file(file_name, as_attachment=True)
+            # todo: finish
+            printer = ""
+            btw_format = ""
+            bartender.net_print(session['order_id'], btw_format, printer)
+            return redirect('/orders')
+        elif additional_func == 'print_l':
+            # todo: finish
+            printer = ""
+            btw_format = ""
+            bartender.net_print(session['order_id'], btw_format, printer)
+            return redirect('/orders')
         elif additional_func == 'scan':
             return redirect('/scan')
     user = session['username']
@@ -191,10 +192,10 @@ def scan():
         order_id, job_id = reports.Images.decode_qr(request.form['scan'])
     elif 'order_id' in request.form.keys() and 'close' not in request.form.keys():
         order_id, job_id = request.form['order_id'].split("_")
-        mongo.update_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id},
+        mongo.update_one(configs.orders_collection, {'order_id': order_id, 'job_id': job_id},
                          {'$set': {'status': request.form['status']}}, upsert=True)
     if order_id:
-        job = mongo.read_collection_one(config['orders_collection'], {'order_id': order_id, 'job_id': job_id})
+        job = mongo.read_collection_one(configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if job:
             full_id = order_id + "_" + job_id
             if job['status'] == 'New':
@@ -227,24 +228,14 @@ def jobs():
 def shape_editor():
     shape_data = {}
     if request.form:
-        # shape_data['edges'] = 0
-        # shape_data['shape'] = request.form['shape']
+        shape_data['edges'] = 0
+        shape_data['shape'] = request.form['shape_data']
         pages.new_order_row()
-        # ImmutableMultiDict([('shape', '4'), ('1', '20'), ('2', '50'), ('3', '30'), ('length', '100')])
-        print(request.form)
     else:
         req_vals = list(request.values)
         if len(req_vals) > 0:
-            shape_data = {'shape': req_vals[0], 'edges': range(1, pages.shapes[req_vals[0]]['edges'] + 1), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
-    return render_template('/shape_editor.html', shapes=pages.shapes.keys(), shape_data=shape_data)
-
-
-# @app.route('/spec_rebar_editor', methods=['POST', 'GET'])
-# def spec_rebar_editor():
-#     if request.form:
-#         # todo: save temp form data
-#         print(request.form)
-#     return render_template('/spec_rebar_editor.html')
+            shape_data = {'shape': req_vals[0], 'edges': range(1, configs.shapes[req_vals[0]]['edges'] + 1), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
+    return render_template('/shape_editor.html', shapes=configs.shapes.keys(), shape_data=shape_data)
 
 
 '''
@@ -258,6 +249,6 @@ production = False
 if __name__ == '__main__':
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
-        serve(app, host=config['server'], port=config['server_port'])
+        serve(app, host=configs.server, port=configs.server_port)
     else:
-        app.run(debug=True, host=config['server'], port=config['server_port'])
+        app.run(debug=True, host=configs.server, port=configs.server_port)

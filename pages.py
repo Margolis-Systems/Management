@@ -1,16 +1,15 @@
 import db_handler
 import pandas as pd
 from datetime import datetime
-
+import configs
 import main
-
 mongo = db_handler.DBHandle()
 # Data lists
 # rebar_weights = mongo.read_collection_one("data_lists", {"name": "rebar_weights"})['data']
-data_to_display = mongo.read_collection_one("data_lists", {"name": "data_to_display"})['data']
-weights = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
-shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
-rebar_catalog = mongo.read_collection_one("data_lists", {"name": "rebar_catalog"})['data']
+# data_to_display = mongo.read_collection_one("data_lists", {"name": "data_to_display"})['data']
+# weights = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
+# shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
+# rebar_catalog = mongo.read_collection_one("data_lists", {"name": "rebar_catalog"})['data']
 
 '''________________________PAGES___________________________ '''
 
@@ -23,7 +22,7 @@ def orders():
         info_df = pd.json_normalize(orders_df['info'])
         # add order id from main df
         new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
-        return new_df[data_to_display['orders']].to_dict('index'), data_to_display['orders']
+        return new_df[configs.data_to_display['orders']].to_dict('index'), configs.data_to_display['orders']
     else:
         return [], []
 
@@ -36,7 +35,7 @@ def edit_order_data():
     # Read all data of this order
     rows, info = get_order_data(order_id, job_id)
     # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
-    keys_to_display = data_to_display['new_row_' + info['type']]
+    keys_to_display = configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
@@ -118,14 +117,14 @@ def new_order_row():
         editor_new_row = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     else:
         for item in req_form_data:
-            if req_form_data[item] != '---':
+            if req_form_data[item] not in ['---', '']:
                 new_row[item] = req_form_data[item]
     if 'mkt' in new_row:
-        cat_item = rebar_catalog[new_row['mkt']]
+        cat_item = configs.rebar_catalog[new_row['mkt']]
         for item in cat_item:
             if item not in ['unit_weight', 'pack_quantity']:
                 new_row[item] = cat_item[item]
-        new_row['weight'] = round(float(rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
+        new_row['weight'] = round(float(configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
         if 'הזמנת_ייצור' in new_row:
             pitch = int(new_row['pitch'].split('X')[0])
             x_bars = {'length': new_row['width'], 'qnt': int(new_row['quantity']) * (int(new_row['length']) / pitch),
@@ -137,19 +136,24 @@ def new_order_row():
     elif 'diam_x' in new_row:  # or 'diam_y'
         editor_new_row = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
         new_row['mkt'] = "2005020000"
-        new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_x'] + \
-                                 "\n" + new_row['length'] + "X" + new_row['width']
+        # todo: write properly
+        try:
+            new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_x'] + \
+                                     "\n" + new_row['length'] + "X" + new_row['width']
+        except:
+            return
         new_row['weight'] = round(calc_bars_weight(), 1)
-        for item in editor_new_row:
-            if item != 'job_id':
-                new_row[item] = editor_new_row[item]
+        if editor_new_row:
+            for item in editor_new_row:
+                if item != 'job_id':
+                    new_row[item] = editor_new_row[item]
         mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
     else:
         if editor_new_row:
             new_row = editor_new_row.copy()
         # main.session['job_id'] = job_id
         if 'shape_data' in req_form_data:
-            print(new_row['shape_data'])
+            print(req_form_data['shape_data'])
             # todo: complete
         elif 'x_form' in req_form_data:
             if 'x_pitch' in new_row:
@@ -196,7 +200,7 @@ def peripheral_orders(add_orders, order_id, job_id):
     order_id += "_R"
     # mongo.delete_many('orders', {'order_id': order_id, 'status': 'New'})
     for order in add_orders:
-        order_weight = float(order['length']) * float(order['qnt']) * weights[str(order['diam'])] / 100
+        order_weight = float(order['length']) * float(order['qnt']) * configs.weights[str(order['diam'])] / 100
         info = {'costumer_id': 'צומת ברזל', 'date_created': ts(), 'type': 'regular'}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                     {'order_id': order_id, 'info': info})
@@ -227,18 +231,18 @@ def gen_patterns(order_type='regular'):
         diam = []
         cat_num = []
         rebar_type = []
-        for item in rebar_catalog:
-            if rebar_catalog[item]['diam'] not in diam:
-                diam.append(rebar_catalog[item]['diam'])
+        for item in configs.rebar_catalog:
+            if configs.rebar_catalog[item]['diam'] not in diam:
+                diam.append(configs.rebar_catalog[item]['diam'])
             if item not in cat_num:
                 cat_num.append(item)
-            if rebar_catalog[item]['pitch'] not in rebar_type:
-                rebar_type.append(rebar_catalog[item]['pitch'])
+            if configs.rebar_catalog[item]['pitch'] not in rebar_type:
+                rebar_type.append(configs.rebar_catalog[item]['pitch'])
         diam.sort()
         rebar_type.sort()
         cat_num.sort()
         patterns = {'pitch': '|'.join(rebar_type), 'diam': '|'.join(diam), 'mkt': '|'.join(cat_num)}
-        lists = {'pitch': rebar_type, 'diam': diam, 'mkt': list(rebar_catalog.keys())}
+        lists = {'pitch': rebar_type, 'diam': diam, 'mkt': list(configs.rebar_catalog.keys())}
     elif order_type == 'rebar_special':
         # catalog = mongo.read_collection_one('data_lists', query={'name': 'rebar_catalog'})['data']
         # todo: --------------
@@ -246,23 +250,23 @@ def gen_patterns(order_type='regular'):
         # todo: --------------
         cat_num = []
         rebar_type = []
-        for item in rebar_catalog:
+        for item in configs.rebar_catalog:
             # if catalog[item]['diam'] not in diam:
             #     diam.append(catalog[item]['diam'])
             if item not in cat_num:
                 cat_num.append(item)
-            if rebar_catalog[item]['pitch'].split('X')[0] not in rebar_type:
-                rebar_type.append(rebar_catalog[item]['pitch'].split('X')[0])
+            if configs.rebar_catalog[item]['pitch'].split('X')[0] not in rebar_type:
+                rebar_type.append(configs.rebar_catalog[item]['pitch'].split('X')[0])
         # diam.sort()
         rebar_type.sort()
         cat_num.sort()
         patterns = {'pitch_x': '|'.join(rebar_type), 'pitch_y': '|'.join(rebar_type), 'diam_x': '|'.join(diam),
                     'diam_y': '|'.join(diam), 'mkt': '|'.join(cat_num)}
         lists = {'pitch_x': rebar_type, 'pitch_y': rebar_type, 'diam_x': diam, 'diam_y': diam,
-                 'mkt': list(rebar_catalog.keys())}
+                 'mkt': list(configs.rebar_catalog.keys())}
     else:
-        shapes_list = shapes.keys()
-        diam = weights.keys()
+        shapes_list = configs.shapes.keys()
+        diam = configs.weights.keys()
         lists = {'diam': diam, 'shape': shapes_list}
         patterns = {'diam': '|'.join(diam), 'shape': '|'.join(shapes_list)}
     return lists, patterns

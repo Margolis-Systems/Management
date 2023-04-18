@@ -40,7 +40,8 @@ div {
         <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" disabled>העתק שורה אחרונה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
-        <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >העבר לייצור \ הדפסה</button></td>
+        <td><button ondblclick="location.href='\close?print'" type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
+        <td><button ondblclick="location.href='\close?print_l'" type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
         <!--<td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
     </tr>
 </table>
@@ -64,14 +65,16 @@ div {
         {% else %}
         {% set name = item %}
         {% endif %}
-        <td>
             {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
+            <td>
             <input type="text" class="form-control" name="{{ item }}" placeholder="{{ name }}">
             {% else %}
             {% if order_data.data_to_display[item] == 1 %} <!-- Regular required -->
+            <td>
             <input type="number" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
+            <td width="80">
             <input class="form-control" name="{{ item }}" id="{{ item }}" value="---" readonly>
             <input type="hidden" name="{{ item }}"/>
             {% else %}<!--
@@ -79,10 +82,12 @@ div {
                 {% include 'spec_rebar_editor.html' %}
             {% else %}-->
             {% if order_data.data_to_display[item] == 2.2 %} <!-- Auto calculated NOT an input1 -->
+            <td>
             <input class="form-control" name="{{ item }}" id="{{ item }}" required readonly>
             <input type="hidden" name="{{ item }}"/>
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
+            <td>
             <input list="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
@@ -91,6 +96,7 @@ div {
                 </datalist>
             {% else %}
             {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
+            <td>
             <input list="{{ item }}1" id="editor" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}1">
                 {% for optn in lists[item] %}
@@ -100,6 +106,7 @@ div {
             <input name="{{ item }}_data" id="shape_data" type="text" required>
             {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
+            <td>
             <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
             {% else %}
             ------
