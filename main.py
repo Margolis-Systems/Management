@@ -232,7 +232,6 @@ def shape_editor():
 def choose_printer():
     printer_list = []
     if request.form:
-        print(request.form)
         printer = request.form['printer']
         bartender.net_print(session['order_id'], printer, request.form['print_type'])
         return redirect('/orders')

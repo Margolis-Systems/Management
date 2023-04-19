@@ -37,11 +37,11 @@ class Images:
             img = Image.open(static_dir + 'images\\shapes\\0.png')
         draw = ImageDraw.Draw(img)
         for index in range(len(data)):
-            bbox = draw.textbbox(positions[index], data[str(index + 1)], font=ImageFont.truetype("segoeui.ttf", 14))
+            bbox = draw.textbbox(positions[index], data[index], font=ImageFont.truetype("segoeui.ttf", 14))
             draw.rectangle(bbox, fill="white")
-            draw.text(positions[index], data[str(index + 1)], font=ImageFont.truetype("segoeui.ttf", 14), fill="black")
+            draw.text(positions[index], data[index], font=ImageFont.truetype("segoeui.ttf", 14), fill="black")
         # file_out = static_dir + 'img\\temp_'+str(shape)+'.bmp'
-        file_out = configs.net_print_dir + "\\Pictures\\" + pages.ts(mode="file_name") + ".bmp"
+        file_out = configs.net_print_dir + "Picture\\" + pages.ts(mode="file_name") + ".bmp"
         img.save(file_out)
         return file_out
 
@@ -234,11 +234,14 @@ class Bartender:
             output = configs.net_print_dir + order_id + "_" + pages.ts(mode="file_name") + ".tmp"
             print_data = []
             for item in rows:
+                if item['job_id'] == "0":
+                    break
                 line = {}
                 for obj in item:
                     line[obj] = item[obj]
                 for obj in info:
                     line[obj] = info[obj]
+                print(line)
                 line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data'])
                 print_data.append(line)
             # Write btw temp file
@@ -253,4 +256,4 @@ class Bartender:
                             print_line += '0~'
                     print_file.write(print_line + "\n")
             # Rename temp to final file
-            os.rename(output, output.replace('.tmp', '.txt'))
+            # os.rename(output, output.replace('.tmp', '.txt'))
