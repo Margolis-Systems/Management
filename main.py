@@ -33,13 +33,14 @@ def index():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
-        login_user = mongo.read_collection_one(configs.users_collection, {'name': request.form['username'].lower()})
+        username_input = request.form['username'].lower()
+        login_user = mongo.read_collection_one(configs.users_collection, {'name': username_input})
         if login_user:
             if bcrypt.hashpw(request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
-                session['username'] = request.form['username']
+                session['username'] = username_input
                 resp = flask.make_response()
                 resp.headers['location'] = url_for('index')
-                resp.set_cookie('userhash', request.form['username'])
+                resp.set_cookie('userhash', username_input)
                 return resp, 302
     return render_template('login.html', msg="סיסמה שגויה")
 
