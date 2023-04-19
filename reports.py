@@ -40,7 +40,8 @@ class Images:
             bbox = draw.textbbox(positions[index], data[str(index + 1)], font=ImageFont.truetype("segoeui.ttf", 14))
             draw.rectangle(bbox, fill="white")
             draw.text(positions[index], data[str(index + 1)], font=ImageFont.truetype("segoeui.ttf", 14), fill="black")
-        file_out = static_dir + 'img\\temp_'+str(shape)+'.png'
+        # file_out = static_dir + 'img\\temp_'+str(shape)+'.bmp'
+        file_out = configs.net_print_dir + "\\Pictures\\" + pages.ts(mode="file_name") + ".bmp"
         img.save(file_out)
         return file_out
 
@@ -238,6 +239,7 @@ class Bartender:
                     line[obj] = item[obj]
                 for obj in info:
                     line[obj] = info[obj]
+                line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data'])
                 print_data.append(line)
             # Write btw temp file
             with open(output, 'w') as print_file:
