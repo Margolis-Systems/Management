@@ -225,7 +225,10 @@ def shape_editor():
         req_vals = list(request.values)
         if len(req_vals) > 0:
             shape_data = {'shape': req_vals[0], 'edges': range(1, configs.shapes[req_vals[0]]['edges'] + 1), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
-    return render_template('/shape_editor.html', shapes=configs.shapes.keys(), shape_data=shape_data)
+    shapes = {}
+    for shape in configs.shapes:
+        shapes[shape] = configs.shapes[shape]['description']
+    return render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data)
 
 
 @app.route('/choose_printer', methods=['POST', 'GET'])
