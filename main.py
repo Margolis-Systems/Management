@@ -8,8 +8,6 @@ import configs
 import db_handler
 import pages
 import reports
-doc_gen = reports.Reports()
-bartender = reports.Bartender()
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
 
@@ -91,6 +89,7 @@ def orders():
     if not validate_user():
         return logout()
     if 'order_id' in session.keys():
+        session['job_id'] = ""
         return redirect('/edit_order')
     orders_list, display_those_keys = pages.orders()
     dictionary = pages.get_dictionary(session['username'])
@@ -128,6 +127,8 @@ def edit_row():
         if order_data:
             return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                                    dictionary=page_data[2], rebar_data={})
+    # todo: complete - no working
+    session['job_id'] = ""
     pages.new_order_row()
     return redirect('/orders')
 
@@ -224,7 +225,8 @@ def shape_editor():
     else:
         req_vals = list(request.values)
         if len(req_vals) > 0:
-            shape_data = {'shape': req_vals[0], 'edges': range(1, configs.shapes[req_vals[0]]['edges'] + 1), 'img_plot':"/static/images/shapes/"+req_vals[0]+".png"}
+            shape_data = {'shape': req_vals[0], 'edges': range(1, configs.shapes[req_vals[0]]['edges'] + 1),
+                          'img_plot': "/static/images/shapes/"+req_vals[0]+".png"}
     shapes = {}
     for shape in configs.shapes:
         shapes[shape] = configs.shapes[shape]['description']
@@ -233,10 +235,9 @@ def shape_editor():
 
 @app.route('/choose_printer', methods=['POST', 'GET'])
 def choose_printer():
-    printer_list = []
     if request.form:
         printer = request.form['printer']
-        bartender.net_print(session['order_id'], printer, request.form['print_type'])
+        reports.Bartender.net_print(session['order_id'], printer, request.form['print_type'])
         return redirect('/orders')
     else:
         print_type = list(request.values)[0]

@@ -68,7 +68,7 @@ def get_dictionary(username):
 
 
 def get_order_data(order_id, job_id="", reverse=True):
-    order = mongo.read_collection_df('orders', query={'order_id': order_id})
+    order = mongo.read_collection_df('orders', query={'order_id': order_id, 'job_id': {'$ne': "0"}})
     if order.empty:
         return False, False
     info = order[order['info'].notnull()]['info'][0]
@@ -171,8 +171,8 @@ def new_order_row():
         # todo: complete
         x_bars = 0
         y_bars = 0
-        new_row['weight'] = calc_weight(new_row['diam_x'], new_row['width'], x_bars) \
-                            + calc_weight(new_row['diam_y'], new_row['length'], y_bars)
+        new_row['weight'] = calc_weight(new_row['diam_x'], new_row['width'],
+                                        x_bars) + calc_weight(new_row['diam_y'], new_row['length'], y_bars)
         if temp_order_data:
             for item in temp_order_data:
                 if item != 'job_id':
@@ -186,6 +186,7 @@ def new_order_row():
                     if item.isdigit():
                         shape_data.append(temp_order_data[item])
                 new_row['shape_data'] = shape_data
+                new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
             else:
                 # Shape data not compatible with form data
                 return

@@ -1,6 +1,8 @@
 import pages
 import os
 import configs
+import math
+from pathlib import Path
 
 
 class Images:
@@ -22,7 +24,7 @@ class Images:
         # todo: complete
         formated = 'BF2D@Hj @r' + data['order_id'] + '_' + data['job_id']
         # return "BF2D@Hj @r22071206@i@p1@l4000@n200@e710@d12@g@\nGl4000@w0@\nC68@x".encode('utf-8')
-        return formated.encode('utf-8')
+        return formated
 
     @staticmethod
     def create_shape_plot(shape, data):
@@ -37,10 +39,11 @@ class Images:
             img = Image.open(static_dir + 'images\\shapes\\0.png')
         draw = ImageDraw.Draw(img)
         for index in range(len(data)):
-            bbox = draw.textbbox(positions[index], data[index], font=ImageFont.truetype("segoeui.ttf", 14))
+            positions[index][0] -= (len(str(data[index])) - 1) * 3
+            text_box_pos = [positions[index][0], positions[index][1] - 2]
+            bbox = draw.textbbox(text_box_pos, str(data[index]), font=ImageFont.truetype("segoeui.ttf", 20))
             draw.rectangle(bbox, fill="white")
-            draw.text(positions[index], data[index], font=ImageFont.truetype("segoeui.ttf", 14), fill="black")
-        # file_out = static_dir + 'img\\temp_'+str(shape)+'.bmp'
+            draw.text(positions[index], str(data[index]), font=ImageFont.truetype("segoeui.ttf", 18), fill="black")
         file_out = configs.net_print_dir + "Picture\\" + pages.ts(mode="file_name") + ".bmp"
         img.save(file_out)
         return file_out
@@ -145,7 +148,8 @@ class Reports:
                     # TODO: fix bug!!!
                     try:
                         temp = str(data[tb_row - 1][tb_column])
-                    except:
+                    except Exception as e:
+                        print(e)
                         temp = "zsdg"
                     if ".png" in temp:
                         cell = table.rows[(tb_row + 1) * inner_rows_count - 1].cells[tb_column_rv]
@@ -156,8 +160,8 @@ class Reports:
                         # TODO: fix bug!!!
                         try:
                             table.cell((tb_row + 1) * inner_rows_count - 1, tb_column_rv).text = str(data[tb_row - 1][tb_column])
-                        except:
-                            print("sfdg")
+                        except Exception as e:
+                            print(e)
                     if (tb_row % inner_rows_count + 1) == inner_rows_count and tb_column_rv in col_merge:
                         table.cell(tb_row, tb_column_rv).merge(table.cell(tb_row + 1 - inner_rows_count, tb_column_rv))
         # Save file
@@ -224,36 +228,69 @@ class Reports:
 class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type):
-        # Order data
+        # Format data
         rows, info = pages.get_order_data(order_id)
         bt_format = configs.bartender_formats[info['type']][print_type]
-        for printt in bt_format:
-            # Bar tender btw
-            header = '%BTW% /AF=H:\\NetCode\\Format\\' + printt + '.btw /D="%Trigger File Name%" /PRN=' \
-                     + printer + ' /R=3 /P /DD\n%END%\n'
-            output = configs.net_print_dir + order_id + "_" + pages.ts(mode="file_name") + ".tmp"
-            print_data = []
-            for item in rows:
-                if item['job_id'] == "0":
-                    break
-                line = {}
-                for obj in item:
-                    line[obj] = item[obj]
-                for obj in info:
-                    line[obj] = info[obj]
-                print(line)
-                line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data'])
-                print_data.append(line)
-            # Write btw temp file
-            with open(output, 'w') as print_file:
-                print_file.write(header)
-                for line in print_data:
-                    print_line = ""
-                    for item in configs.print_dict:
-                        if item in line.keys():
-                            print_line += str(line[item]) + '~'
-                        else:
-                            print_line += '0~'
-                    print_file.write(print_line + "\n")
-            # Rename temp to final file
-            # os.rename(output, output.replace('.tmp', '.txt'))
+        print_data = []
+        for item in rows:
+            if item['job_id'] == "0":
+                break
+            line = {}
+            for obj in item:
+                line[obj] = item[obj]
+            for obj in info:
+                line[obj] = info[obj]
+            if 'shape_data' in line:
+                line['img_dir'] = Path(Images.create_shape_plot(line['shape'], line['shape_data'])).stem
+            line['barcode_data'] = Images.format_qr_data(line)
+            print_data.append(line)
+        Bartender.bt_create_print_file(printer, bt_format[0], print_data)
+        # Print additional summary info
+        if len(bt_format) > 1:
+            info['temp_select'] = 1
+            summary_data = [info]
+            template_row = {'temp_select': 2}
+            sum_items = {}
+            for row in rows:
+                if row['diam'] in sum_items.keys():
+                    print()
+            for row in range(math.ceil(len(sum_items)/3)):
+
+                for indx in range(3):
+                    if row + indx > len(rows) - 1:
+                        break
+                    template_row["tb" + str(1 + 5 * indx)] = "METZ"  # rows[row + indx]['type']
+                    template_row["tb" + str(2 + 5 * indx)] = rows[row + indx]['diam']
+                    template_row["tb" + str(3 + 5 * indx)] = rows[row + indx]['length']
+                    template_row["tb" + str(4 + 5 * indx)] = configs.weights[rows[row + indx]['diam']]
+                    template_row["tb" + str(5 + 5 * indx)] = rows[row + indx]['weight']
+                summary_data.append(template_row)
+                template_row = {'temp_select': 2}
+            print(summary_data)
+            Bartender.bt_create_print_file(printer, bt_format[1], summary_data)
+
+    @staticmethod
+    def bt_create_print_file(printer, btw_file, print_data):
+        # Bar tender btw
+        header = '%BTW% /AF=H:\\NetCode\\Format\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
+                 + printer + ' /R=3 /P /DD\n%END%\n'
+        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + pages.ts(mode="file_name") + ".tmp"
+        # Write btw temp file
+        with open(file_dir, 'w') as print_file:
+            print_file.write(header)
+            for line in print_data:
+                line['company_name'] = 'צומת ברזל לבנין בע"מ'
+                print_line = ""
+                if btw_file in configs.print_dict.keys():
+                    bt_dict = configs.print_dict[btw_file]
+                else:
+                    bt_dict = configs.print_dict["default"]
+                for item in bt_dict:
+                    if item in line.keys():
+                        print_line += str(line[item]) + '~'
+                    else:
+                        print_line += '0~'
+                print_file.write(print_line + "\n")
+        # Rename temp to final file
+        # os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
+        return file_dir
