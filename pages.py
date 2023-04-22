@@ -35,6 +35,7 @@ def edit_order_data():
         job_id = main.session['job_id']
     # Read all data of this order
     rows, info = get_order_data(order_id, job_id)
+    # #todo: return None if order 'NEW' from another user
     # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     keys_to_display = configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
@@ -98,12 +99,14 @@ def new_order_id():
 
 
 def new_order(info_data):
+    user = main.session['username']
     client = info_data['client']
+    client_id = ""
     site = info_data['site']
     order_type = info_data['type']
     order_id = new_order_id()
-    order = {'order_id': order_id, 'info': {'date_created': ts(), 'costumer_id': client, 'costumer_site': site,
-                                            'type': order_type}}
+    order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'type': order_type,
+                                            'costumer_name': client, 'costumer_id': client_id, 'costumer_site': site}}
     mongo.insert_collection_one('orders', order)
     return order_id
 

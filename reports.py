@@ -250,14 +250,17 @@ class Bartender:
             info['temp_select'] = 1
             summary_data = [info]
             template_row = {'temp_select': 2}
-            sum_items = {}
-            for row in rows:
-                if row['diam'] in sum_items.keys():
-                    print()
-            for row in range(math.ceil(len(sum_items)/3)):
-
+            # todo: summ diams
+            # sum_items = {}
+            # for row in rows:
+            #     if row['diam'] in sum_items.keys():
+            #         print()
+            #     else:
+            #         sum_items[row['diam']] = ""
+            for row in range(math.ceil(len(print_data)/3)):
                 for indx in range(3):
                     if row + indx > len(rows) - 1:
+                        print("break ", row + indx - 1, " > ", len(rows))
                         break
                     template_row["tb" + str(1 + 5 * indx)] = "METZ"  # rows[row + indx]['type']
                     template_row["tb" + str(2 + 5 * indx)] = rows[row + indx]['diam']
@@ -292,5 +295,5 @@ class Bartender:
                         print_line += '0~'
                 print_file.write(print_line + "\n")
         # Rename temp to final file
-        # os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
+        os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
         return file_dir
