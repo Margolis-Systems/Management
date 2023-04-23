@@ -247,30 +247,65 @@ class Bartender:
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:
-            info['temp_select'] = 1
-            summary_data = [info]
-            template_row = {'temp_select': 2}
-            # todo: summ diams
-            # sum_items = {}
-            # for row in rows:
-            #     if row['diam'] in sum_items.keys():
-            #         print()
-            #     else:
-            #         sum_items[row['diam']] = ""
-            for row in range(math.ceil(len(print_data)/3)):
-                for indx in range(3):
-                    if row + indx > len(rows) - 1:
-                        print("break ", row + indx - 1, " > ", len(rows))
-                        break
-                    template_row["tb" + str(1 + 5 * indx)] = "METZ"  # rows[row + indx]['type']
-                    template_row["tb" + str(2 + 5 * indx)] = rows[row + indx]['diam']
-                    template_row["tb" + str(3 + 5 * indx)] = rows[row + indx]['length']
-                    template_row["tb" + str(4 + 5 * indx)] = configs.weights[rows[row + indx]['diam']]
-                    template_row["tb" + str(5 + 5 * indx)] = rows[row + indx]['weight']
-                summary_data.append(template_row)
-                template_row = {'temp_select': 2}
-            print(summary_data)
+            summary_data = Bartender.gen_summary_data(rows, info)
             Bartender.bt_create_print_file(printer, bt_format[1], summary_data)
+
+    @staticmethod
+    def gen_summary_data(rows, info):
+        info['temp_select'] = 1
+        summary_data = [info]
+        special_sum = {}
+        table_data = {}
+        for row in rows:
+            # Summary data
+            if row['diam'] in table_data.keys():
+                table_data[row['diam']]['weight'] += row['weight']
+                table_data[row['diam']]['length'] += row['length']
+            else:
+                table_data[row['diam']] = {'weight': row['weight'], 'length': row['length'],
+                                           'weight_per_M': configs.weights[row['diam']], 'type': "???"}
+            # Special summary data
+            if False:
+                # todo: complete
+                special_sum = []
+                line = {'description': "", 'qnt': "", 'weight': ""}
+        print(table_data)
+        # Bartender Table filler
+        # Summary
+        table_cells = 5
+        table_rows = 3
+        table_selector = 2
+        template_row = {'temp_select': table_selector}
+        for row in range(math.ceil(len(table_data.keys()) / table_rows)):
+            for indx in range(table_rows):
+                if row + indx > len(table_data.keys()) - 1:
+                    print("break ", row + indx - 1, " > ", len(table_data))
+                    break
+                diam = table_data.keys()[indx]
+                template_row["tb" + str(1 + table_cells * indx)] = table_data[diam]['type']
+                template_row["tb" + str(2 + table_cells * indx)] = diam
+                template_row["tb" + str(3 + table_cells * indx)] = table_data[diam]['length']
+                template_row["tb" + str(4 + table_cells * indx)] = table_data[diam]['weight_per_M']
+                template_row["tb" + str(5 + table_cells * indx)] = table_data[diam]['weight']
+            summary_data.append(template_row)
+        # Bartender Table filler
+        # Special summary
+        table_selector = 3
+        table_cells = 3
+        table_rows = 3
+        template_row['temp_select'] = 3  # Just in case
+        summary_data.append(table_selector)
+        template_row['temp_select'] = 4
+        for row in range(math.ceil(len(special_sum) / table_rows)):
+            for indx in range(table_rows):
+                if row + indx > len(special_sum) - 1:
+                    print("break ", row + indx - 1, " > ", len(special_sum))
+                    break
+                template_row["tb" + str(1 + table_cells * indx)] = special_sum[indx]['description']
+                template_row["tb" + str(2 + table_cells * indx)] = special_sum[indx]['qnt']
+                template_row["tb" + str(3 + table_cells * indx)] = special_sum[indx]['weight']
+            summary_data.append(template_row)
+        return summary_data
 
     @staticmethod
     def bt_create_print_file(printer, btw_file, print_data):
