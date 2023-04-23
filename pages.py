@@ -239,7 +239,7 @@ def ts(mode=""):
     if not mode:
         return datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     elif mode == "file_name":
-        return datetime.now().strftime('%d-%m-%Y_%H-%M-%S.%f')
+        return datetime.now().strftime('%d-%m-%Y_%H-%M-%S-%f')
 
 
 def gen_job_id(order_id):
