@@ -218,7 +218,7 @@ def gen_client_list(client):
 
 
 def calc_weight(diam, length, qnt):
-    return float(length) * float(qnt) * configs.weights[str(diam)] / 100
+    return round(float(length) * float(qnt) * configs.weights[str(diam)] / 100, 2)
 
 
 def peripheral_orders(add_orders, order_id, job_id):
