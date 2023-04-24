@@ -1,23 +1,16 @@
 import pandas as pd
-import json
 import gc
 from pymongo import MongoClient
-
-'''
-
-'''
-with open("config.json") as config_file:
-    config = json.load(config_file)
+import configs
 
 
 class DBHandle:
     @staticmethod
     def con_to_mongo_default(db_name):
         if db_name:
-            print(db_name)
-            db = MongoClient(config['mongo_adr'])[db_name]
+            db = MongoClient(configs.mongo_adr)[db_name]
         else:
-            db = MongoClient(config['mongo_adr'])[config['db_main']]
+            db = MongoClient(configs.mongo_adr)[configs.db_main]
         return db
 
     @staticmethod
@@ -53,7 +46,6 @@ class DBHandle:
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         query[sort_by] = {'$exists': True}
-        print(query)
         dic = db[collect].find_one(query, {'_id': False}, sort=[(sort_by, -1)])
         return dic
 

@@ -3,7 +3,7 @@ import db_handler
 
 mongo = db_handler.DBHandle()
 
-with open("config.json") as config_file:
+with open("config.json", 'r', encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 server = config['server']
@@ -15,6 +15,7 @@ orders_collection = config['orders_collection']
 users_collection = config['users_collection']
 orders_reverse = config['orders_reverse']
 net_print_dir = config['net_print_dir']
+company_name = config['company_name']
 # rebar_weights = mongo.read_collection_one("data_lists", {"name": "rebar_weights"})['data']
 data_to_display = mongo.read_collection_one("data_lists", {"name": "data_to_display"})['data']
 weights = mongo.read_collection_one("data_lists", {"name": "weights"})['data']

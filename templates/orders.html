@@ -2,26 +2,13 @@
 {% block body %}
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
-        <td height="10">
-        </td>
-        <td></td>
-        <td></td>
-    </tr>
-    <tr class="btn btn-primary btn-block" >
-        <td style="outline: thin solid;text-align: center" onclick="location.href='/new_order?regular'">
-              הזמנה חדשה
-        </td>
-        <td></td>
-        <td style="outline: thin solid;text-align: center" onclick="location.href='/new_order?rebar'">
-            הזמנת רשת חדשה
-        </td>
-        <td></td>
-        <td style="outline: thin solid;text-align: center" onclick="location.href='/new_order?rebar_special'">
-            הזמנת כוורת חדשה
-        </td>
+        <td><button ondblclick="location.href='/new_order?regular'" type="button" class="btn btn-primary btn-block">הזמנת ברזל חדשה</button></td>
+        <td><button ondblclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
+        <td><button ondblclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
     </tr>
     <tr>
-
+</table>
+<table class="table table-striped" dir="rtl" align="center">
     </tr>
     <tr>
         {% for item in display_items %}

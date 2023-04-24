@@ -113,8 +113,10 @@ def edit_order():
 
     if not order_data:
         return close_order()
+    # todo: gen_defaults
+    defaults = {'bar_type': 'מצולע'}
     return render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                           dictionary=page_data[2], rebar_data={})
+                           dictionary=page_data[2], rebar_data={}, defaults=defaults)
 
 
 @app.route('/edit_row', methods=['POST', 'GET'])

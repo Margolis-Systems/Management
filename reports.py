@@ -99,49 +99,50 @@ class Bartender:
         template_row = {}
         for row in rows:
             # Summary data
+            quantity = int(row['quantity'])
             if row['diam'] in table_data.keys():
                 table_data[row['diam']]['weight'] += row['weight']
-                table_data[row['diam']]['length'] += int(row['length'])
+                table_data[row['diam']]['length'] += int(row['length']) * quantity
             else:
-                table_data[row['diam']] = {'weight': row['weight'], 'length': int(row['length']),
+                table_data[row['diam']] = {'weight': row['weight'], 'length': int(row['length']) * quantity,
                                            'weight_per_M': configs.weights[row['diam']], 'type': "???"}
             # Special summary data
             if row['shape'] not in ["905"]:
                 if 'חיתוך' not in special_sum.keys():
                     special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
-                special_sum['חיתוך']['qnt'] += int(row['quantity'])
+                special_sum['חיתוך']['qnt'] += quantity
                 special_sum['חיתוך']['weight'] += row['weight']
             if row['shape'] not in ["1", "905"]:
                 if 'כיפוף' not in special_sum.keys():
                     special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
-                special_sum['כיפוף']['qnt'] += int(row['quantity'])
+                special_sum['כיפוף']['qnt'] += quantity
                 special_sum['כיפוף']['weight'] += row['weight']
             if row['shape'] in []:
                 if 'חישוק' not in special_sum.keys():
                     special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
-                special_sum['חישוק']['qnt'] += int(row['quantity'])
+                special_sum['חישוק']['qnt'] += quantity
                 special_sum['חישוק']['weight'] += row['weight']
             if row['shape'] in []:
                 if 'ספירלים' not in special_sum.keys():
                     special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
-                special_sum['ספירלים']['qnt'] += int(row['quantity'])
+                special_sum['ספירלים']['qnt'] += quantity
                 special_sum['ספירלים']['weight'] += row['weight']
             if row['shape'] in []:
                 if 'ספסלים' not in special_sum.keys():
                     special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
-                special_sum['ספסלים']['qnt'] += int(row['quantity'])
+                special_sum['ספסלים']['qnt'] += quantity
                 special_sum['ספסלים']['weight'] += row['weight']
             # todo: Config!!!
             x_length = 2000
             if int(row['length']) > x_length:
                 if 'ברזל_ארוך' not in special_sum.keys():
                     special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
-                special_sum['ברזל_ארוך']['qnt'] += int(row['quantity'])
+                special_sum['ברזל_ארוך']['qnt'] += quantity
                 special_sum['ברזל_ארוך']['weight'] += row['weight']
             if float(row['diam']) >= 28:
                 if 'תוספת_ברזל_28_ממ_ומעלה' not in special_sum.keys():
                     special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
-                special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += int(row['quantity'])
+                special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
                 special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
         # print(table_data)
         # Bartender Table filler
@@ -160,7 +161,7 @@ class Bartender:
                 template_row["tb" + str(2 + table_cells * indx)] = diam
                 template_row["tb" + str(3 + table_cells * indx)] = table_data[diam]['length']
                 template_row["tb" + str(4 + table_cells * indx)] = table_data[diam]['weight_per_M']
-                template_row["tb" + str(5 + table_cells * indx)] = round(table_data[diam]['weight'], 1)
+                template_row["tb" + str(5 + table_cells * indx)] = int(table_data[diam]['weight'])
             summary_data.append(template_row.copy())
 
         # Bartender Table filler
@@ -182,7 +183,7 @@ class Bartender:
                     description = list(special_sum.keys())[table_cells * row + indx]
                     template_row["tb" + str(1 + table_cells * indx)] = description.replace("_", " ")
                     template_row["tb" + str(2 + table_cells * indx)] = special_sum[description]['qnt']
-                    template_row["tb" + str(3 + table_cells * indx)] = round(special_sum[description]['weight'], 1)
+                    template_row["tb" + str(3 + table_cells * indx)] = int(special_sum[description]['weight'])
                 summary_data.append(template_row.copy())
         return summary_data
 
@@ -191,12 +192,15 @@ class Bartender:
         # Bar tender btw
         header = '%BTW% /AF=H:\\NetCode\\Format\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer + ' /R=3 /P /DD\n%END%\n'
-        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + pages.ts(mode="file_name") + ".tmp"
+        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + pages.ts(mode="file_name") + ".txt"
+        # ---------todo: for testing------
+        # file_dir.replace('.txt', '.tmp')
+        # --------------------------------
         # Write btw temp file
-        with open(file_dir, 'w') as print_file:
+        with open(file_dir, 'w', encoding='cp1255') as print_file:
             print_file.write(header)
             for line in print_data:
-                line['company_name'] = 'צומת ברזל לבנין בע"מ'
+                line['company_name'] = configs.company_name
                 print_line = ""
                 if btw_file in configs.print_dict.keys():
                     bt_dict = configs.print_dict[btw_file]
@@ -204,11 +208,10 @@ class Bartender:
                     bt_dict = configs.print_dict["default"]
                 for item in bt_dict:
                     if item in line.keys():
+                        if isinstance(line[item], float):
+                            line[item] = int(line[item])
                         print_line += str(line[item]) + '~'
                     else:
                         print_line += '~'
                 print_file.write(print_line + "\n")
-        # Rename temp to final file
-        time.sleep(1)
-        # os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
         return file_dir

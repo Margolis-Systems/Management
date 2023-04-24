@@ -1,13 +1,13 @@
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td>
-            <table class="table table-striped" dir="rtl" align="center" onload="findTotal2('amount_x', 'width', 'x_length');findTotal2('amount_y', 'length', 'y_length')">
+            <table class="table table-striped" dir="rtl" align="center">
             <form id="x_form" method=POST action="{{ url_for('edit_order') }}">
             <input type="hidden" id="x" name="x" value="x">
                 <tr>
                     <td></td>
                     <td>
-                        <input type="number" name="x_length" id="x_length" onchange="findTotal2('amount_x', 'width', 'x_length')" class="form-control" placeholder="רוחב" required>
+                        <input type="number" value="0" name="x_length" id="x_length" onchange="findTotal2('amount_x', 'width', 'x_length')" class="form-control" placeholder="רוחב" required>
                     </td>
                     <td>
                         <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" required>
@@ -39,7 +39,7 @@
                 <tr>
                     <td></td>
                     <td>
-                        <input type="number" name="y_length" id="y_length" onchange="findTotal2('amount_y', 'length', 'y_length')" class="form-control" placeholder="אורך" required>
+                        <input type="number" value="0" name="y_length" id="y_length" onchange="findTotal2('amount_y', 'length', 'y_length')" class="form-control" placeholder="אורך" required>
                     </td>
                     <td>
                         <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" required>
@@ -66,3 +66,6 @@
         </td>
     </tr>
 </table>
+<script>
+    window.onload = function(){findTotal2('amount_x', 'width', 'x_length');findTotal2('amount_y', 'length', 'y_length');};
+</script>

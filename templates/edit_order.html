@@ -40,6 +40,7 @@ div {
         <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" disabled>העתק שורה אחרונה</button></td>
         <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
+        <td><button ondblclick="location.href='\choose_printer?page'" type="button" class="btn btn-primary btn-block" disabled>הדפס דוגמה</button></td>
         <td><button ondblclick="location.href='\choose_printer?page'" type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
         <td><button ondblclick="location.href='\choose_printer?label'" type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
         <!--<td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
@@ -80,7 +81,7 @@ div {
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <td>
-            <input list="{{ item }}" type="number" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+            <input list="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
@@ -89,7 +90,7 @@ div {
             {% else %}
             {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
             <td>
-            <input list="{{ item }}" type="number" id="editor" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+            <input list="{{ item }}" type="number" id="editor" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' onchange='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
