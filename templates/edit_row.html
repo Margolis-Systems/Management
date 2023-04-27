@@ -54,7 +54,7 @@
             <input type="number" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
-            {{order_data.order_rows[0][item]}}
+            <input type="text" class="form-control" name="{{ item }}" id="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" readonly>
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <input list="{{ item }}" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
@@ -63,6 +63,15 @@
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
                 {% endfor %}
                 </datalist>
+            {% else %}
+            {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
+            <input list="{{ item }}" type="number" id="editor" value="{{order_data.order_rows[0][item]}}" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' onchange='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+                <datalist id="{{ item }}">
+                {% for optn in lists[item] %}
+                    <option value="{{ optn }}">{{dictionary[optn]}}</option>
+                {% endfor %}
+                </datalist>
+            <input type="hidden" name="{{ item }}_hid" value="{{order_data.order_rows[0][item]}}" id="shape_data" type="number" required>
             {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
             <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
@@ -75,6 +84,7 @@
             -->
             {% else %}
             ------
+            {% endif %}
             {% endif %}
             {% endif %}
             {% endif %}
@@ -96,6 +106,7 @@
     -->
 </table>
 </form>
+<!--
 <script>
 function confirmDel() {
   let text = "Are you sure?";
@@ -104,4 +115,6 @@ function confirmDel() {
   }
 }
 </script>
+-->
+<script src="\static\js\shapes.js" ></script>
 {% endblock %}

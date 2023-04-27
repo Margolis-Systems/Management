@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block body %}
+<table class="table table-striped" align="center" dir="rtl">
+    <tr>
+        <td><button ondblclick="location.href='/new_order?regular'" type="button" class="btn btn-primary btn-block">הזמנת ברזל חדשה</button></td>
+        <td><button ondblclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
+        <td><button ondblclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
+    </tr>
+    <tr>
+</table>
+<table class="table table-striped" dir="rtl" align="center">
+    </tr>
+    <tr>
+        {% for item in display_items %}
+        <td width="5%"  style="outline: thin solid;text-align: center">
+            <b>{{dictionary[item]}}</b>
+        </td>
+        {% endfor %}
+    </tr>
+    {% for order in orders %}
+    <tr ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'" >
+        {% for item in display_items %}
+        <td height="50" style="outline: thin solid;text-align: center">
+        {% if dictionary[orders[order][item]] %}
+            {{dictionary[orders[order][item]]}}
+        {% else %}
+            {{ orders[order][item] }}
+        {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table >
+{% endblock %}

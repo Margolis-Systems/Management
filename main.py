@@ -3,6 +3,7 @@ import flask
 from flask import Flask, render_template, url_for, request, session, redirect, send_file
 from waitress import serve
 import bcrypt
+import os
 # ERP libs
 import configs
 import db_handler
@@ -102,8 +103,7 @@ def edit_order():
     if not validate_user():
         return logout()
     if len(list(request.values)) == 1:
-        order_id = list(request.values)[0]
-        session['order_id'] = order_id
+        session['order_id'] = list(request.values)[0]
     elif len(request.form.keys()) > 1:
         pages.new_order_row()
         return redirect('/orders')
@@ -114,7 +114,7 @@ def edit_order():
     if not order_data:
         return close_order()
     # todo: gen_defaults
-    defaults = {'bar_type': 'מצולע'}
+    defaults = {'bar_type': 'מצולע', 'comment': order_data}
     return render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                            dictionary=page_data[2], rebar_data={}, defaults=defaults)
 
@@ -130,7 +130,7 @@ def edit_row():
             return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                                    dictionary=page_data[2], rebar_data={})
     # todo: complete - no working
-    session['job_id'] = ""
+    # session['job_id'] = ""
     pages.new_order_row()
     return redirect('/orders')
 
@@ -231,7 +231,8 @@ def shape_editor():
                           'img_plot': "/static/images/shapes/"+req_vals[0]+".png"}
     shapes = {}
     for shape in configs.shapes:
-        shapes[shape] = configs.shapes[shape]['description']
+        if os.path.exists("C:\\server\\static\\images\\shapes\\" + shape + ".png"):
+            shapes[shape] = configs.shapes[shape]['description']
     return render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data)
 
 
@@ -247,9 +248,27 @@ def choose_printer():
     return render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type)
 
 
-'''
 @app.route('/clients', methods=['POST'])
-@app.route('/new_client', methods=['POST'])
+def clients():
+    orders_list = []
+    display_those_keys = []
+    dictionary = {}
+    return render_template('clients.html', orders=orders_list, display_items=display_those_keys,
+                           dictionary=dictionary)
+
+
+@app.route('/edit_client', methods=['POST'])
+def edit_client():
+    req_vals = list(request.values)
+    # todo: read clients list
+    if len(req_vals) == 1:
+        client = req_vals[0]
+        # todo: client_list[client]
+        print("edit client")
+    return None
+
+
+'''
 @app.route('/scale', methods=['POST'])
 @app.route('/mep', methods=['POST'])
 '''

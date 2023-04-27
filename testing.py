@@ -1,11 +1,5 @@
-# import bcrypt
-# from reports import Bartender as bt
-# import db_handler
-# import pandas as pd
-# mongo = db_handler.DBHandle()
-#
-# import pages
+import configs
 
-from pathlib import Path
-
-print(Path('/root/dir/sub/file.ext').stem)
+mongo = configs.mongo
+order_id = "1"
+mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}}, {'info.comment': "sffbafba"})

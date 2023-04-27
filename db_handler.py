@@ -1,7 +1,10 @@
-import pandas as pd
-import gc
 from pymongo import MongoClient
+from datetime import datetime
+import pandas as pd
 import configs
+import bson
+import gc
+import os
 
 
 class DBHandle:
@@ -90,4 +93,25 @@ class DBHandle:
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
-        collection.update_one(key, doc, upsert=upsert)
+        collection.update_one(key, {"$set": doc}, upsert=upsert)
+
+    @staticmethod
+    def dump(path, collections=[], db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        ts = datetime.now().strftime('%d-%m-%Y_%H-%M-%S-%f')
+        path = os.path.join(path, ts)
+        os.mkdir(path)
+        if not collections:
+            collections = db.list_collection_names()
+        for coll in collections:
+            with open(os.path.join(path, f'{coll}.bson'), 'wb+') as f:
+                for doc in db[coll].find():
+                    f.write(bson.BSON.encode(doc))
+
+    @staticmethod
+    def restore(path, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        for coll in os.listdir(path):
+            if coll.endswith('.bson'):
+                with open(os.path.join(path, coll), 'rb+') as f:
+                    db[coll.split('.')[0]].insert_many(bson.decode_all(f.read()))

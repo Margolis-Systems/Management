@@ -144,7 +144,6 @@ class Bartender:
                     special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
                 special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
                 special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
-        # print(table_data)
         # Bartender Table filler
         # Summary
         table_cells = 5

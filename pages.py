@@ -31,7 +31,8 @@ def edit_order_data():
         job_id = main.session['job_id']
     # Read all data of this order
     rows, info = get_order_data(order_id, job_id)
-    # #todo: return None if order 'NEW' from another user
+    # if info['created_by'] != main.session['username']:
+    #     return {}, []
     # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     keys_to_display = configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
@@ -65,13 +66,14 @@ def get_dictionary(username):
 
 
 def get_order_data(order_id, job_id="", reverse=True):
-    # order = mongo.read_collection_df('orders', query={'order_id': order_id, 'job_id': {'$ne': "0"}})
-    order = mongo.read_collection_df('orders', query={'order_id': order_id})
+    order = mongo.read_collection_df('orders', query={'order_id': order_id, 'job_id': {'$ne': "0"}})
+    # order = mongo.read_collection_df('orders', query={'order_id': order_id})
     if order.empty:
         return False, False
     info = order[order['info'].notnull()]['info'][0]
     order_data_df = order[order['info'].isnull()].drop(['info'], axis=1).fillna("")
-    order_data_df['weight'] = order_data_df['weight'].astype(int)
+    if not order_data_df.empty:
+        order_data_df['weight'] = order_data_df['weight'].astype(int)
     order_data = order_data_df.to_dict('index')
     rows = []
     for key in order_data:
@@ -113,6 +115,10 @@ def new_order_row():
     order_id = main.session['order_id']
     req_form_data = main.request.form
     temp_order_data = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
+    # Order comment
+    if 'commnt_hid' in req_form_data:
+        mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                         {'info.comment': req_form_data['comment_hid']})
     # Order peripheral data handling
     if 'x_form' in req_form_data.keys() or 'y_form' in req_form_data.keys() or 'shape_data' in req_form_data.keys():
         if temp_order_data and 'shape_data' not in req_form_data.keys():
@@ -141,6 +147,9 @@ def new_order_row():
         return
     else:
         job_id = gen_job_id(order_id)
+        if 'job_id' in main.session.keys():
+            if main.session['job_id'] != "":
+                job_id = main.session['job_id']
         new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'New', 'date_created': ts()}
         for item in req_form_data:
             if req_form_data[item] not in ['---', ''] and '_hid' not in item:
@@ -196,7 +205,6 @@ def new_order_row():
                     new_row[item] = temp_order_data[item]
         mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
     elif 'shape' in req_form_data:
-        # todo: ???
         if int(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
         if temp_order_data:
