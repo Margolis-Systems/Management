@@ -72,18 +72,46 @@ class Bartender:
         rows, info = pages.get_order_data(order_id, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
-        for item in rows:
-            if item['job_id'] == "0":
-                break
-            line = {}
-            for obj in item:
-                line[obj] = item[obj]
-            for obj in info:
-                line[obj] = info[obj]
-            if 'shape_data' in line:
-                line['img_dir'] = Path(Images.create_shape_plot(line['shape'], line['shape_data'])).stem
-            line['barcode_data'] = Images.format_qr_data(line)
-            print_data.append(line)
+        # if info['type'] == 'regular':
+        if 'rebar' in info['type'] and print_type == "page":
+            info['temp_select'] = 1
+            print_data.append(info)
+            total_weight = 0
+            table_cells = 6
+            table_rows = 5
+            table_selector = 2
+            for row in range(math.ceil(len(rows) / table_rows)):
+                template_row = {'temp_select': table_selector}
+                for indx in range(table_rows):
+                    if table_rows * row + indx >= len(rows):
+                        print("break ", row + indx, " > ", len(rows) - 1)
+                        break
+                    n = table_rows * row + indx
+                    template_row["tb" + str(1 + table_rows * indx)] = rows[n]['job_id']
+                    template_row["tb" + str(2 + table_rows * indx)] = rows[n]['mkt']
+                    template_row["tb" + str(3 + table_rows * indx)] = rows[n]['description']
+                    template_row["tb" + str(4 + table_rows * indx)] = rows[n]['quantity']
+                    if rows[n]['mkt'] != "2005020000":
+                        template_row["tb" + str(5 + table_rows * indx)] = float(configs.rebar_catalog[rows[n]['mkt']]['unit_weight'])
+                    else:
+                        template_row["tb" + str(5 + table_rows * indx)] = rows[n]['weight'] / rows[n]['quantity']
+                    template_row["tb" + str(6 + table_rows * indx)] = rows[n]['weight']
+                    total_weight += rows[n]['weight']
+                print_data.append(template_row.copy())
+            print_data.append({'temp_select': 3, 'tb1': total_weight})
+        else:
+            for item in rows:
+                if item['job_id'] == "0":
+                    break
+                line = {}
+                for obj in item:
+                    line[obj] = item[obj]
+                for obj in info:
+                    line[obj] = info[obj]
+                if 'shape_data' in line:
+                    line['img_dir'] = Path(Images.create_shape_plot(line['shape'], line['shape_data'])).stem
+                line['barcode_data'] = Images.format_qr_data(line)
+                print_data.append(line)
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:
@@ -152,15 +180,15 @@ class Bartender:
         for row in range(math.ceil(len(table_data.keys()) / table_rows)):
             template_row = {'temp_select': table_selector}
             for indx in range(table_rows):
-                if table_cells * row + indx >= len(table_data.keys()):
+                if table_rows * row + indx >= len(table_data.keys()):
                     print("break ", row + indx, " > ", len(table_data.keys()) - 1)
                     break
-                diam = list(table_data.keys())[table_cells * row + indx]
-                template_row["tb" + str(1 + table_cells * indx)] = table_data[diam]['type']
-                template_row["tb" + str(2 + table_cells * indx)] = diam
-                template_row["tb" + str(3 + table_cells * indx)] = table_data[diam]['length']
-                template_row["tb" + str(4 + table_cells * indx)] = table_data[diam]['weight_per_M']
-                template_row["tb" + str(5 + table_cells * indx)] = int(table_data[diam]['weight'])
+                diam = list(table_data.keys())[table_rows * row + indx]
+                template_row["tb" + str(1 + table_rows * indx)] = table_data[diam]['type']
+                template_row["tb" + str(2 + table_rows * indx)] = diam
+                template_row["tb" + str(3 + table_rows * indx)] = table_data[diam]['length']
+                template_row["tb" + str(4 + table_rows * indx)] = table_data[diam]['weight_per_M']
+                template_row["tb" + str(5 + table_rows * indx)] = int(table_data[diam]['weight'])
             summary_data.append(template_row.copy())
 
         # Bartender Table filler
@@ -176,13 +204,13 @@ class Bartender:
             for row in range(spec_sum_lines):
                 template_row = {'temp_select': table_selector}
                 for indx in range(table_rows):
-                    if table_cells * row + indx >= len(special_sum.keys()):
+                    if table_rows * row + indx >= len(special_sum.keys()):
                         print("break ", row + indx, " > ", len(special_sum) - 1)
                         break
-                    description = list(special_sum.keys())[table_cells * row + indx]
-                    template_row["tb" + str(1 + table_cells * indx)] = description.replace("_", " ")
-                    template_row["tb" + str(2 + table_cells * indx)] = special_sum[description]['qnt']
-                    template_row["tb" + str(3 + table_cells * indx)] = int(special_sum[description]['weight'])
+                    description = list(special_sum.keys())[table_rows * row + indx]
+                    template_row["tb" + str(1 + table_rows * indx)] = description.replace("_", " ")
+                    template_row["tb" + str(2 + table_rows * indx)] = special_sum[description]['qnt']
+                    template_row["tb" + str(3 + table_rows * indx)] = int(special_sum[description]['weight'])
                 summary_data.append(template_row.copy())
         return summary_data
 
@@ -193,7 +221,7 @@ class Bartender:
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + pages.ts(mode="file_name") + ".txt"
         # ---------todo: for testing------
-        # file_dir.replace('.txt', '.tmp')
+        file_dir = file_dir.replace('.txt', '.tmp')
         # --------------------------------
         # Write btw temp file
         with open(file_dir, 'w', encoding='cp1255') as print_file:

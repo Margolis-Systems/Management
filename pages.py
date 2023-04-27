@@ -116,7 +116,7 @@ def new_order_row():
     req_form_data = main.request.form
     temp_order_data = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     # Order comment
-    if 'commnt_hid' in req_form_data:
+    if 'comment_hid' in req_form_data:
         mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                          {'info.comment': req_form_data['comment_hid']})
     # Order peripheral data handling
@@ -174,15 +174,15 @@ def new_order_row():
         if 'length' in new_row and 'width' in new_row:
             new_row['length'] = str(int(new_row['length']) + int(new_row['trim_y_start']) + int(new_row['trim_y_end']))
             new_row['width'] = str(int(new_row['width']) + int(new_row['trim_x_start']) + int(new_row['trim_x_end']))
-            new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_y'] + \
-                                     "\n" + new_row['length'] + "X" + new_row['width']
+            new_row['description'] = "רשת מיוחדת - פירוט"
+            # new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_y'] + \
+            #                          "\n" + new_row['length'] + "X" + new_row['width']
         else:
             # Peripheral data not compatible with form data
             print("Peripheral data not compatible with form data")
             return
         bars_x = 1
         bars_y = 1
-        # Need to be reviewed !!!!!
         for i in range(len(temp_order_data['x_length'])):
             if temp_order_data['x_pitch'][i] != "0":
                 bars_y += math.floor(int(temp_order_data['x_length'][i]) / int(temp_order_data['x_pitch'][i]))
@@ -249,7 +249,7 @@ def calc_weight(diam, length, qnt):
 
 
 def peripheral_orders(add_orders, order_id, job_id):
-    description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id + "\nשורה מספר: " + job_id
+    description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id + " שורה מספר: " + job_id
     order_id += "_R"
     for order in add_orders:
         order_weight = calc_weight(order['diam'], order['length'], order['qnt'])

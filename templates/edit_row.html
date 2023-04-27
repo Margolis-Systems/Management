@@ -3,6 +3,7 @@
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
     {% for item in order_data.info %}
+    {% if item != 'comment' %}
         <td>
             <b>
                 {% if dictionary[item] %}
@@ -17,6 +18,7 @@
             {{ order_data.info[item] }}
             {% endif %}
         </td>
+    {% endif %}
     {% endfor %}
     </tr>
 </table>
@@ -25,6 +27,9 @@
 {% endif %}
 <form name="input_form" id="input_form" method=POST action="{{ url_for('edit_row') }}">
 <table class="table table-striped" dir="rtl" align="center">
+        <td colspan="100">
+            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}">
+        </td>
     <tr>
         <td><button type=submit class="btn btn-primary btn-block" >עדכן</button></td>
         <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>

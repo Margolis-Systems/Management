@@ -4,7 +4,7 @@ const formInput = document.getElementById('editor');
 const lengInput = document.getElementById('length');
 const widtInput = document.getElementById('width');
 
-const openNewWindow = (editorUrl) => {
+const openEditWindow = (editorUrl) => {
     const params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=700,height=500,top=200,left=400`;
     if (formInput.value.length == 0||formInput.value == "undefined"){
         newWindow = window.open(editorUrl, 'sub', params);
@@ -12,6 +12,11 @@ const openNewWindow = (editorUrl) => {
     else{
         newWindow = window.open(editorUrl+"?"+formInput.value, 'sub', params);
     }
+};
+
+const openNewWindow = (editorUrl) => {
+    const params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=700,height=500,top=200,left=400`;
+    newWindow = window.open(editorUrl, 'sub', params);
 };
 
 const sendMessage = () => {

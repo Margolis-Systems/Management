@@ -241,7 +241,7 @@ def choose_printer():
     if request.form:
         printer = request.form['printer']
         reports.Bartender.net_print(session['order_id'], printer, request.form['print_type'])
-        return redirect('/orders')
+        return '', 204
     else:
         print_type = list(request.values)[0]
         printer_list = configs.printers[print_type]
