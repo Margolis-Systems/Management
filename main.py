@@ -238,14 +238,18 @@ def shape_editor():
 
 @app.route('/choose_printer', methods=['POST', 'GET'])
 def choose_printer():
+    default_printer = ""
     if request.form:
         printer = request.form['printer']
         reports.Bartender.net_print(session['order_id'], printer, request.form['print_type'])
         return '', 204
     else:
         print_type = list(request.values)[0]
+        default_printer = mongo.read_collection_one('users', {'name': session['username']})
+        if default_printer:
+            default_printer = default_printer['default_printer'][print_type]
         printer_list = configs.printers[print_type]
-    return render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type)
+    return render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type, defaults={'printer':default_printer})
 
 
 @app.route('/clients', methods=['POST'])

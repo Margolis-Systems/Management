@@ -30,12 +30,14 @@ def edit_order_data():
     if 'job_id' in main.session.keys():
         job_id = main.session['job_id']
     # Read all data of this order
-    rows, info = get_order_data(order_id, job_id)
+    rows, info, additional = get_order_data(order_id, job_id)
     # if info['created_by'] != main.session['username']:
     #     return {}, []
     # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     keys_to_display = configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
+    if additional:
+        order_data['include_data'] = additional
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
     lists, patterns = gen_patterns(info['type'])
@@ -67,6 +69,7 @@ def get_dictionary(username):
 
 def get_order_data(order_id, job_id="", reverse=True):
     order = mongo.read_collection_df('orders', query={'order_id': order_id, 'job_id': {'$ne': "0"}})
+    additional = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     # order = mongo.read_collection_df('orders', query={'order_id': order_id})
     if order.empty:
         return False, False
@@ -82,7 +85,7 @@ def get_order_data(order_id, job_id="", reverse=True):
             rows.append(row_data)
     info['order_id'] = order_id
     rows.sort(key=lambda k: int(k['job_id']), reverse=reverse)
-    return rows, info
+    return rows, info, additional
 
 
 def new_order_id():
@@ -160,39 +163,44 @@ def new_order_row():
         for item in cat_item:
             if item not in ['unit_weight', 'pack_quantity']:
                 new_row[item] = cat_item[item]
+        pitch = int(new_row['pitch'].split('X')[0])
+        x_bars = {'length': new_row['width'], 'qnt': int(int(new_row['quantity']) * (int(new_row['length']) / pitch)),
+                  'diam': new_row['diam']}
+        y_bars = {'length': new_row['length'],
+                  'qnt': int(((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity'])),
+                  'diam': new_row['diam']}
+        new_row['description'] = "V250X"+str(int(int(new_row['length']) / pitch))+"X"+new_row['diam']+"WBX"+str(pitch) +\
+                                 " H600X"+str(int((int(new_row['width']) - 10) / pitch + 1))+"X"+new_row['diam']+"WBX"+str(pitch)
         new_row['weight'] = round(float(configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
         if 'הזמנת_ייצור' in new_row:
-            pitch = int(new_row['pitch'].split('X')[0])
-            x_bars = {'length': new_row['width'], 'qnt': int(new_row['quantity']) * (int(new_row['length']) / pitch),
-                      'diam': new_row['diam']}
-            y_bars = {'length': new_row['length'],
-                      'qnt': ((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity']),
-                      'diam': new_row['diam']}
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'diam_x' in new_row:  # or 'diam_y'
         new_row['mkt'] = "2005020000"
         if 'length' in new_row and 'width' in new_row:
             new_row['length'] = str(int(new_row['length']) + int(new_row['trim_y_start']) + int(new_row['trim_y_end']))
             new_row['width'] = str(int(new_row['width']) + int(new_row['trim_x_start']) + int(new_row['trim_x_end']))
-            new_row['description'] = "רשת מיוחדת - פירוט"
-            # new_row['description'] = "רשת מיוחדת קוטר" + new_row['diam_x'] + "|" + new_row['diam_y'] + \
-            #                          "\n" + new_row['length'] + "X" + new_row['width']
         else:
             # Peripheral data not compatible with form data
             print("Peripheral data not compatible with form data")
             return
         bars_x = 1
         bars_y = 1
+        x_pitch = ""
+        y_pitch = ""
         for i in range(len(temp_order_data['x_length'])):
             if temp_order_data['x_pitch'][i] != "0":
                 bars_y += math.floor(int(temp_order_data['x_length'][i]) / int(temp_order_data['x_pitch'][i]))
+                x_pitch += "("+temp_order_data['x_pitch'][i]+")"
             else:
                 bars_y += 1
         for i in range(len(temp_order_data['y_length'])):
             if temp_order_data['y_pitch'][i] != "0":
                 bars_x += math.floor(int(temp_order_data['y_length'][i]) / int(temp_order_data['y_pitch'][i]))
+                y_pitch += "("+temp_order_data['y_pitch'][i]+")"
             else:
                 bars_x += 1
+        new_row['description'] = "V250X" + str(bars_x) + "X" + new_row['diam_x'] + "WBX" + x_pitch + \
+                                 " H600X" + str(bars_y) + "X" + new_row['diam_y'] + "WBX" + y_pitch
         new_row['weight'] = calc_weight(new_row['diam_x'], new_row['width'],
                                         bars_x) + calc_weight(new_row['diam_y'], new_row['length'], bars_y)
         if 'הזמנת_ייצור' in new_row:

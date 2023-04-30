@@ -13,20 +13,18 @@
                         <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" required>
                     </td>
                 </tr>
-                {% if order_data.order_rows %}
-                {% if order_data.order_rows[-1]['job_id'] == "0" %}
-                {% for item in order_data.order_rows[-1].x_pitch %}
+                {% if order_data.include_data %}
+                {% for item in order_data.include_data.x_pitch %}
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>
-                        <label class="amount_x">{{order_data.order_rows[-1].x_length[loop.index0]}}</label>
+                        <label class="amount_x">{{order_data.include_data.x_length[loop.index0]}}</label>
                     </td>
                     <td>
-                        <lable>{{order_data.order_rows[-1].x_pitch[loop.index0]}}</lable>
+                        <lable>{{order_data.include_data.x_pitch[loop.index0]}}</lable>
                     </td>
                 </tr>
                 {% endfor %}
-                {% endif %}
                 {% endif %}
                 <button type=submit class="btn btn-primary btn-block" name="x_form">הוסף מקטע רוחב</button>
                 <label style="color:red">זמנית לא ניתן לתקן שדות במקטעים </label>
@@ -46,20 +44,18 @@
                         <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" required>
                     </td>
                 </tr>
-                {% if order_data.order_rows %}
-                {% if order_data.order_rows[-1]['job_id'] == "0" %}
-                {% for item in order_data.order_rows[-1].y_pitch %}
+                {% if order_data.include_data %}
+                {% for item in order_data.include_data.y_pitch %}
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>
-                        <label class="amount_y">{{order_data.order_rows[-1].y_length[loop.index0]}}</label>
+                        <label class="amount_y">{{order_data.include_data.y_length[loop.index0]}}</label>
                     </td>
                     <td>
-                        <lable>{{order_data.order_rows[-1].y_pitch[loop.index0]}}</lable>
+                        <lable>{{order_data.include_data.y_pitch[loop.index0]}}</lable>
                     </td>
                 </tr>
                 {% endfor %}
-                {% endif %}
                 {% endif %}
                 <button type=submit class="btn btn-primary btn-block" name="y_form">הוסף מקטע אורך</button>
                 <label style="color:red">זמנית לא ניתן לתקן שדות במקטעים </label>

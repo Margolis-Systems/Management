@@ -13,14 +13,14 @@
 <body>
 <div class="form-floating">
     <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}">
-        <input list="printer" type="text" class="form-control" name="printer" placeholder="Choose printer" autofocus="autofocus" required>
+        <input list="printer" type="text" class="form-control" name="printer" value="{{ defaults.printer }}" placeholder="Choose printer" autofocus="autofocus" required>
             <datalist id="printer">
             {% for printer in printer_list %}
                 <option value="{{ printer }}">{{ printer_list[printer] }}</option>
             {% endfor %}
             </datalist>
         <input type="hidden" name="print_type" value="{{print_type}}">
-        <button class="w-100 btn btn-lg btn-primary" type="submit" onclick="close_window();">אישור</button>
+        <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="close_window();">אישור</button>
         <button class="w-100 btn btn-lg btn-primary" onclick="close_window();">סגור</button>
     </form>
 </div>
