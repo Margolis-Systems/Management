@@ -7,8 +7,6 @@ import math
 
 mongo = db_handler.DBHandle()
 
-'''________________________PAGES___________________________ '''
-
 
 def orders():
     # Read all orders data with Info, mean that it's not including order rows
@@ -16,6 +14,7 @@ def orders():
     if not orders_df.empty:
         # normalize json to df
         info_df = pd.json_normalize(orders_df['info'])
+        info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%d-%m-%Y %H:%M:%S')
         # add order id from main df
         new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
         orders_info = new_df[configs.data_to_display['orders']].sort_values(by='date_created', ascending=False)
@@ -48,16 +47,13 @@ def edit_order_data():
 def jobs_list(order_type='regular'):
     type_list = mongo.read_collection_df('orders', query={'info.type': order_type})
     type_list = type_list['order_id'].to_list()
-    all_orders = mongo.read_collection_df('orders', query={'order_id': {'$in': type_list}})
+    all_orders = mongo.read_collection_df('orders', query={'order_id': {'$in': type_list}, 'job_id': {'$ne': "0"}})
     all_jobs = all_orders[all_orders['job_id'].notna()]
     if all_jobs.empty:
         return {}
     all_jobs = all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True])
     columns = ['order_id', 'job_id', 'status', 'date_created', 'description']
     return all_jobs[columns].to_dict('records')
-
-
-'''_____________________FUNCTIONS___________________________'''
 
 
 def get_dictionary(username):
@@ -123,29 +119,11 @@ def new_order_row():
         mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                          {'info.comment': req_form_data['comment_hid']})
     # Order peripheral data handling
-    if 'x_form' in req_form_data.keys() or 'y_form' in req_form_data.keys() or 'shape_data' in req_form_data.keys():
-        if temp_order_data and 'shape_data' not in req_form_data.keys():
-            new_row = temp_order_data.copy()
-        else:
-            new_row = {'order_id': order_id, 'job_id': "0"}
-        if 'x_form' in req_form_data:
-            if 'x_pitch' in new_row:
-                new_row['x_pitch'].append(str(int(req_form_data['x_pitch'])))
-                new_row['x_length'].append(str(int(req_form_data['x_length'])))
-            else:
-                new_row['x_pitch'] = [str(int(req_form_data['x_pitch']))]
-                new_row['x_length'] = [str(int(req_form_data['x_length']))]
-        elif 'y_form' in req_form_data:
-            if 'y_pitch' in new_row:
-                new_row['y_pitch'].append(str(int(req_form_data['y_pitch'])))
-                new_row['y_length'].append(str(int(req_form_data['y_length'])))
-            else:
-                new_row['y_pitch'] = [str(int(req_form_data['y_pitch']))]
-                new_row['y_length'] = [str(int(req_form_data['y_length']))]
-        else:
-            for item in req_form_data:
-                if item.isdigit() or item == 'shape_data':
-                    new_row[item] = req_form_data[item]
+    if 'shape_data' in req_form_data.keys():
+        new_row = {'order_id': order_id, 'job_id': "0"}
+        for item in req_form_data:
+            if item.isdigit() or item == 'shape_data':
+                new_row[item] = req_form_data[item]
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': "0"}, new_row)
         return
     else:
@@ -154,65 +132,76 @@ def new_order_row():
             if main.session['job_id'] != "":
                 job_id = main.session['job_id']
         new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'New', 'date_created': ts()}
+        if 'x_length' in req_form_data.keys():
+            new_row['x_length'] = []
+            new_row['x_pitch'] = []
+            new_row['y_length'] = []
+            new_row['y_pitch'] = []
         for item in req_form_data:
             if req_form_data[item] not in ['---', ''] and '_hid' not in item:
-                new_row[item] = req_form_data[item]
+                if '_length' in item or '_pitch' in item:
+                    new_row[item[:item.find('h')+1]].append(req_form_data[item])
+                else:
+                    new_row[item] = req_form_data[item]
     # Order data handling
-    if 'mkt' in new_row:
+    if 'diam_x' in new_row:  # or 'diam_y'
+        new_row['mkt'] = "2005020000"
+        bars_x = 1
+        bars_y = 1
+        for i in range(len(new_row['x_length'])):
+            if new_row['x_pitch'][i] != "0":
+                new_row['trim_x_end'] = str(int(new_row['trim_x_end']) +
+                                            int(new_row['x_length'][i]) % int(new_row['x_pitch'][i]))
+                new_row['x_length'][i] = str(int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])))
+                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['x_pitch'][i]))
+            else:
+                bars_y += 1
+        new_row['length'] = sum(list(map(int, new_row['y_length'])))
+        new_row['width'] = sum(list(map(int, new_row['x_length'])))
+        new_row['length'] += int(new_row['trim_y_start']) + int(new_row['trim_y_end'])
+        new_row['width'] += int(new_row['trim_x_start']) + int(new_row['trim_x_end'])
+        for i in range(len(new_row['y_length'])):
+            if new_row['y_pitch'][i] != "0":
+                new_row['trim_y_end'] = str(int(new_row['trim_y_end']) +
+                                            int(new_row['y_length'][i]) % int(new_row['y_pitch'][i]))
+                new_row['y_length'][i] = str(int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['y_pitch'][i])))
+                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['y_pitch'][i]))
+            else:
+                bars_x += 1
+        x_pitch = '('+')('.join(new_row['x_pitch'])+')'
+        y_pitch = '('+')('.join(new_row['y_pitch'])+')'
+        # x_length = '('+')('.join(new_row['x_length'])+')'
+        # y_length = '('+')('.join(new_row['y_length'])+')'
+        new_row['x_bars'] = int(bars_x)
+        new_row['y_bars'] = int(bars_y)
+        new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
+        new_row['y_weight'] = calc_weight(new_row['diam_y'], new_row['length'], bars_y)
+        new_row['description'] = "V"+str(new_row['width'])+"X"+str(bars_x)+"X"+str(new_row['diam_x'])+"WBX"+x_pitch + \
+                                 " H"+str(new_row['length'])+"X"+str(bars_y) + "X"+str(new_row['diam_y'])+"WBX"+y_pitch
+        new_row['unit_weight'] = new_row['x_weight'] + new_row['y_weight']
+        new_row['weight'] = new_row['unit_weight'] * int(new_row['quantity'])
+        if 'הזמנת_ייצור' in new_row:
+            x_bars = {'length': new_row['width'], 'qnt': bars_x * int(new_row['quantity']), 'diam': new_row['diam_x']}
+            y_bars = {'length': new_row['length'], 'qnt': bars_y * int(new_row['quantity']), 'diam': new_row['diam_y']}
+            peripheral_orders([x_bars, y_bars], order_id, job_id)
+    elif 'mkt' in new_row:
         cat_item = configs.rebar_catalog[new_row['mkt']]
         for item in cat_item:
-            if item not in ['unit_weight', 'pack_quantity']:
+            if item not in ['pack_quantity']:
                 new_row[item] = cat_item[item]
-        pitch = int(new_row['pitch'].split('X')[0])
+        pitch = int(new_row['x_pitch'])
         x_bars = {'length': new_row['width'], 'qnt': int(int(new_row['quantity']) * (int(new_row['length']) / pitch)),
-                  'diam': new_row['diam']}
+                  'diam': new_row['diam_x']}
         y_bars = {'length': new_row['length'],
                   'qnt': int(((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity'])),
-                  'diam': new_row['diam']}
-        new_row['description'] = "V250X"+str(int(int(new_row['length']) / pitch))+"X"+new_row['diam']+"WBX"+str(pitch) +\
-                                 " H600X"+str(int((int(new_row['width']) - 10) / pitch + 1))+"X"+new_row['diam']+"WBX"+str(pitch)
+                  'diam': new_row['diam_y']}
+        new_row['description'] = "V250X"+str(int(int(new_row['length']) / pitch))+"X"+new_row['diam_x']+"WBX"+str(pitch) +\
+                                 " H600X"+str(int((int(new_row['width']) - 10) / pitch + 1))+"X"+new_row['diam_y']+"WBX"+str(pitch)
         new_row['weight'] = round(float(configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
         if 'הזמנת_ייצור' in new_row:
             peripheral_orders([x_bars, y_bars], order_id, job_id)
-    elif 'diam_x' in new_row:  # or 'diam_y'
-        new_row['mkt'] = "2005020000"
-        if 'length' in new_row and 'width' in new_row:
-            new_row['length'] = str(int(new_row['length']) + int(new_row['trim_y_start']) + int(new_row['trim_y_end']))
-            new_row['width'] = str(int(new_row['width']) + int(new_row['trim_x_start']) + int(new_row['trim_x_end']))
-        else:
-            # Peripheral data not compatible with form data
-            print("Peripheral data not compatible with form data")
-            return
-        bars_x = 1
-        bars_y = 1
-        x_pitch = ""
-        y_pitch = ""
-        for i in range(len(temp_order_data['x_length'])):
-            if temp_order_data['x_pitch'][i] != "0":
-                bars_y += math.floor(int(temp_order_data['x_length'][i]) / int(temp_order_data['x_pitch'][i]))
-                x_pitch += "("+temp_order_data['x_pitch'][i]+")"
-            else:
-                bars_y += 1
-        for i in range(len(temp_order_data['y_length'])):
-            if temp_order_data['y_pitch'][i] != "0":
-                bars_x += math.floor(int(temp_order_data['y_length'][i]) / int(temp_order_data['y_pitch'][i]))
-                y_pitch += "("+temp_order_data['y_pitch'][i]+")"
-            else:
-                bars_x += 1
-        new_row['description'] = "V250X" + str(bars_x) + "X" + new_row['diam_x'] + "WBX" + x_pitch + \
-                                 " H600X" + str(bars_y) + "X" + new_row['diam_y'] + "WBX" + y_pitch
-        new_row['weight'] = calc_weight(new_row['diam_x'], new_row['width'],
-                                        bars_x) + calc_weight(new_row['diam_y'], new_row['length'], bars_y)
-        if 'הזמנת_ייצור' in new_row:
-            x_bars = {'length': new_row['width'], 'qnt': bars_x, 'diam': new_row['diam_x']}
-            y_bars = {'length': new_row['length'], 'qnt': bars_y, 'diam': new_row['diam_y']}
-            peripheral_orders([x_bars, y_bars], order_id, job_id)
-        if temp_order_data:
-            for item in temp_order_data:
-                if item != 'job_id':
-                    new_row[item] = temp_order_data[item]
-        mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
     elif 'shape' in req_form_data:
+        new_row['description'] = ""
         if int(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
         if temp_order_data:
@@ -233,6 +222,9 @@ def new_order_row():
             return
     else:
         return
+    for item in new_row:
+        if isinstance(new_row[item], int):
+            new_row[item] = str(new_row[item])
     mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']}, new_row)
 
 
@@ -292,12 +284,13 @@ def gen_patterns(order_type='regular'):
         cat_num = []
         rebar_type = []
         for item in configs.rebar_catalog:
-            if configs.rebar_catalog[item]['diam'] not in diam:
-                diam.append(configs.rebar_catalog[item]['diam'])
+            if configs.rebar_catalog[item]['diam_x'] not in diam:
+                diam.append(configs.rebar_catalog[item]['diam_x'])
             if item not in cat_num:
                 cat_num.append(item)
-            if configs.rebar_catalog[item]['pitch'] not in rebar_type:
-                rebar_type.append(configs.rebar_catalog[item]['pitch'])
+            if configs.rebar_catalog[item]['x_pitch'] not in rebar_type:
+                pitch = configs.rebar_catalog[item]['x_pitch'] + "X" + configs.rebar_catalog[item]['y_pitch']
+                rebar_type.append(pitch)
         diam.sort()
         rebar_type.sort()
         cat_num.sort()
@@ -307,11 +300,11 @@ def gen_patterns(order_type='regular'):
         diam = ['5.5', '6.5', '7.5', '8', '10', '12', '14', '16', '18']
         cat_num = []
         rebar_type = []
-        for item in configs.rebar_catalog:
-            if item not in cat_num:
-                cat_num.append(item)
-            if configs.rebar_catalog[item]['pitch'].split('X')[0] not in rebar_type:
-                rebar_type.append(configs.rebar_catalog[item]['pitch'].split('X')[0])
+        # for item in configs.rebar_catalog:
+        #     if item not in cat_num:
+        #         cat_num.append(item)
+        #     if configs.rebar_catalog[item]['pitch'].split('X')[0] not in rebar_type:
+        #         rebar_type.append(configs.rebar_catalog[item]['pitch'].split('X')[0])
         rebar_type.sort()
         cat_num.sort()
         patterns = {'pitch_x': '|'.join(rebar_type), 'pitch_y': '|'.join(rebar_type), 'diam_x': '|'.join(diam),

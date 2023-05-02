@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+<form>
+    <input name="name" placeholder="שם לקוח" autofocus>
+    <input name="id" type="hidden" value="{{client_data.id}}">
+    {% for item in client_data.info %}
+    {{ item }}
+    <br>
+    {% endfor %}
+    <button type="submit">אישור</button>
+</form>
+{% endblock %}

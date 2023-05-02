@@ -129,15 +129,14 @@ def edit_row():
         if order_data:
             return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                                    dictionary=page_data[2], rebar_data={})
-    # todo: complete - no working
-    # session['job_id'] = ""
     pages.new_order_row()
     return redirect('/orders')
 
 
 @app.route('/new_order', methods=['POST', 'GET'])
 def new_order():
-    if not validate_user():
+    user_group = validate_user()
+    if not user_group:
         return logout()
     client = ""
     order_type = ""
@@ -152,7 +151,10 @@ def new_order():
     elif 'type' in request.form.keys():
         order_type = request.form['type']
     client_list, sites_list = pages.gen_client_list(client)
-    return render_template('/pick_client.html', clients=client_list, site=sites_list, order_type=order_type)
+    permission = False
+    if user_group > 50:
+        permission = True
+    return render_template('/pick_client.html', clients=client_list, site=sites_list, order_type=order_type, permission=permission)
 
 
 @app.route('/close', methods=['GET'])
@@ -252,24 +254,51 @@ def choose_printer():
     return render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type, defaults={'printer':default_printer})
 
 
-@app.route('/clients', methods=['POST'])
+@app.route('/clients', methods=['POST', 'GET'])
 def clients():
-    orders_list = []
-    display_those_keys = []
+    clients_list = mongo.read_collection_df('costumers').to_dict('index')
+    display_those_keys = ['name', 'id']
     dictionary = {}
-    return render_template('clients.html', orders=orders_list, display_items=display_those_keys,
+    return render_template('clients.html', clients=clients_list, display_items=display_those_keys,
                            dictionary=dictionary)
 
 
-@app.route('/edit_client', methods=['POST'])
+@app.route('/edit_client', methods=['POST', 'GET'])
 def edit_client():
+    user_group = validate_user()
+    if not user_group:
+        return logout()
+    client = ""
     req_vals = list(request.values)
-    # todo: read clients list
     if len(req_vals) == 1:
         client = req_vals[0]
-        # todo: client_list[client]
-        print("edit client")
-    return None
+    elif request.form:
+        # Add or edit client
+        client_data = {'sites': []}
+        for item in request.form.keys():
+            if item not in ['name', 'id', 'site_1', 'site_2', 'site_3']:
+                client_data['info'][item] = request.form[item]
+            elif 'site' in item:
+                # todo:
+                client_data['sites'].append({request.form[item]: 'id'})
+            else:
+                client_data[item] = request.form[item]
+
+    else:
+        if user_group < 50:
+            return '', 204
+
+    if client:
+        client_data = mongo.read_collection_one('costumers', {'name': client})
+    else:
+        client_data = {'name': '', 'id': gen_client_id(), 'sites': {},
+                       'info': mongo.read_collection_one('costumers', {'name': 'Margolisys'})['info']}
+    return render_template('edit_client.html', client_data=client_data)
+
+
+def gen_client_id():
+    last_id = mongo.read_collection_last('costumers', 'id')['id']
+    return str(int(last_id) + 1)
 
 
 '''

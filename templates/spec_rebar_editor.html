@@ -1,16 +1,26 @@
-<table class="table table-striped" dir="rtl" align="center">
+<table dir="rtl" align="center">
     <tr>
         <td>
             <table class="table table-striped" dir="rtl" align="center">
-            <form id="x_form" method=POST action="{{ url_for('edit_order') }}">
-            <input type="hidden" id="x" name="x" value="x">
                 <tr>
-                    <td></td>
                     <td>
-                        <input type="number" value="0" name="x_length" id="x_length" onchange="findTotal2('amount_x', 'width', 'x_length')" class="form-control" placeholder="רוחב" required>
+                        <input type="number" name="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" required>
                     </td>
                     <td>
+                        <input type="number" name="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td id="x_length_container">
+                        רוחב
+                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" required>
+                    </td>
+                    <td id="x_pitch_container">
+                        פסיעה
                         <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" required>
+                    </td>
+                    <td>
+                        <button type="button" onclick="addInput('x_length_container');addInput('x_pitch_container');">הוסף</button>
                     </td>
                 </tr>
                 {% if order_data.include_data %}
@@ -26,22 +36,32 @@
                 </tr>
                 {% endfor %}
                 {% endif %}
-                <button type=submit class="btn btn-primary btn-block" name="x_form">הוסף מקטע רוחב</button>
-                <label style="color:red">זמנית לא ניתן לתקן שדות במקטעים </label>
-            </form>
             </table>
         </td>
+        <td width="80"></td>
         <td>
             <table class="table table-striped" dir="rtl" align="center">
-            <form id="y_form" method=POST action="{{ url_for('edit_order') }}">
-            <input type="hidden" id="y" name="y" value="y">
                 <tr>
-                    <td></td>
                     <td>
-                        <input type="number" value="0" name="y_length" id="y_length" onchange="findTotal2('amount_y', 'length', 'y_length')" class="form-control" placeholder="אורך" required>
+                        <input type="number" name="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" required>
                     </td>
                     <td>
+                        <input type="number" name="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td> <!--onchange="findTotal2('amount_y', 'length', 'y_length')"-->
+                        אורך
+                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" required>
+                        <div id="y_length_container"></div>
+                    </td>
+                    <td>
+                        פסיעה
                         <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" required>
+                        <div id="y_pitch_container"></div>
+                    </td>
+                    <td>
+                        <button type="button" onclick="addInput('y_length_container');addInput('y_pitch_container');">הוסף</button>
                     </td>
                 </tr>
                 {% if order_data.include_data %}
@@ -57,9 +77,6 @@
                 </tr>
                 {% endfor %}
                 {% endif %}
-                <button type=submit class="btn btn-primary btn-block" name="y_form">הוסף מקטע אורך</button>
-                <label style="color:red">זמנית לא ניתן לתקן שדות במקטעים </label>
-            </form>
             </table>
         </td>
     </tr>

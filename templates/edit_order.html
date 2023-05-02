@@ -33,9 +33,6 @@ div {
     {% endfor %}
     </tr>
 </table>
-{% if order_data.include %}
-    {% include order_data.include %}
-{% endif %}
 <form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
@@ -45,14 +42,17 @@ div {
     </tr>
     <tr>
         <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
-        <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" disabled>העתק שורה אחרונה</button></td>
-        <td><button ondblclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
-        <td><button ondblclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" disabled>הדפס דוגמה</button></td>
-        <td><button ondblclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
-        <td><button ondblclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
-        <!--<td><button ondblclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
+        <td><button onclick="location.href='\close'" type="button" class="btn btn-primary btn-block" disabled>העתק שורה אחרונה</button></td>
+        <td><button onclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
+        <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" disabled>הדפס דוגמה</button></td>
+        <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
+        <td><button onclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
+        <!--<td><button onclick="confirmDel()" type="button" class="btn btn-primary btn-block" >מחק הזמנה</button></td>-->
     </tr>
 </table>
+{% if order_data.include %}
+    {% include order_data.include %}
+{% endif %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         {% for item in order_data.data_to_display %}
@@ -77,9 +77,13 @@ div {
             <td>
             <input type="text" class="form-control" name="{{ item }}" placeholder="{{ name }}">
             {% else %}
-            {% if order_data.data_to_display[item] == 1 %} <!-- Regular required -->
+            {% if order_data.data_to_display[item] == 1 %} <!-- Regular required numeric -->
             <td>
             <input type="number" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" required>
+            {% else %}
+            {% if order_data.data_to_display[item] == 1.1 %} <!-- Regular required text -->
+            <td>
+            <input type="text" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" required>
             {% else %}
             {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
             <td width="80">
@@ -116,12 +120,13 @@ div {
             {% endif %}
             {% endif %}
             {% endif %}
+            {% endif %}
         </td>
         {% endfor %}
     </tr>
     {% for row in order_data.order_rows %}
     {% if row['job_id'] != "0" %}
-    <tr ondblclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
+    <tr onclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
         {% for item in order_data.data_to_display %}
         <td>
             {{ row[item] }}

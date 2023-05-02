@@ -67,3 +67,13 @@ function findTotal2(src, target, inputId){
         document.getElementById(target).value = tot;
     }
 }
+var temp = 0
+function addInput(div_id){
+    var container = document.getElementById(div_id);
+    var input = document.createElement("input");
+    input.type = "number";
+    input.name = div_id.replace('_container', temp);
+    temp += 1
+    input.setAttribute('class', 'form-control');
+    container.appendChild(input);
+}
