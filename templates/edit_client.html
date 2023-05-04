@@ -3,10 +3,18 @@
 <form>
     <input name="name" placeholder="שם לקוח" autofocus>
     <input name="id" type="hidden" value="{{client_data.id}}">
+    <table>
     {% for item in client_data.info %}
-    {{ item }}
-    <br>
+        <tr>
+            <td>
+                {{ item }}
+            </td>
+            <td>
+                {{ client_data.info[item] }}
+            </td>
+        </tr>
     {% endfor %}
+    </table>
     <button type="submit">אישור</button>
 </form>
 {% endblock %}

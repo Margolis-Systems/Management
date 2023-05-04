@@ -89,11 +89,18 @@ class DBHandle:
         collection.delete_many(query)
 
     @staticmethod
-    def update_one(collect, key, doc, upsert=False, db_name=""):
+    def update_one_set(collect, key, doc, upsert=False, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.update_one(key, {"$set": doc}, upsert=upsert)
+
+    @staticmethod
+    def update_one_push(collect, key, doc, upsert=False, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        collection = db[collect]
+        collection.update_one(key, {"$push": doc}, upsert=upsert)
 
     @staticmethod
     def dump(path, collections=[], db_name=""):

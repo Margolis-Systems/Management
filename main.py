@@ -134,19 +134,17 @@ def edit_row():
 
 
 @app.route('/new_order', methods=['POST', 'GET'])
-def new_order():
+def new_order(client="", order_type=""):
     user_group = validate_user()
     if not user_group:
         return logout()
-    client = ""
-    order_type = ""
-    if 'client' in request.form.keys():
+    if 'client' in request.form.keys() or client:
         if 'site' in request.form.keys():
             session['order_id'] = pages.new_order(request.form)
             return redirect('/orders')
-        else:
+        elif 'client' in request.form.keys():
             client = request.form['client']
-    if len(list(request.values)) == 1:
+    if len(list(request.values)) == 1 or order_type:
         order_type = list(request.values)[0]
     elif 'type' in request.form.keys():
         order_type = request.form['type']
@@ -186,8 +184,8 @@ def scan():
         order_id, job_id = reports.Images.decode_qr(request.form['scan'])
     elif 'order_id' in request.form.keys() and 'close' not in request.form.keys():
         order_id, job_id = request.form['order_id'].split("_")
-        mongo.update_one(configs.orders_collection, {'order_id': order_id, 'job_id': job_id},
-                         {'$set': {'status': request.form['status']}}, upsert=True)
+        mongo.update_one_set(configs.orders_collection, {'order_id': order_id, 'job_id': job_id},
+                             {'status': request.form['status']}, upsert=True)
     if order_id:
         job = mongo.read_collection_one(configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if job:
@@ -264,41 +262,50 @@ def clients():
 
 
 @app.route('/edit_client', methods=['POST', 'GET'])
-def edit_client():
+def edit_client(client=""):
     user_group = validate_user()
+    client_data = {}
     if not user_group:
         return logout()
-    client = ""
+    elif user_group < 50:
+        return '', 204
     req_vals = list(request.values)
     if len(req_vals) == 1:
         client = req_vals[0]
     elif request.form:
+        print(request.form)
         # Add or edit client
-        client_data = {'sites': []}
-        for item in request.form.keys():
-            if item not in ['name', 'id', 'site_1', 'site_2', 'site_3']:
-                client_data['info'][item] = request.form[item]
-            elif 'site' in item:
-                # todo:
-                client_data['sites'].append({request.form[item]: 'id'})
-            else:
-                client_data[item] = request.form[item]
+        if 'client_name' in request.form.keys():
+            client = request.form['client_name']
+            return_to_page = request.form['new_client']
+            if not mongo.read_collection_one('costumers', {'name': client}):
+                add_new_client(client)
+            if return_to_page == 'pick_client':
+                return new_order(client=client)
+        elif 'site_name' in request.form.keys():
+            return_to_page = request.form['new_client']
+            client = request.form['client']
+            new_site = request.form['site_name']
+            client_data = mongo.read_collection_one('costumers', {'name': client})
+            if new_site not in client_data['sites']:
+                mongo.update_one_push('costumers', {'name': client}, {'sites': new_site})
+            if return_to_page == 'pick_client':
+                return new_order(client=client)
 
-    else:
-        if user_group < 50:
-            return '', 204
-
-    if client:
+    elif client:
+        # Edit existing client
         client_data = mongo.read_collection_one('costumers', {'name': client})
-    else:
-        client_data = {'name': '', 'id': gen_client_id(), 'sites': {},
-                       'info': mongo.read_collection_one('costumers', {'name': 'Margolisys'})['info']}
     return render_template('edit_client.html', client_data=client_data)
 
 
 def gen_client_id():
     last_id = mongo.read_collection_last('costumers', 'id')['id']
     return str(int(last_id) + 1)
+
+
+def add_new_client(client_name, info={}):
+    new_client_data = {'name': client_name, 'id': gen_client_id(), 'sites': [], 'info': info}
+    mongo.insert_collection_one('costumers', new_client_data)
 
 
 '''

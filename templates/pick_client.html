@@ -5,7 +5,7 @@
         <form method=POST action="{{ url_for('new_order') }}">
             <td>
                 <input type="hidden" name="type" value="{{ order_type }}">
-                {% if site == [] %}
+                {% if site == "" %}
                 <label>בחר לקוח</label>
                 <input list="client_list" class="form-control" name="client" placeholder="select client" autofocus="autofocus" required>
                     <datalist id="client_list">
@@ -26,13 +26,14 @@
                 <button type="submit" class="btn btn-primary btn-block">אישור</button>
             </form>
         </td>
-        <!--{% if permission %}
-        {% if site == [] %}
+        {% if permission %}
+        {% if site == "" %}
         <td>
             <form method=POST action="{{ url_for('edit_client') }}">
                 <label>לקוח חדש</label><br>
                 <input type="text" class="form-control" name="client_name">
-                <button onclick="location.href='\edit_client?new_client'" type="button" class="btn btn-primary btn-block">לקוח חדש</button>
+                <input type="hidden" name="new_client" value="pick_client">
+                <button type="submit" class="btn btn-primary btn-block">לקוח חדש</button>
             </form>
         </td>
         {% else %}
@@ -40,12 +41,13 @@
             <form method=POST action="{{ url_for('edit_client') }}">
                 <label>הוסף אתר</label><br>
                 <input type="hidden" name="client" value="{{clients}}">
+                <input type="hidden" name="new_client" value="pick_client">
                 <input type="text" class="form-control" name="site_name">
-                <button onclick="location.href='\edit_client?new_site'" type="button" class="btn btn-primary btn-block">הוסף אתר</button>
+                <button type="submit" class="btn btn-primary btn-block">הוסף אתר</button>
             </form>
         </td>
         {% endif %}
-        {% endif %}-->
+        {% endif %}
     </tr>
 </table>
 {% endblock %}

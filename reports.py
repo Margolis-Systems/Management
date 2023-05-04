@@ -119,7 +119,6 @@ class Bartender:
         # Print additional summary info
         if len(bt_format) > 1:
             summary_data = Bartender.gen_summary_data(rows, info)
-            print(rows)
             Bartender.bt_create_print_file(printer, bt_format[1], summary_data)
 
     @staticmethod

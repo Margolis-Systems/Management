@@ -17,6 +17,9 @@ def orders():
         info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%d-%m-%Y %H:%M:%S')
         # add order id from main df
         new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
+        for item in configs.data_to_display['orders']:
+            if item not in new_df.columns:
+                new_df[item] = ""
         orders_info = new_df[configs.data_to_display['orders']].sort_values(by='date_created', ascending=False)
         return orders_info.to_dict('index'), configs.data_to_display['orders']
     else:
@@ -105,7 +108,7 @@ def new_order(info_data):
     order_type = info_data['type']
     order_id = new_order_id()
     order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'type': order_type,
-                                            'costumer_name': client, 'costumer_id': client_id, 'costumer_site': site}}
+                                            'costumer_name': client, 'costumer_id': client_id, 'costumer_site': site, 'status': 'NEW'}}
     mongo.insert_collection_one('orders', order)
     return order_id
 
@@ -116,8 +119,8 @@ def new_order_row():
     temp_order_data = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     # Order comment
     if 'comment_hid' in req_form_data:
-        mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                         {'info.comment': req_form_data['comment_hid']})
+        mongo.update_one_set('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                             {'info.comment': req_form_data['comment_hid']})
     # Order peripheral data handling
     if 'shape_data' in req_form_data.keys():
         new_row = {'order_id': order_id, 'job_id': "0"}
@@ -228,19 +231,18 @@ def new_order_row():
     mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']}, new_row)
 
 
-def gen_client_list(client):
-    sites_list = []
+def gen_client_list(client=""):
+    sites_list = ""
     client_list = []
-    client_data = {}
     if client:
         client_data = mongo.read_collection_one('costumers', {'name': client})
-    else:
-        costumers = mongo.read_collection_df('costumers')
-        if not costumers.empty:
-            client_list = costumers['name'].to_list()
-    if client_data:
-        sites_list = client_data['sites']
-        client_list = client
+        if client_data:
+            sites_list = client_data['sites']
+            client_list = client
+            return client_list, sites_list
+    costumers = mongo.read_collection_df('costumers')
+    if not costumers.empty:
+        client_list = costumers['name'].to_list()
     return client_list, sites_list
 
 
