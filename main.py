@@ -127,8 +127,20 @@ def edit_row():
         session['order_id'], session['job_id'] = list(request.values)[0].split('job')
         order_data, page_data = pages.edit_order_data()
         if order_data:
+            defaults = {}
+            for item in order_data['order_rows'][0]:
+
+                if isinstance(order_data['order_rows'][0][item], list):
+                    print(item)
+                    for li in range(len(order_data['order_rows'][0][item])):
+                        if li > 0:
+                            defaults[item+str(li - 1)] = order_data['order_rows'][0][item][li]
+                        else:
+                            defaults[item] = order_data['order_rows'][0][item][li]
+                else:
+                    defaults[item] = order_data['order_rows'][0][item]
             return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                                   dictionary=page_data[2], rebar_data={})
+                                   dictionary=page_data[2], defaults=defaults)
     pages.new_order_row()
     return redirect('/orders')
 
@@ -139,12 +151,13 @@ def new_order(client="", order_type=""):
     if not user_group:
         return logout()
     if 'client' in request.form.keys() or client:
-        if 'site' in request.form.keys():
-            session['order_id'] = pages.new_order(request.form)
-            return redirect('/orders')
+        if 'site' in request.form.keys() and 'sites_list' in session.keys():
+            if request.form['site'] in session['sites_list']:
+                session['order_id'] = pages.new_order(request.form)
+                return redirect('/orders')
         elif 'client' in request.form.keys():
             client = request.form['client']
-    if len(list(request.values)) == 1 or order_type:
+    if len(list(request.values)) == 1 and not order_type:
         order_type = list(request.values)[0]
     elif 'type' in request.form.keys():
         order_type = request.form['type']
@@ -152,6 +165,8 @@ def new_order(client="", order_type=""):
     permission = False
     if user_group > 50:
         permission = True
+    if sites_list:
+        session['sites_list'] = sites_list
     return render_template('/pick_client.html', clients=client_list, site=sites_list, order_type=order_type, permission=permission)
 
 
@@ -273,24 +288,24 @@ def edit_client(client=""):
     if len(req_vals) == 1:
         client = req_vals[0]
     elif request.form:
-        print(request.form)
+        return_to_page = ""
         # Add or edit client
         if 'client_name' in request.form.keys():
             client = request.form['client_name']
+            order_type = request.form['type']
             return_to_page = request.form['new_client']
             if not mongo.read_collection_one('costumers', {'name': client}):
                 add_new_client(client)
-            if return_to_page == 'pick_client':
-                return new_order(client=client)
         elif 'site_name' in request.form.keys():
             return_to_page = request.form['new_client']
+            order_type = request.form['type']
             client = request.form['client']
             new_site = request.form['site_name']
             client_data = mongo.read_collection_one('costumers', {'name': client})
             if new_site not in client_data['sites']:
                 mongo.update_one_push('costumers', {'name': client}, {'sites': new_site})
-            if return_to_page == 'pick_client':
-                return new_order(client=client)
+        if return_to_page == 'pick_client':
+            return new_order(client=client, order_type=order_type)
 
     elif client:
         # Edit existing client

@@ -4,20 +4,20 @@
             <table class="table table-striped" dir="rtl" align="center">
                 <tr>
                     <td>
-                        <input type="number" name="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" required>
+                        <input type="number" name="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" value="{{defaults['trim_x_start']}}" required>
                     </td>
                     <td>
-                        <input type="number" name="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" required>
+                        <input type="number" name="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" required>
                     </td>
                 </tr>
                 <tr>
                     <td id="x_length_container">
                         רוחב
-                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" required>
+                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" required>
                     </td>
                     <td id="x_pitch_container">
                         פסיעה
-                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" required>
+                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch']}}" required>
                     </td>
                     <td>
                         <button type="button" onclick="addInput('x_length_container');addInput('x_pitch_container');">הוסף</button>
@@ -43,21 +43,21 @@
             <table class="table table-striped" dir="rtl" align="center">
                 <tr>
                     <td>
-                        <input type="number" name="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" required>
+                        <input type="number" name="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" value="{{defaults['trim_y_start']}}" required>
                     </td>
                     <td>
-                        <input type="number" name="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" required>
+                        <input type="number" name="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" value="{{defaults['trim_y_end']}}" required>
                     </td>
                 </tr>
                 <tr>
                     <td> <!--onchange="findTotal2('amount_y', 'length', 'y_length')"-->
                         אורך
-                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" required>
+                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" required>
                         <div id="y_length_container"></div>
                     </td>
                     <td>
                         פסיעה
-                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" required>
+                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch']}}" required>
                         <div id="y_pitch_container"></div>
                     </td>
                     <td>

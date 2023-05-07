@@ -22,10 +22,10 @@
     {% endfor %}
     </tr>
 </table>
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_row') }}">
 {% if order_data.include %}
     {% include order_data.include %}
 {% endif %}
-<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_row') }}">
 <table class="table table-striped" dir="rtl" align="center">
         <td colspan="100">
             <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}">

@@ -7,7 +7,7 @@
                 <input type="hidden" name="type" value="{{ order_type }}">
                 {% if site == "" %}
                 <label>בחר לקוח</label>
-                <input list="client_list" class="form-control" name="client" placeholder="select client" autofocus="autofocus" required>
+                <input list="client_list" class="form-control" name="client" placeholder="select client" autofocus="autofocus" autocomplete="off" required>
                     <datalist id="client_list">
                     {% for item in clients %}
                         <option value="{{ item }}">
@@ -16,7 +16,7 @@
                 {% else %}
                 <label>בחר אתר לקוח / לקוח נבחר: {{clients}}</label><br>
                 <input type="hidden" name="client" value="{{clients}}">
-                <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" required>
+                <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" required>
                     <datalist id="sites_list">
                     {% for item in site %}
                         <option value="{{ item }}">
@@ -33,6 +33,7 @@
                 <label>לקוח חדש</label><br>
                 <input type="text" class="form-control" name="client_name">
                 <input type="hidden" name="new_client" value="pick_client">
+                <input type="hidden" name="type" value="{{ order_type }}">
                 <button type="submit" class="btn btn-primary btn-block">לקוח חדש</button>
             </form>
         </td>
@@ -42,6 +43,7 @@
                 <label>הוסף אתר</label><br>
                 <input type="hidden" name="client" value="{{clients}}">
                 <input type="hidden" name="new_client" value="pick_client">
+                <input type="hidden" name="type" value="{{ order_type }}">
                 <input type="text" class="form-control" name="site_name">
                 <button type="submit" class="btn btn-primary btn-block">הוסף אתר</button>
             </form>

@@ -96,7 +96,10 @@ class Bartender:
                         template_row["tb" + str(3 + i)] = "רשת סטנדרט"
                         template_row["tb" + str(6 + i)] = float(configs.rebar_catalog[row['mkt']]['unit_weight'])
                     else:
-                        template_row["tb" + str(3 + i)] = "רשת מיוחדת לפי תוכנית כוורת מרותכת דקה"
+                        # template_row["tb" + str(3 + i)] = "רשת מיוחדת לפי תוכנית כוורת מרותכת דקה"
+                        template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
+                        if int(row['diam_x']) >= 14 or int(row['diam_y']) >= 14:
+                            template_row["tb" + str(3 + i)] = template_row["tb" + str(3 + i)].replace('דקה', 'עבה')
                         template_row["tb" + str(6 + i)] = int(row['weight'] / int(row['quantity']))
                     template_row["tb" + str(7 + i)] = row['weight']
                     total_weight += row['weight']
@@ -165,6 +168,8 @@ class Bartender:
             special_sum = {}
             summary_data.append(info)
             for row in rows:
+                if 'bar_type' not in row:
+                    row['bar_type'] = "מצולע"
                 # Summary data
                 quantity = int(row['quantity'])
                 if row['diam'] in table_data.keys():
@@ -277,8 +282,6 @@ class Bartender:
                     bt_dict = configs.print_dict["default"]
                 for item in bt_dict:
                     if item in line.keys():
-                        # if isinstance(line[item], float):
-                        #     line[item] = int(line[item])
                         print_line += str(line[item]) + '~'
                     else:
                         print_line += '~'

@@ -181,8 +181,8 @@ def new_order_row():
         new_row['y_weight'] = calc_weight(new_row['diam_y'], new_row['length'], bars_y)
         new_row['description'] = "V"+str(new_row['width'])+"X"+str(bars_x)+"X"+str(new_row['diam_x'])+"WBX"+x_pitch + \
                                  " H"+str(new_row['length'])+"X"+str(bars_y) + "X"+str(new_row['diam_y'])+"WBX"+y_pitch
-        new_row['unit_weight'] = new_row['x_weight'] + new_row['y_weight']
-        new_row['weight'] = new_row['unit_weight'] * int(new_row['quantity'])
+        new_row['unit_weight'] = round(new_row['x_weight'] + new_row['y_weight'], 2)
+        new_row['weight'] = round(new_row['unit_weight'] * int(new_row['quantity']), 2)
         if 'הזמנת_ייצור' in new_row:
             x_bars = {'length': new_row['width'], 'qnt': bars_x * int(new_row['quantity']), 'diam': new_row['diam_x']}
             y_bars = {'length': new_row['length'], 'qnt': bars_y * int(new_row['quantity']), 'diam': new_row['diam_y']}
@@ -253,16 +253,17 @@ def calc_weight(diam, length, qnt):
 def peripheral_orders(add_orders, order_id, job_id):
     description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id + " שורה מספר: " + job_id
     order_id += "_R"
-    for order in add_orders:
-        order_weight = calc_weight(order['diam'], order['length'], order['qnt'])
+    for order in range(len(add_orders)):
+        job_id += '_'+str(order)
+        order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
         info = {'costumer_name': 'צומת ברזל', 'created_by': main.session['username'], 'date_created': ts(),
-                'type': 'for_production'}
+                'type': 'regular', 'status': "New"}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                     {'order_id': order_id, 'info': info})
-        peripheral_order = {'order_id': order_id, 'job_id': gen_job_id(order_id), 'status': "New", 'date_created': ts(),
-                            'description': description, 'quantity': order['qnt'], 'shape': 1, 'length': order['length'],
-                            'diam': order['diam'], 'weight': order_weight}
-        mongo.insert_collection_one('orders', peripheral_order)
+        peripheral_order = {'order_id': order_id, 'job_id': job_id, 'status': "New", 'date_created': ts(),
+                            'description': description, 'quantity': add_orders[order]['qnt'], 'shape': "1", 'length': add_orders[order]['length'],
+                            'diam': add_orders[order]['diam'], 'weight': order_weight, 'shape_data': [add_orders[order]['length']]}
+        mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': job_id}, peripheral_order)
 
 
 def ts(mode=""):

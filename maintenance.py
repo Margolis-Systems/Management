@@ -19,6 +19,7 @@ def clean_reports_temp():
 def mongo_backup():
     db_handler.DBHandle.dump("C:\\DB_backup")
 
+
 if __name__ == '__main__':
     # clean_reports_temp()
     configs.mongo.delete_many('orders')
