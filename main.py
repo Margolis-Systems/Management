@@ -150,14 +150,14 @@ def new_order(client="", order_type=""):
     user_group = validate_user()
     if not user_group:
         return logout()
-    if 'client_name' in request.form.keys() or client:
+    if 'name' in request.form.keys() or client:
         if 'site' in request.form.keys() and 'sites_list' in session.keys():
             if request.form['site'] in session['sites_list']:
                 session['sites_list'] = []
                 session['order_id'] = pages.new_order(request.form)
                 return redirect('/orders')
-        elif 'client_name' in request.form.keys():
-            client = request.form['client_name']
+        elif 'name' in request.form.keys():
+            client = request.form['name']
     if len(list(request.values)) == 1 and not order_type:
         order_type = list(request.values)[0]
     elif 'order_type' in request.form.keys():
@@ -295,13 +295,14 @@ def edit_client(client_id=""):
         if request.form:
             if not client_data:
                 client_id = add_new_client(request.form['name'])
+                client_data = mongo.read_collection_one('costumers', {'id': client_id})
             for item in request.form:
                 if 'site' in item:
                     new_site = request.form[item]
                     if new_site not in client_data['sites']:
                         mongo.update_one_push('costumers', {'id': client_id}, {'sites': new_site})
                 elif item not in ['return_to', 'order_type', 'id']:
-                    mongo.update_one_set('costumers', {'id': client_id}, {item: request.form[item]}, upsert=True)
+                    mongo.update_one_set('costumers', {'id': client_id}, {item: request.form[item]})
             if 'order_type' in request.form.keys():
                 order_type = request.form['order_type']
                 return_to_page = request.form['return_to']
@@ -321,6 +322,22 @@ def add_new_client(client_name):
     new_client_data = {'name': client_name, 'id': client_id, 'sites': []}
     mongo.insert_collection_one('costumers', new_client_data)
     return client_id
+
+
+@app.route('/delete_client', methods=['POST', 'GET'])
+def delete_client():
+    print("hello")
+    user_group = validate_user()
+    if not user_group:
+        return logout()
+    elif user_group < 50:
+        return '', 204
+    req_vals = list(request.values)
+    if len(req_vals) == 1:
+        client_id = req_vals[0]
+        if client_id:
+            mongo.delete_many('costumers', {'id': client_id})
+    return redirect('/clients')
 
 
 '''

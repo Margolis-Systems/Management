@@ -103,7 +103,7 @@ def new_order_id():
 
 def new_order(info_data):
     user = main.session['username']
-    client = info_data['client_name']
+    client = info_data['name']
     client_id = mongo.read_collection_one('costumers', {'name': client})['id']
     site = info_data['site']
     order_type = info_data['order_type']
