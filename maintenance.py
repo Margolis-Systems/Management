@@ -20,7 +20,12 @@ def mongo_backup():
     db_handler.DBHandle.dump("C:\\DB_backup")
 
 
+def mongo_restore(backup_dir):
+    db_handler.DBHandle.restore(backup_dir)
+
+
 if __name__ == '__main__':
     # clean_reports_temp()
     configs.mongo.delete_many('orders')
     mongo_backup()
+    # mongo_restore("C:\\Users\\MargoliSys\\Desktop\\07-05-2023_12-37-07-270634")

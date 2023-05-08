@@ -119,6 +119,10 @@ class DBHandle:
     def restore(path, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         for coll in os.listdir(path):
+            print(coll)
             if coll.endswith('.bson'):
-                with open(os.path.join(path, coll), 'rb+') as f:
-                    db[coll.split('.')[0]].insert_many(bson.decode_all(f.read()))
+                try:
+                    with open(os.path.join(path, coll), 'rb+') as f:
+                        db[coll.split('.')[0]].insert_many(bson.decode_all(f.read()))
+                except Exception as e:
+                    print(e)

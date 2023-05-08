@@ -41,8 +41,8 @@ class Images:
             img = Image.open(static_dir + 'images\\shapes\\0.png')
         draw = ImageDraw.Draw(img)
         for index in range(len(data)):
-            positions[index][0] -= (len(str(data[index])) - 1) * 3
-            text_box_pos = [positions[index][0], positions[index][1] - 2]
+            # positions[index][0] -= (len(str(data[index])) - 1) * 3
+            text_box_pos = positions[index][0], positions[index][1] - 2
             bbox = draw.textbbox(text_box_pos, str(data[index]), font=ImageFont.truetype("segoeuib.ttf", font_size + 2))
             draw.rectangle(bbox, fill="white")
             draw.text(positions[index], str(data[index]), font=ImageFont.truetype("segoeui.ttf", font_size), fill="black")
@@ -69,7 +69,7 @@ class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type):
         # Format data
-        rows, info, aditional = pages.get_order_data(order_id, reverse=False)
+        rows, info, additional = pages.get_order_data(order_id, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
         if 'rebar' in info['type'] and print_type == 'page':

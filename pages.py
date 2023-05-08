@@ -21,6 +21,7 @@ def orders():
             if item not in new_df.columns:
                 new_df[item] = ""
         orders_info = new_df[configs.data_to_display['orders']].sort_values(by='date_created', ascending=False)
+        print(info_df)
         return orders_info.to_dict('index'), configs.data_to_display['orders']
     else:
         return [], []
@@ -102,10 +103,10 @@ def new_order_id():
 
 def new_order(info_data):
     user = main.session['username']
-    client = info_data['client']
-    client_id = ""
+    client = info_data['client_name']
+    client_id = mongo.read_collection_one('costumers', {'name': client})['id']
     site = info_data['site']
-    order_type = info_data['type']
+    order_type = info_data['order_type']
     order_id = new_order_id()
     order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'type': order_type,
                                             'costumer_name': client, 'costumer_id': client_id, 'costumer_site': site, 'status': 'NEW'}}

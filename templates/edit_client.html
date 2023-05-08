@@ -1,20 +1,50 @@
 {% extends "layout.html" %}
 {% block body %}
-<form>
-    <input name="name" placeholder="שם לקוח" autofocus>
-    <input name="id" type="hidden" value="{{client_data.id}}">
-    <table>
-    {% for item in client_data.info %}
-        <tr>
-            <td>
-                {{ item }}
-            </td>
-            <td>
-                {{ client_data.info[item] }}
-            </td>
-        </tr>
+<form method=POST autocomplete="off" action="{{ url_for('edit_client') }}">
+<input type="hidden" name="id" value="{{client_data['id']}}">
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td><b>שם לקוח</b></td>
+        <td><b>עיר</b></td>
+        <td><b>כתובת</b></td>
+    </tr>
+    <tr>
+        <td><input type="text" name="name" class="form-control" value="{{client_data['name']}}" required></td>
+        <td><input type="text" name="city" value="{{client_data['city']}}" class="form-control"></td>
+        <td><input type="text" name="address" value="{{client_data['address']}}" class="form-control"></td>
+    </tr>
+    <tr>
+        <td>שם איש קשר</td>
+        <td>טלפון איש קשר</td>
+        <td>Email</td>
+    </tr>
+    <tr>
+        <td><input type="text" name="contact_name" value="{{client_data['contact_name']}}" class="form-control"></td>
+        <td><input type="text" name="contact_phone" value="{{client_data['contact_phone']}}" class="form-control"></td>
+        <td><input type="email" name="email" value="{{client_data['email']}}" class="form-control"></td>
+    </tr>
+    <tr>
+        <td><button onclick="location.href='\clients'" type="button" class="btn btn-primary btn-block">סגור</button></td>
+        <td><button type="submit" class="btn btn-primary btn-block">אישור</button></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+            <b>רשימת אתרים</b>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <input name="new_site" placeholder="הוסף אתר חדש" class="form-control">
+        </td>
+    </tr>
+    {% for site in client_data['sites'] %}
+    <tr>
+        <td>
+            <input name="site_{{loop.index}}" value="{{site}}" class="form-control" readonly>
+        </td>
+    </tr>
     {% endfor %}
-    </table>
-    <button type="submit">אישור</button>
+</table>
 </form>
 {% endblock %}

@@ -2,12 +2,12 @@
 {% block body %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <form method=POST action="{{ url_for('new_order') }}">
+        <form method=POST autocomplete="off" action="{{ url_for('new_order') }}">
             <td>
-                <input type="hidden" name="type" value="{{ order_type }}">
+                <input type="hidden" name="order_type" value="{{ order_type }}">
                 {% if site == "" %}
                 <label>בחר לקוח</label>
-                <input list="client_list" class="form-control" name="client" placeholder="select client" autofocus="autofocus" autocomplete="off" required>
+                <input list="client_list" class="form-control" name="name" placeholder="select client" autofocus="autofocus" required>
                     <datalist id="client_list">
                     {% for item in clients %}
                         <option value="{{ item }}">
@@ -15,7 +15,7 @@
                     </datalist>
                 {% else %}
                 <label>בחר אתר לקוח / לקוח נבחר: {{clients}}</label><br>
-                <input type="hidden" name="client" value="{{clients}}">
+                <input type="hidden" name="name" value="{{clients}}">
                 <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" required>
                     <datalist id="sites_list">
                     {% for item in site %}
@@ -26,29 +26,25 @@
                 <button type="submit" class="btn btn-primary btn-block">אישור</button>
             </form>
         </td>
-        {% if permission %}
-        {% if site == "" %}
+        {% if permission and not permission %}
         <td>
-            <form method=POST action="{{ url_for('edit_client') }}">
+            <form method=POST autocomplete="off" action="{{ url_for('edit_client') }}">
+            {% if site == "" %}
                 <label>לקוח חדש</label><br>
-                <input type="text" class="form-control" name="client_name">
-                <input type="hidden" name="new_client" value="pick_client">
-                <input type="hidden" name="type" value="{{ order_type }}">
+                <input type="text" class="form-control" name="name">
+                <input type="hidden" name="return_to" value="pick_client">
+                <input type="hidden" name="order_type" value="{{ order_type }}">
                 <button type="submit" class="btn btn-primary btn-block">לקוח חדש</button>
-            </form>
-        </td>
-        {% else %}
-        <td>
-            <form method=POST action="{{ url_for('edit_client') }}">
+            {% else %}
                 <label>הוסף אתר</label><br>
-                <input type="hidden" name="client" value="{{clients}}">
-                <input type="hidden" name="new_client" value="pick_client">
-                <input type="hidden" name="type" value="{{ order_type }}">
+                <input type="hidden" name="name" value="{{clients}}">
+                <input type="hidden" name="return_to" value="pick_client">
+                <input type="hidden" name="order_type" value="{{ order_type }}">
                 <input type="text" class="form-control" name="site_name">
                 <button type="submit" class="btn btn-primary btn-block">הוסף אתר</button>
+            {% endif %}
             </form>
         </td>
-        {% endif %}
         {% endif %}
     </tr>
 </table>

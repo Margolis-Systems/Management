@@ -150,17 +150,18 @@ def new_order(client="", order_type=""):
     user_group = validate_user()
     if not user_group:
         return logout()
-    if 'client' in request.form.keys() or client:
+    if 'client_name' in request.form.keys() or client:
         if 'site' in request.form.keys() and 'sites_list' in session.keys():
             if request.form['site'] in session['sites_list']:
+                session['sites_list'] = []
                 session['order_id'] = pages.new_order(request.form)
                 return redirect('/orders')
-        elif 'client' in request.form.keys():
-            client = request.form['client']
+        elif 'client_name' in request.form.keys():
+            client = request.form['client_name']
     if len(list(request.values)) == 1 and not order_type:
         order_type = list(request.values)[0]
-    elif 'type' in request.form.keys():
-        order_type = request.form['type']
+    elif 'order_type' in request.form.keys():
+        order_type = request.form['order_type']
     client_list, sites_list = pages.gen_client_list(client)
     permission = False
     if user_group > 50:
@@ -277,39 +278,36 @@ def clients():
 
 
 @app.route('/edit_client', methods=['POST', 'GET'])
-def edit_client(client=""):
+def edit_client(client_id=""):
     user_group = validate_user()
-    client_data = {}
     if not user_group:
         return logout()
     elif user_group < 50:
         return '', 204
+    client_id = ""
     req_vals = list(request.values)
-    if len(req_vals) == 1:
-        client = req_vals[0]
-    elif request.form:
-        return_to_page = ""
-        # Add or edit client
-        if 'client_name' in request.form.keys():
-            client = request.form['client_name']
-            order_type = request.form['type']
-            return_to_page = request.form['new_client']
-            if not mongo.read_collection_one('costumers', {'name': client}):
-                add_new_client(client)
-        elif 'site_name' in request.form.keys():
-            return_to_page = request.form['new_client']
-            order_type = request.form['type']
-            client = request.form['client']
-            new_site = request.form['site_name']
-            client_data = mongo.read_collection_one('costumers', {'name': client})
-            if new_site not in client_data['sites']:
-                mongo.update_one_push('costumers', {'name': client}, {'sites': new_site})
-        if return_to_page == 'pick_client':
-            return new_order(client=client, order_type=order_type)
-
-    elif client:
-        # Edit existing client
-        client_data = mongo.read_collection_one('costumers', {'name': client})
+    if len(req_vals) == 1 and not client_id:
+        client_id = req_vals[0]
+    elif 'id' in request.form:
+        client_id = request.form['id']
+    client_data = mongo.read_collection_one('costumers', {'id': client_id})
+    if request.method == 'POST':
+        if request.form:
+            if not client_data:
+                client_id = add_new_client(request.form['name'])
+            for item in request.form:
+                if 'site' in item:
+                    new_site = request.form[item]
+                    if new_site not in client_data['sites']:
+                        mongo.update_one_push('costumers', {'id': client_id}, {'sites': new_site})
+                elif item not in ['return_to', 'order_type', 'id']:
+                    mongo.update_one_set('costumers', {'id': client_id}, {item: request.form[item]}, upsert=True)
+            if 'order_type' in request.form.keys():
+                order_type = request.form['order_type']
+                return_to_page = request.form['return_to']
+                if return_to_page == 'pick_client':
+                    return new_order(client=request.form['name'], order_type=order_type)
+    client_data = mongo.read_collection_one('costumers', {'id': client_id})
     return render_template('edit_client.html', client_data=client_data)
 
 
@@ -318,9 +316,11 @@ def gen_client_id():
     return str(int(last_id) + 1)
 
 
-def add_new_client(client_name, info={}):
-    new_client_data = {'name': client_name, 'id': gen_client_id(), 'sites': [], 'info': info}
+def add_new_client(client_name):
+    client_id = gen_client_id()
+    new_client_data = {'name': client_name, 'id': client_id, 'sites': []}
     mongo.insert_collection_one('costumers', new_client_data)
+    return client_id
 
 
 '''
