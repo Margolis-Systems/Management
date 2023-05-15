@@ -14,10 +14,20 @@
                     <td id="x_length_container">
                         רוחב
                         <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" required>
-                    </td>
+                        {% for item in defaults %}
+                        {% if "x_length_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}">
+                        {% endif %}
+                        {% endfor %}
+                        </td>
                     <td id="x_pitch_container">
                         פסיעה
                         <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch']}}" required>
+                        {% for item in defaults %}
+                        {% if "x_pitch_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}">
+                        {% endif %}
+                        {% endfor %}
                     </td>
                     <td>
                         <button type="button" onclick="addInput('x_length_container');addInput('x_pitch_container');">הוסף</button>
@@ -50,15 +60,23 @@
                     </td>
                 </tr>
                 <tr>
-                    <td> <!--onchange="findTotal2('amount_y', 'length', 'y_length')"-->
+                    <td id="y_length_container"> <!--onchange="findTotal2('amount_y', 'length', 'y_length')"-->
                         אורך
                         <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" required>
-                        <div id="y_length_container"></div>
+                        {% for item in defaults %}
+                        {% if "y_length_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}">
+                        {% endif %}
+                        {% endfor %}
                     </td>
-                    <td>
+                    <td id="y_pitch_container">
                         פסיעה
                         <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch']}}" required>
-                        <div id="y_pitch_container"></div>
+                        {% for item in defaults %}
+                        {% if "y_pitch_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}">
+                        {% endif %}
+                        {% endfor %}
                     </td>
                     <td>
                         <button type="button" onclick="addInput('y_length_container');addInput('y_pitch_container');">הוסף</button>
@@ -80,7 +98,7 @@
             </table>
         </td>
     </tr>
-</table>
+</table><!--
 <script>
     window.onload = function(){findTotal2('amount_x', 'width', 'x_length');findTotal2('amount_y', 'length', 'y_length');};
-</script>
+</script>-->

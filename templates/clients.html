@@ -12,9 +12,13 @@
         {% for item in display_items %}
         <td width="5%"  style="outline: thin solid;text-align: center">
             <b>{% if dictionary[item] %}
-            {{dictionary[item]}}
+                {{dictionary[item]}}
             {% else %}
-            {{item}}
+            {% if dictionary['costumer_'+item] %}
+                {{dictionary['costumer_'+item]}}
+            {% else %}
+                {{item}}
+            {% endif %}
             {% endif %}</b>
         </td>
         {% endfor %}

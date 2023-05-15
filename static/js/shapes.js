@@ -1,6 +1,6 @@
 let newWindow;
 const shapeData = document.getElementById('shape_data');
-const formInput = document.getElementById('editor');
+const formInput = document.getElementById('shape');
 const lengInput = document.getElementById('length');
 const widtInput = document.getElementById('width');
 
@@ -26,6 +26,13 @@ const sendMessage = () => {
 const closeWindow = (shape_selected, tot_len) => {
     window.opener.postMessage({shp: shape_selected, len: tot_len}, '*');
     window.close();
+};
+
+const refreshWindow = () => {
+    setTimeout(function(){
+   window.opener.location.reload();
+}, 1000);
+setTimeout("window.close()",1000)
 };
 
 window.addEventListener('message', (event) => {
@@ -68,12 +75,41 @@ function findTotal2(src, target, inputId){
     }
 }
 var temp = 0
-function addInput(div_id){
+function addInput(div_id, val){
     var container = document.getElementById(div_id);
     var input = document.createElement("input");
     input.type = "number";
     input.name = div_id.replace('_container', temp);
     temp += 1
     input.setAttribute('class', 'form-control');
+    if(val){
+        input.setAttribute('value', val);
+    }
+    if(div_id.includes("pitch")){
+        input.setAttribute('placeholder', 'פסיעה');
+    }
+    if(div_id.includes("length")){
+        input.setAttribute('placeholder', 'אורך');
+    }
+    if(div_id.includes("width")){
+        input.setAttribute('placeholder', 'רוחב');
+    }
     container.appendChild(input);
+}
+
+function copyLastRow(dict, dataToDisplay){
+    dataToDisplay['shape_data'] = 1;
+    dataToDisplay['length'] = 1;
+    dataToDisplay['quantity'] = 2;
+    for(item in dataToDisplay){
+        if(dataToDisplay[item] != 2 && dataToDisplay[item] != 4){
+            try {
+                document.getElementById(item).value = dict[item];
+            }
+            catch (error) {
+                console.error(error);
+            }
+        }
+    }
+    document.getElementById('quantity').focus();
 }

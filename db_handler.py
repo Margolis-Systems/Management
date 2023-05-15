@@ -96,6 +96,13 @@ class DBHandle:
         collection.update_one(key, {"$set": doc}, upsert=upsert)
 
     @staticmethod
+    def update_many_set(collect, key, doc, upsert=False, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        collection = db[collect]
+        collection.update_many(key, {"$set": doc}, upsert=upsert)
+
+    @staticmethod
     def update_one_push(collect, key, doc, upsert=False, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)

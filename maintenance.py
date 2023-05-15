@@ -26,6 +26,6 @@ def mongo_restore(backup_dir):
 
 if __name__ == '__main__':
     # clean_reports_temp()
-    configs.mongo.delete_many('orders')
+    configs.mongo.delete_many('orders', {'order_id': "9_R"})
     mongo_backup()
     # mongo_restore("C:\\Users\\MargoliSys\\Desktop\\07-05-2023_12-37-07-270634")

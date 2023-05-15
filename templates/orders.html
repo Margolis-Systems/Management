@@ -6,10 +6,19 @@
         <td><button onclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
     </tr>
-    <tr>
 </table>
-<table class="table table-striped" dir="rtl" align="center">
+<table class="table table-striped" align="center" dir="rtl">
+    <tr>
+        <form method=POST autocomplete="off" action="{{ url_for('edit_order') }}">
+        <td>
+            <input type="text" name="order_id" placeholder="חיפוש הזמנה">
+            <button type="submit">חפש</button>
+        </td>
+        </form>
     </tr>
+</table><!--
+<table class="table table-striped" dir="rtl" align="center">-->
+<table class="table table-condensed" dir="rtl" align="center">
     <tr>
         {% for item in display_items %}
         <td width="5%"  style="outline: thin solid;text-align: center">
@@ -18,7 +27,7 @@
         {% endfor %}
     </tr>
     {% for order in orders %}
-    <tr ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'" >
+    <tr ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'" bgcolor="{{dictionary.html_colors[orders[order].status]}}">
         {% for item in display_items %}
         <td height="50" style="outline: thin solid;text-align: center">
         {% if dictionary[orders[order][item]] %}

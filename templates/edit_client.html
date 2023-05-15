@@ -1,7 +1,9 @@
 {% extends "layout.html" %}
 {% block body %}
 <form method=POST autocomplete="off" action="{{ url_for('edit_client') }}">
+{% if client_data['id'] %}
 <input type="hidden" name="id" value="{{client_data['id']}}">
+{% endif %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td><b>שם לקוח</b></td>
@@ -25,7 +27,7 @@
     </tr>
     <tr>
         <td><button onclick="location.href='\clients'" type="button" class="btn btn-primary btn-block">סגור</button></td>
-        <td><button type="submit" class="btn btn-primary btn-block">אישור</button></td>
+        <td><button type="submit" class="btn btn-primary btn-block">עדכן</button></td>
         <td><button ondblclick="location.href='\delete_client?{{client_data['id']}}'" type="button" class="btn btn-primary btn-block">מחק לקוח</button></td>
     </tr>
     <tr>

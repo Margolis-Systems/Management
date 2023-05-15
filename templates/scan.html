@@ -9,6 +9,7 @@
                     <label>מספר הזמנה: {{order}}</label>
                     <input type="hidden" name="order_id" value="{{order}}">
                     <button type="submit" class="btn btn-primary btn-block" name="status" value="{{status}}">{{status}}</button>
+                    <button type="button" class="btn btn-primary btn-block" onclick="location.href='/scan'">Cancel</button>
                 </div>
                 {% else %}
                 <div class="form-group">

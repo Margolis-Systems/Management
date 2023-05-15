@@ -12,6 +12,9 @@ import reports
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
 
+with open('C:\\Server\\pid.txt', 'w') as pid:
+    pid.write(str(os.getpid()))
+
 
 @app.route('/')
 def index():
@@ -31,7 +34,9 @@ def index():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    msg = ""
     if request.method == 'POST':
+        msg = "סיסמה שגויה"
         username_input = request.form['username'].lower()
         login_user = mongo.read_collection_one(configs.users_collection, {'name': username_input})
         if login_user:
@@ -41,7 +46,7 @@ def login():
                 resp.headers['location'] = url_for('index')
                 resp.set_cookie('userhash', username_input)
                 return resp, 302
-    return render_template('login.html', msg="סיסמה שגויה")
+    return render_template('login.html', msg=msg)
 
 
 @app.route('/logout', methods=['POST', 'GET'])
@@ -103,7 +108,10 @@ def edit_order():
     if not validate_user():
         return logout()
     if len(list(request.values)) == 1:
-        session['order_id'] = list(request.values)[0]
+        if 'order_id' in request.values.keys():
+            session['order_id'] = request.values['order_id']
+        else:
+            session['order_id'] = list(request.values)[0]
     elif len(request.form.keys()) > 1:
         pages.new_order_row()
         return redirect('/orders')
@@ -131,14 +139,14 @@ def edit_row():
             for item in order_data['order_rows'][0]:
 
                 if isinstance(order_data['order_rows'][0][item], list):
-                    print(item)
                     for li in range(len(order_data['order_rows'][0][item])):
                         if li > 0:
-                            defaults[item+str(li - 1)] = order_data['order_rows'][0][item][li]
+                            defaults[item+"_"+str(li - 1)] = order_data['order_rows'][0][item][li]
                         else:
                             defaults[item] = order_data['order_rows'][0][item][li]
                 else:
                     defaults[item] = order_data['order_rows'][0][item]
+            print(order_data)
             return render_template('/edit_row.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                                    dictionary=page_data[2], defaults=defaults)
     pages.new_order_row()
@@ -197,26 +205,25 @@ def scan():
     msg = ""
     status = ""
     if 'scan' in request.form.keys():
-        order_id, job_id = reports.Images.decode_qr(request.form['scan'])
+        decode = reports.Images.decode_qr(request.form['scan'])
+        order_id, job_id = decode['order_id'], decode['job_id']
     elif 'order_id' in request.form.keys() and 'close' not in request.form.keys():
-        order_id, job_id = request.form['order_id'].split("_")
-        mongo.update_one_set(configs.orders_collection, {'order_id': order_id, 'job_id': job_id},
-                             {'status': request.form['status']}, upsert=True)
+        order_id, job_id = request.form['order_id'].split("|")
+        pages.change_order_status(request.form['status'], order_id, job_id)
+        return redirect('/scan')
     if order_id:
         job = mongo.read_collection_one(configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if job:
-            full_id = order_id + "_" + job_id
-            if job['status'] == 'New':
+            full_id = order_id + "|" + job_id
+            if job['status'] == 'Production':
                 status = session['username'] + "__Start"
             elif job['status'] == session['username'] + "__Start":
-                status = session['username'] + "__Finish"
+                status = "Finished"
             else:
                 full_id = ""
                 msg = job['status']
         else:
             msg = "Not found"
-    else:
-        msg = "Wrong input"
     return render_template('/scan.html', order=full_id, msg=msg, status=status)
 
 
@@ -254,10 +261,11 @@ def shape_editor():
 
 @app.route('/choose_printer', methods=['POST', 'GET'])
 def choose_printer():
-    default_printer = ""
     if request.form:
         printer = request.form['printer']
         reports.Bartender.net_print(session['order_id'], printer, request.form['print_type'])
+        if request.form['print_type'] == 'label':
+            pages.change_order_status('Processed', session['order_id'])
         return '', 204
     else:
         print_type = list(request.values)[0]
@@ -272,7 +280,7 @@ def choose_printer():
 def clients():
     clients_list = mongo.read_collection_df('costumers').to_dict('index')
     display_those_keys = ['name', 'id']
-    dictionary = {}
+    dictionary = pages.get_dictionary(session['username'])
     return render_template('clients.html', clients=clients_list, display_items=display_those_keys,
                            dictionary=dictionary)
 
@@ -284,7 +292,6 @@ def edit_client(client_id=""):
         return logout()
     elif user_group < 50:
         return '', 204
-    client_id = ""
     req_vals = list(request.values)
     if len(req_vals) == 1 and not client_id:
         client_id = req_vals[0]
@@ -299,22 +306,29 @@ def edit_client(client_id=""):
             for item in request.form:
                 if 'site' in item:
                     new_site = request.form[item]
-                    if new_site not in client_data['sites']:
-                        mongo.update_one_push('costumers', {'id': client_id}, {'sites': new_site})
+                    if new_site and new_site not in client_data['sites']:
+                        mongo.update_one_push('costumers', {'id': client_id}, {'sites': new_site}, upsert=True)
                 elif item not in ['return_to', 'order_type', 'id']:
                     mongo.update_one_set('costumers', {'id': client_id}, {item: request.form[item]})
-            if 'order_type' in request.form.keys():
-                order_type = request.form['order_type']
-                return_to_page = request.form['return_to']
-                if return_to_page == 'pick_client':
-                    return new_order(client=request.form['name'], order_type=order_type)
+            return redirect('/edit_client?'+client_id)
+            # if 'order_type' in request.form.keys():
+            #     order_type = request.form['order_type']
+            #     return_to_page = request.form['return_to']
+            #     if return_to_page == 'pick_client':
+            #         return new_order(client=request.form['name'], order_type=order_type)
     client_data = mongo.read_collection_one('costumers', {'id': client_id})
     return render_template('edit_client.html', client_data=client_data)
 
 
 def gen_client_id():
-    last_id = mongo.read_collection_last('costumers', 'id')['id']
-    return str(int(last_id) + 1)
+    new_client_id = "1"
+    costumers_df = mongo.read_collection_df('costumers')
+    if costumers_df.empty:
+        return new_client_id
+    costumers_df['id'] = costumers_df['id'].astype('int')
+    costumers_df.sort_values(by='id', inplace=True)
+    last_id = costumers_df.iloc[-1]['id']
+    return str(last_id + 1)
 
 
 def add_new_client(client_name):
@@ -326,7 +340,6 @@ def add_new_client(client_name):
 
 @app.route('/delete_client', methods=['POST', 'GET'])
 def delete_client():
-    print("hello")
     user_group = validate_user()
     if not user_group:
         return logout()
@@ -338,6 +351,19 @@ def delete_client():
         if client_id:
             mongo.delete_many('costumers', {'id': client_id})
     return redirect('/clients')
+
+
+@app.route('/change_order_status', methods=['GET', 'POST'])
+def change_order_status():
+    user_group = validate_user()
+    if not user_group:
+        return logout()
+    elif user_group < 80:
+        return '', 204
+    if request.form:
+        pages.change_order_status(request.form['status'], request.form['order_id'])
+        return '', 204
+    return render_template('change_order_status.html', order_id=session['order_id'])
 
 
 '''

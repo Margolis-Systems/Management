@@ -11,20 +11,23 @@ mongo = db_handler.DBHandle()
 def orders():
     # Read all orders data with Info, mean that it's not including order rows
     orders_df = mongo.read_collection_df('orders', query={'info': {'$exists': True}})
-    if not orders_df.empty:
-        # normalize json to df
-        info_df = pd.json_normalize(orders_df['info'])
-        info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%d-%m-%Y %H:%M:%S')
-        # add order id from main df
-        new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
-        for item in configs.data_to_display['orders']:
-            if item not in new_df.columns:
-                new_df[item] = ""
-        orders_info = new_df[configs.data_to_display['orders']].sort_values(by='date_created', ascending=False)
-        print(info_df)
-        return orders_info.to_dict('index'), configs.data_to_display['orders']
-    else:
+    if orders_df.empty:
         return [], []
+    # normalize json to df
+    info_df = pd.json_normalize(orders_df['info'])
+    info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%d-%m-%Y %H:%M:%S')
+    # add order id from main df
+    new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
+    for item in configs.data_to_display['orders']:
+        if item not in new_df.columns:
+            new_df[item] = ""
+
+    orders_info = new_df[configs.data_to_display['orders']].copy()#.sort_values(by='date_created', ascending=False)
+    sorter = {'NEW': 0, 'Processed': 1, 'Production': 2}
+    orders_info['sorter'] = orders_info['status'].map(sorter)
+    orders_info['status'] = 'order_status_' + orders_info['status'].astype(str)
+    orders_info.sort_values(by=['sorter', 'date_created'], ascending=[True, False], inplace=True)
+    return orders_info.to_dict('index'), configs.data_to_display['orders']
 
 
 def edit_order_data():
@@ -35,7 +38,10 @@ def edit_order_data():
     # Read all data of this order
     rows, info, additional = get_order_data(order_id, job_id)
     # if info['created_by'] != main.session['username']:
-    #     return {}, []
+
+    if not info:
+        return {}, []
+
     # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     keys_to_display = configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
@@ -55,7 +61,7 @@ def jobs_list(order_type='regular'):
     all_jobs = all_orders[all_orders['job_id'].notna()]
     if all_jobs.empty:
         return {}
-    all_jobs = all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True])
+    all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True], inplace=True)
     columns = ['order_id', 'job_id', 'status', 'date_created', 'description']
     return all_jobs[columns].to_dict('records')
 
@@ -72,11 +78,12 @@ def get_order_data(order_id, job_id="", reverse=True):
     additional = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     # order = mongo.read_collection_df('orders', query={'order_id': order_id})
     if order.empty:
-        return False, False
+        return False, False, False
     info = order[order['info'].notnull()]['info'][0]
     order_data_df = order[order['info'].isnull()].drop(['info'], axis=1).fillna("")
     if not order_data_df.empty:
         order_data_df['weight'] = order_data_df['weight'].astype(int)
+        order_data_df['status'] = 'order_status_' + order_data_df['status'].astype(str)
     order_data = order_data_df.to_dict('index')
     rows = []
     for key in order_data:
@@ -118,6 +125,9 @@ def new_order_row():
     order_id = main.session['order_id']
     req_form_data = main.request.form
     temp_order_data = mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
+    info = mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
+    if info['info']['status'] != "NEW":
+        return
     # Order comment
     if 'comment_hid' in req_form_data:
         mongo.update_one_set('orders', {'order_id': order_id, 'info': {'$exists': True}},
@@ -135,7 +145,7 @@ def new_order_row():
         if 'job_id' in main.session.keys():
             if main.session['job_id'] != "":
                 job_id = main.session['job_id']
-        new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'New', 'date_created': ts()}
+        new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts()}
         if 'x_length' in req_form_data.keys():
             new_row['x_length'] = []
             new_row['x_pitch'] = []
@@ -253,15 +263,15 @@ def calc_weight(diam, length, qnt):
 
 def peripheral_orders(add_orders, order_id, job_id):
     description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id + " שורה מספר: " + job_id
-    order_id += "_R"
+    order_id += "R"
     for order in range(len(add_orders)):
         job_id += '_'+str(order)
         order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
         info = {'costumer_name': 'צומת ברזל', 'created_by': main.session['username'], 'date_created': ts(),
-                'type': 'regular', 'status': "New"}
+                'type': 'regular', 'status': 'NEW'}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                     {'order_id': order_id, 'info': info})
-        peripheral_order = {'order_id': order_id, 'job_id': job_id, 'status': "New", 'date_created': ts(),
+        peripheral_order = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts(),
                             'description': description, 'quantity': add_orders[order]['qnt'], 'shape': "1", 'length': add_orders[order]['length'],
                             'diam': add_orders[order]['diam'], 'weight': order_weight, 'shape_data': [add_orders[order]['length']]}
         mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': job_id}, peripheral_order)
@@ -323,3 +333,16 @@ def gen_patterns(order_type='regular'):
         lists = {'diam': diam, 'shape': shapes_list, 'bar_type': bar_type}
         patterns = {'diam': '|'.join(diam), 'shape': '|'.join(shapes_list), 'bar_type': '|'.join(bar_type)}
     return lists, patterns
+
+
+def change_order_status(new_status, order_id, job_id=""):
+    if job_id != "":
+        mongo.update_one_set('orders', {'order_id': order_id, 'job_id': job_id}, {'status': new_status})
+        rows, info, additional = get_order_data(order_id)
+        for row in rows:
+            if row['status'] != "Finished":
+                return
+        change_order_status('Finished', order_id)
+    else:
+        mongo.update_one_set('orders', {'order_id': order_id, 'info': {'$exists': True}}, {'info.status': new_status})
+        mongo.update_many_set('orders', {'order_id': order_id, 'info': {'$exists': False}}, {'status': new_status})

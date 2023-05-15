@@ -22,10 +22,29 @@ class Images:
 
     @staticmethod
     def format_qr_data(data):
-        # todo: complete
-        formated = 'BF2D@Hj @r' + data['order_id'] + '_' + data['job_id']
-        # return "BF2D@Hj @r22071206@i@p1@l4000@n200@e710@d12@g@\nGl4000@w0@\nC68@x".encode('utf-8')
-        return formated
+        formatted = 'BF2D@Hj @r' + data['order_id'] + '@i@p' + data['job_id']
+        if 'length' in data.keys():
+            formatted += '@l' + str(data['length'])
+        if 'quantity' in data.keys():
+            formatted += '@n' + str(data['quantity'])
+        if 'weight' in data.keys():
+            formatted += '@e' + str(data['weight'])
+        if 'diam' in data.keys():
+            formatted += '@d' + str(data['diam'])
+        if 'shape_data' in data.keys():
+            formatted += '@g@Gl'
+            for item in range(len(data['shape_data'])):
+                if item == 0:
+                    formatted += str(data['shape_data'][item])
+                    if 'shape_ang' in data.keys():
+                        if item < len(data['shape_ang']):
+                            formatted += '@w' + str(data['shape_ang'][item])
+                            break
+                    formatted += '@w0'
+        formatted += '@'
+        print(data)
+        print(formatted)
+        return formatted
 
     @staticmethod
     def create_shape_plot(shape, data):
@@ -52,17 +71,19 @@ class Images:
 
     @staticmethod
     def decode_qr(qr):
-        # todo: make generic for farther uses
         code = qr.split('@')
+        decode = {'order_id': "", 'job_id': ""}
         if code:
             for item in code:
                 if item:
                     if item[0] == 'r':
-                        temp = item.split('_')
-                        order_id = temp[0][1:]
-                        job_id = temp[1]
-                        return order_id, job_id
-        return "", ""
+                        decode['order_id'] = item[1:]
+                    elif item[0] == 'p':
+                        decode['job_id'] = item[1:]
+                    else:
+                        # todo: complete
+                        print("")
+        return {}
 
 
 class Bartender:
@@ -263,8 +284,8 @@ class Bartender:
         header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + pages.ts(mode="file_name") + ".txt"
-        # ---------todo: for testing------
-        # file_dir = file_dir.replace('.txt', '.tmp')
+        # --------- for testing ----------
+        file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"
