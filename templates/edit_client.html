@@ -45,8 +45,16 @@
         <td>
             <input name="site_{{loop.index}}" value="{{site}}" class="form-control" readonly>
         </td>
+        <td>
+            <button ondblclick="location.href='/remove_site?client_id={{client_data['id']}}&site={{site}}'" type="button">מחק</button>
+        </td>
     </tr>
     {% endfor %}
 </table>
 </form>
+<script>
+function reload(){
+location.reload();
+}
+</script>
 {% endblock %}

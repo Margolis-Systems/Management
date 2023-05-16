@@ -80,13 +80,6 @@
             {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
             <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
-            <!--
-            {% if order_data.order_rows[0][item] == "Yes" %}
-                <input type="checkbox" value="Yes" class="form-control" name="{{ item }}" checked disabled>
-            {% else %}
-                <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
-            {% endif %}
-            -->
             {% else %}
             ------
             {% endif %}
@@ -98,28 +91,7 @@
         </td>
         {% endfor %}
     </tr>
-    <!--
-    {% for row in order_data.order_rows %}
-    <tr>
-        {% for item in order_data.data_to_display %}
-        <td>
-            {{ row[item] }}
-        </td>
-        {% endfor %}
-    </tr>
-    {% endfor %}
-    -->
 </table>
 </form>
-<!--
-<script>
-function confirmDel() {
-  let text = "Are you sure?";
-  if (confirm(text) == true) {
-    window.location.href = "close?delete";
-  }
-}
-</script>
--->
 <script src="\static\js\shapes.js" ></script>
 {% endblock %}

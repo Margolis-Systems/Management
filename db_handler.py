@@ -110,6 +110,20 @@ class DBHandle:
         collection.update_one(key, {"$push": doc}, upsert=upsert)
 
     @staticmethod
+    def update_one_pull(collect, key, doc, upsert=False, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        collection = db[collect]
+        collection.update_one(key, {"$pull": doc}, upsert=upsert)
+
+    @staticmethod
+    def update_one_unset(collect, key, doc, upsert=False, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        collection = db[collect]
+        collection.update_one(key, {"$unset": doc}, upsert=upsert)
+
+    @staticmethod
     def dump(path, collections=[], db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         ts = datetime.now().strftime('%d-%m-%Y_%H-%M-%S-%f')
@@ -126,10 +140,17 @@ class DBHandle:
     def restore(path, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         for coll in os.listdir(path):
-            print(coll)
             if coll.endswith('.bson'):
                 try:
                     with open(os.path.join(path, coll), 'rb+') as f:
-                        db[coll.split('.')[0]].insert_many(bson.decode_all(f.read()))
+                        data = f.read()
+                        if data:
+                            db[coll.split('.')[0]].insert_many(bson.decode_all())
                 except Exception as e:
-                    print(e)
+                    DBHandle.delete_many(coll.split('.')[0])
+                    try:
+                        with open(os.path.join(path, coll), 'rb+') as f:
+                            db[coll.split('.')[0]].insert_many(bson.decode_all(f.read()))
+                    except Exception as e:
+                        print(e)
+
