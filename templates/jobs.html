@@ -17,7 +17,7 @@
         </form>
     </tr>
 </table>
-<table class="table table-striped" align="center" dir="rtl">
+<table class="table table-condensed" align="center" dir="rtl">
     <tr>
         {% for key in jobs[0] %}
         <td>
@@ -30,10 +30,14 @@
         {% endfor %}
     </tr>
     {% for job in jobs%}
-    <tr>
-        {% for info in job %}
+    <tr bgcolor="{{dictionary.html_colors[job.status]}}">
+        {% for item in job %}
         <td>
-            {{job[info]}}
+            {% if dictionary[job[item]] %}
+                {{dictionary[job[item]]}}
+            {% else %}
+                {{job[item]}}
+            {% endif %}
         </td>
         {% endfor %}
     </tr>

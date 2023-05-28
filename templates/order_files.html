@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tzomet ERP</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+{{ message }}
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td>שם קובץ</td>
+        <td>נשמר בתאריך</td>
+        <td>נשמר על ידי</td>
+        <td>תיאור</td>
+        <td></td>
+    </tr>
+    {% for file in files %}
+    <tr>
+        <td>{{ file.name }}</td>
+        <td>{{ file.timestamp }}</td>
+        <td>{{ file.user }}</td>
+        <td>{{ file.description }}</td>
+        <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="location.href='\download_attachment?{{ file.id }}'" >הורד</button></td>
+    </tr>
+    {% endfor %}
+    <form method=POST autocomplete="off" action="{{ url_for('order_file_upload') }}" enctype = "multipart/form-data">
+    <tr>
+        <td colspan="5">
+            <input type="file" name="file" class="form-control" required/>
+            <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit">אישור</button>
+            <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="5"><textarea name="description" class="form-control" placeholder="תיאור"></textarea></td>
+        <!--<td colspan="5"><input type="text" name="description" class="form-control" placeholder="תיאור" required></td>-->
+    </tr>
+    </form>
+</table>
+<script src="\static\js\shapes.js" ></script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 # Server
 import flask
-from flask import Flask, render_template, url_for, request, session, redirect
+from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory
 from waitress import serve
-
+from werkzeug.utils import secure_filename
 import os
 # ERP libs
 import configs
@@ -11,11 +11,12 @@ import pages
 import clients
 import users
 import orders
+import scale
 
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
 
-with open('pid.txt', 'w') as pid: # C:\\Server\\
+with open('pid.txt', 'w') as pid:  # C:\\Server\\
     pid.write(str(os.getpid()))
 
 
@@ -50,7 +51,7 @@ def register():
     return users.register()
 
 
-@app.route('/orders', methods=['GET'])
+@app.route('/orders', methods=['POST', 'GET'])
 def orders_page():
     return orders.orders()
 
@@ -95,6 +96,21 @@ def choose_printer():
     return pages.choose_printer()
 
 
+@app.route('/order_files', methods=['POST', 'GET'])
+def order_files():
+    return pages.order_files()
+
+
+@app.route('/order_file_upload', methods=['POST', 'GET'])
+def order_file_upload():
+    return pages.order_files()
+
+
+@app.route('/download_attachment', methods=['POST', 'GET'])
+def download_attachment():
+    return pages.download_attachment()
+
+
 @app.route('/clients', methods=['POST', 'GET'])
 def clients_page():
     return clients.clients()
@@ -120,8 +136,33 @@ def remove_site():
     return clients.remove_site()
 
 
+@app.route('/scale', methods=['POST', 'GET'])
+def scaling():
+    return scale.main_page()
+
+
+@app.route('/scaling_info', methods=['POST', 'GET'])
+def scaling_info():
+    return scale.main_page()
+
+
+@app.route('/tare_scale', methods=['POST', 'GET'])
+def tare_scale():
+    return scale.main_page()
+
+
+@app.route('/print_scale', methods=['POST', 'GET'])
+def print_scale():
+    return scale.main_page()
+
+
+@app.route('/new_scale', methods=['POST', 'GET'])
+def new_scale():
+    users.clear()
+    return scale.main_page()
+
+
 '''
-@app.route('/scale', methods=['POST'])
 @app.route('/mep', methods=['POST'])
 '''
 

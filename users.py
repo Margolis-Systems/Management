@@ -55,3 +55,9 @@ def validate_user():
         if user_data:
             return user_data['group']
     return False
+
+
+def clear():
+    user = main.session['username']
+    main.session.clear()
+    main.session['username'] = user

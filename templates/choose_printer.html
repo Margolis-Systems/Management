@@ -12,13 +12,17 @@
 <body>
 <div class="form-floating">
     <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}">
+        בחר מדפסת<br>
         <input list="printer" type="text" class="form-control" name="printer" value="{{ defaults.printer }}" placeholder="Choose printer" autofocus="autofocus" required>
             <datalist id="printer">
             {% for printer in printer_list %}
                 <option value="{{ printer }}">{{ printer_list[printer] }}</option>
             {% endfor %}
             </datalist>
+        כמות העתקים<br>
+        <input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים">
         <input type="hidden" name="print_type" value="{{print_type}}">
+        <input type="hidden" name="sub_type" value="{{sub_type}}">
         <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="refreshWindow();">אישור</button>
         <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
     </form>

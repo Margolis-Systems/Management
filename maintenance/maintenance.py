@@ -1,6 +1,9 @@
 import os
+os.chdir(os.path.dirname(os.getcwd()))
 import shutil
-import db_handler
+import configs
+
+mongo = configs.mongo
 
 
 def clear_folder(folder_dir):
@@ -16,15 +19,33 @@ def clean_reports_temp():
 
 
 def mongo_backup():
-    db_handler.DBHandle.dump("C:\\DB_backup")
+    mongo.dump("C:\\DB_backup")
 
 
 def mongo_restore(backup_dir):
-    db_handler.DBHandle.restore(backup_dir)
+    mongo.restore(backup_dir)
+
+
+def calc_rows_count_for_orders():
+    orders_info_df = mongo.read_collection_df('orders', query={'info': {'$exists': True}})
+    for order_id in orders_info_df['order_id']:
+        order_rows_count = mongo.count_docs('orders', query={'order_id': order_id, 'info': {'$exists': False},
+                                                             'job_id': {'$ne': '0'}})
+        mongo.update_one('orders', {'order_id': order_id}, {'info.rows': str(order_rows_count)}, '$set')
+
+
+def clean_empty_orders():
+    orders_info_df = mongo.read_collection_df('orders', query={'info': {'$exists': True}})
+    for order_id in orders_info_df['order_id']:
+        order_rows_count = mongo.count_docs('orders', query={'order_id': order_id, 'info': {'$exists': False},
+                                                             'job_id': {'$ne': '0'}})
+        if order_rows_count == 0:
+            mongo.delete_many('orders', {'order_id': order_id})
 
 
 if __name__ == '__main__':
     # clean_reports_temp()
     # configs.mongo.delete_many('orders', {'order_id': "9_R"})
     # mongo_backup()
-    mongo_restore("C:\\Users\\MargoliSys\\Desktop\\15-05-2023_15-37-10-377286")
+    # mongo_restore("C:\\Users\\MargoliSys\\Desktop\\15-05-2023_15-37-10-377286")
+    calc_rows_count_for_orders()

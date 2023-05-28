@@ -37,7 +37,7 @@ div {
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td>
-            <button onclick='openNewWindow("\order_files?{{ order_data.info.order_id }}")' type="button" class="btn btn-primary btn-block" disabled>קבצים מצורפים</button>
+            <button onclick='openNewWindow("\order_files")' type="button" class="btn btn-primary btn-block">קבצים מצורפים</button>
         </td>
         <td colspan="100">
             <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}">
@@ -47,7 +47,7 @@ div {
         <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
         <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
         <td><button onclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
-        <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" disabled>הדפס דוגמה</button></td>
+        <td><button onclick='openNewWindow("\choose_printer?test_page")' type="button" class="btn btn-primary btn-block">הדפס דוגמה</button></td>
         <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
         {% if order_data.info.status == "NEW" %}
         <td><button onclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
@@ -103,8 +103,8 @@ div {
             {% else %}
             {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
             <td>
-            <input list="{{ item }}" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
-                <datalist id="{{ item }}">
+            <input list="{{ item }}_l" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+                <datalist id="{{ item }}_l">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
                 {% endfor %}
@@ -112,8 +112,8 @@ div {
             {% else %}
             {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
             <td>
-            <input list="{{ item }}" type="number" id="{{ item }}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='openEditWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
-                <datalist id="{{ item }}">
+            <input list="{{ item }}_l" type="number" id="{{ item }}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='openEditWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+                <datalist id="{{ item }}_l">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
                 {% endfor %}
@@ -139,7 +139,7 @@ div {
     {% for row in order_data.order_rows %}
     {% if row['job_id'] != "0" %}
     {% if order_data.info.status == "NEW" %}
-    <tr onclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
+    <tr ondblclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;">
     {% endif %}

@@ -101,12 +101,16 @@ function copyLastRow(dict, dataToDisplay){
     dataToDisplay['shape_data'] = 1;
     dataToDisplay['length'] = 1;
     dataToDisplay['quantity'] = 2;
+    if("shape" in dict){
+        dict['shape_data'] = dict['shape']
+    }
     for(item in dataToDisplay){
         if(dataToDisplay[item] != 2 && dataToDisplay[item] != 4){
             try {
                 document.getElementById(item).value = dict[item];
             }
             catch (error) {
+                document.getElementById(item).value = dict[item].map(String);
                 console.error(error);
             }
         }

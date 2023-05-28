@@ -1,5 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
+<style>
+    #shape_data {
+  opacity: 0;
+  width: 0;
+  float: left; /* Reposition so the validation message shows over the label */
+}
+
+div {
+    text-align: center;
+}
+</style>
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
     {% for item in order_data.info %}
@@ -70,13 +81,13 @@
                 </datalist>
             {% else %}
             {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
-            <input list="{{ item }}" type="number" id="editor" value="{{order_data.order_rows[0][item]}}" class="form-control" ondblclick='openNewWindow("{{ dictionary["editor_" + item] }}")' onchange='openNewWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
+            <input list="{{ item }}" type="number" id="{{ item }}" value="{{order_data.order_rows[0][item]}}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='openEditWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
                 <datalist id="{{ item }}">
                 {% for optn in lists[item] %}
                     <option value="{{ optn }}">{{dictionary[optn]}}</option>
                 {% endfor %}
                 </datalist>
-            <input type="hidden" name="{{ item }}_hid" value="{{order_data.order_rows[0][item]}}" id="shape_data" type="number" required>
+            <input name="{{ item }}_hid" id="shape_data" type="number" required>
             {% else %}
             {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
             <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">

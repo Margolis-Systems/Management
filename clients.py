@@ -32,9 +32,9 @@ def edit_client(client_id=""):
                 if 'site' in item:
                     new_site = main.request.form[item]
                     if new_site and new_site not in client_data['sites']:
-                        main.mongo.update_one_push('costumers', {'id': client_id}, {'sites': new_site})  # , upsert=True)
+                        main.mongo.update_one('costumers', {'id': client_id}, {'sites': new_site}, '$push')  # , upsert=True)
                 elif item not in ['return_to', 'order_type', 'id']:
-                    main.mongo.update_one_set('costumers', {'id': client_id}, {item: main.request.form[item]})
+                    main.mongo.update_one('costumers', {'id': client_id}, {item: main.request.form[item]}, '$set')
             return main.redirect('/edit_client?'+client_id)
     client_data = main.mongo.read_collection_one('costumers', {'id': client_id})
     return main.render_template('edit_client.html', client_data=client_data)
@@ -79,7 +79,7 @@ def remove_site():
     elif user_group > 80:
         client_id = main.request.values['client_id']
         site = main.request.values['site']
-        main.mongo.update_one_pull('costumers', {'id': client_id}, {'sites': site})
+        main.mongo.update_one('costumers', {'id': client_id}, {'sites': site}, '$pull')
         return edit_client(client_id)
     return '', 204
 

@@ -1,3 +1,4 @@
+import functions
 import main
 import users
 import reports
@@ -8,11 +9,17 @@ import os
 def jobs_list(order_type='regular'):
     type_list = main.mongo.read_collection_df('orders', query={'info.type': order_type})
     type_list = type_list['order_id'].to_list()
-    all_orders = main.mongo.read_collection_df('orders', query={'order_id': {'$in': type_list}, 'job_id': {'$ne': "0"}})
-    all_jobs = all_orders[all_orders['job_id'].notna()]
-    if all_jobs.empty:
+    all_orders = main.mongo.read_collection_df('orders', query={'order_id': {'$in': type_list},
+                                                                'job_id': {'$ne': "0", '$exists': True},
+                                                                'status': {'$nin': ['NEW', 'Processed']}})
+    if all_orders.empty:
         return {}
-    all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True], inplace=True)
+    all_jobs = all_orders[all_orders['job_id'].notna()]
+    # all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True], inplace=True)
+    sorter = {'Finished': 1, 'Production': 0}
+    all_jobs['sorter'] = all_jobs['status'].map(sorter)
+    all_jobs.sort_values(by=['sorter', 'date_created'], ascending=[True, False], inplace=True)
+    all_jobs['status'] = 'order_status_' + all_jobs['status'].astype(str)
     columns = ['order_id', 'job_id', 'status', 'date_created', 'description']
     return all_jobs[columns].to_dict('records')
 
@@ -82,29 +89,51 @@ def shape_editor():
     else:
         req_vals = list(main.request.values)
         if len(req_vals) > 0:
-            shape_data = {'shape': req_vals[0], 'edges': range(1, main.configs.shapes[req_vals[0]]['edges'] + 1),
-                          'img_plot': "/static/images/shapes/"+req_vals[0]+".png"}
+            shape_data = {'shape': req_vals[0], 'edges': list(range(1, main.configs.shapes[req_vals[0]]['edges'] + 1)),
+                          'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
+                          'angels': main.configs.shapes[req_vals[0]]['ang']}
     shapes = {}
     for shape in main.configs.shapes:
-        if os.path.exists("C:\\server\\static\\images\\shapes\\" + shape + ".png"):
+        if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\
             shapes[shape] = main.configs.shapes[shape]['description']
     return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data)
 
 
 def choose_printer():
+    copies = 1
     if main.request.form:
         printer = main.request.form['printer']
-        reports.Bartender.net_print(main.session['order_id'], printer, main.request.form['print_type'])
+        print_type = main.request.form['print_type']
+        if 'sub_type' in main.request.form.keys():
+            if main.request.form['sub_type']:
+                print_type = main.request.form['sub_type']
+        if 'copies' in main.request.form.keys():
+            if main.request.form['copies']:
+                copies = int(main.request.form['copies'])
+        for r in range(copies):
+            reports.Bartender.net_print(main.session['order_id'], printer, print_type)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
     else:
-        print_type = list(main.request.values)[0]
+        req_vals = list(main.request.values)
+        sub_type = ''
+        print_type = req_vals[0]
+        if len(req_vals) > 1:
+            sub_type = req_vals[1]
         default_printer = main.mongo.read_collection_one('users', {'name': main.session['username']})
         if default_printer:
-            default_printer = default_printer['default_printer'][print_type]
-        printer_list = main.configs.printers[print_type]
-    return main.render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type, defaults={'printer':default_printer})
+            if print_type in default_printer['default_printer']:
+                default_printer = default_printer['default_printer'][print_type]
+            else:
+                default_printer = ''
+            if print_type == 'page':
+                copies = 2
+        else:
+            default_printer = ''
+        printer_list = main.configs.printers[print_type.replace('test_', '')]
+    return main.render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type,
+                                defaults={'printer': default_printer, 'copies': copies}, sub_type=sub_type)
 
 
 def scan():
@@ -135,3 +164,52 @@ def scan():
         else:
             msg = "Not found"
     return main.render_template('/scan.html', order=full_id, msg=msg, status=status)
+
+
+def get_defaults():
+    return {}
+
+
+def order_files():
+    order_id = main.session['order_id']
+    msg = ""
+    if main.request.method == 'POST':
+        try:
+            attach_dir = 'C:\\projects\\Tzomet\\Management\\attachments\\orders'
+            # TODO: main.app.instance_path  <--> 'C:\\projects\\Tzomet\\Management'
+            f = main.request.files['file']
+            # file_dir = os.path.join(main.app.instance_path, attach_dir, order_id)
+            file_dir = os.path.join(attach_dir, order_id)
+            if not os.path.exists(file_dir):
+                os.makedirs(file_dir)
+            # file_name = main.secure_filename(f.filename)
+            file_name = f.filename
+            file = os.path.join(file_dir, file_name)
+            if os.path.exists(file):
+                file = functions.uniquify(file)
+            f.save(file)
+            doc = {'name': file_name, 'timestamp': functions.ts(), 'user': main.session['username'], 'id': gen_file_id(),
+                   'description': main.request.form['description'], 'link': file, 'order_id': order_id}
+            main.mongo.insert_collection_one('attachments', doc)
+            return main.redirect('/order_files')
+        except Exception as e:
+            # print(e)
+            msg = "Internal Error"
+    files = main.mongo.read_collection_list('attachments', {'order_id': order_id})
+    return main.render_template('/order_files.html', files=files, message=msg)
+
+
+def download_attachment():
+    attach_dir = 'C:\\projects\\Tzomet\\Management\\attachments\\orders'
+    order_id = main.session['order_id']
+    file_name = main.mongo.read_collection_one('attachments', {'id': list(main.request.values)[0]})['name']
+    file = os.path.join(attach_dir, order_id, file_name)
+    return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=True)
+
+
+def gen_file_id():
+    new_id = 1
+    last_attach = main.mongo.read_collection_last('attachments', 'timestamp')
+    if last_attach:
+        new_id = int(last_attach['id']) + 1
+    return str(new_id)

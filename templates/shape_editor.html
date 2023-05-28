@@ -21,6 +21,11 @@
                 <input type="number" class="amount" onchange="findTotal('amount', 'length')" name="{{edge}}" placeholder="{{edge}}" required autofocus>
             {% endfor %}
             </td>
+            <td>
+            {% for ang in shape_data.angels %}
+                <input type="number" class="amount" name="ang_{{loop.index}}" placeholder="< {{ ang }}">
+            {% endfor %}
+            </td>
         </tr>
     <tr>
         <td>

@@ -1,9 +1,7 @@
-import pages
-import os
+import orders
+import functions
 import configs
 import math
-from pathlib import Path
-import time
 
 
 class Images:
@@ -14,9 +12,9 @@ class Images:
         data = Images.format_qr_data(data)
         _data = pdf417.encode(data)
         img = pdf417.render_image(_data)
-        name = 'static\\img\\pdf417_' + pages.ts(mode='file_name') + '.png'
+        name = 'static\\img\\pdf417_' + functions.ts(mode='file_name') + '.png'
         while os.path.exists(name):
-            name = 'static\\img\\pdf417_' + pages.ts(mode='file_name') + '.png'
+            name = 'static\\img\\pdf417_' + functions.ts(mode='file_name') + '.png'
         img.save(name)
         return name
 
@@ -33,17 +31,25 @@ class Images:
             formatted += '@d' + str(data['diam'])
         if 'shape_data' in data.keys():
             formatted += '@g@Gl'
+            # print(data)
             for item in range(len(data['shape_data'])):
-                if item == 0:
-                    formatted += str(data['shape_data'][item])
-                    if 'shape_ang' in data.keys():
-                        if item < len(data['shape_ang']):
-                            formatted += '@w' + str(data['shape_ang'][item])
-                            break
-                    formatted += '@w0'
-        formatted += '@'
-        print(data)
-        print(formatted)
+                if item > 0:
+                    formatted += '@l'
+                formatted += str(data['shape_data'][item])
+                if 'shape_ang' in data.keys():
+                    if item < len(data['shape_ang']):
+                        formatted += '@w' + str(data['shape_ang'][item])
+                        continue
+                formatted += '@w0'
+        formatted += '@C'
+        chksm = 0
+        for char in formatted:
+            chksm += ord(char)
+        chksm = 96 - (chksm % 32)
+        formatted += str(chksm) + '@'
+        # print('CheckSum: ', chksm)
+        # print(len(formatted))
+        # print(formatted)
         return formatted
 
     @staticmethod
@@ -59,13 +65,12 @@ class Images:
         else:
             img = Image.open(static_dir + 'images\\shapes\\0.png')
         draw = ImageDraw.Draw(img)
-        for index in range(len(data)):
-            # positions[index][0] -= (len(str(data[index])) - 1) * 3
-            text_box_pos = positions[index][0], positions[index][1] - 2
-            bbox = draw.textbbox(text_box_pos, str(data[index]), font=ImageFont.truetype("segoeuib.ttf", font_size + 2))
+        for i in range(len(data)):
+            text_box_pos = positions[i][0], positions[i][1] - 2
+            bbox = draw.textbbox(text_box_pos, str(data[i]), font=ImageFont.truetype("segoeuib.ttf", font_size + 2))
             draw.rectangle(bbox, fill="white")
-            draw.text(positions[index], str(data[index]), font=ImageFont.truetype("segoeui.ttf", font_size), fill="black")
-        file_out = configs.net_print_dir + "Picture\\" + pages.ts(mode="file_name") + ".bmp"
+            draw.text(positions[i], str(data[i]), font=ImageFont.truetype("segoeui.ttf", font_size), fill="black")
+        file_out = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".bmp"
         img.save(file_out)
         return file_out
 
@@ -80,9 +85,17 @@ class Images:
                         decode['order_id'] = item[1:]
                     elif item[0] == 'p':
                         decode['job_id'] = item[1:]
-                    else:
-                        # todo: complete
-                        print("")
+                    elif item[0] == 'l' and 'length' not in decode.keys():  # @l also in shape_data
+                        decode['length'] = item[1:]
+                    elif item[0] == 'n':
+                        decode['quantity'] = item[1:]
+                    elif item[0] == 'e':
+                        decode['weight'] = item[1:]
+                    elif item[0] == 'd':
+                        decode['diam'] = item[1:]
+                    elif item[0] == 'g':
+                        print("Shape_data")
+            return decode
         return {}
 
 
@@ -90,10 +103,10 @@ class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type):
         # Format data
-        rows, info, additional = pages.get_order_data(order_id, reverse=False)
+        rows, info, additional = orders.get_order_data(order_id, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
-        if 'rebar' in info['type'] and print_type == 'page':
+        if 'rebar' in info['type'] and 'page' in print_type:
             info['temp_select'] = 1
             print_data.append(info)
             total_weight = 0
@@ -135,8 +148,8 @@ class Bartender:
                     line[obj] = item[obj]
                 for obj in info:
                     line[obj] = info[obj]
-                if 'shape_data' in line:
-                    line['img_dir'] = Path(Images.create_shape_plot(line['shape'], line['shape_data'])).stem
+                # if 'shape_data' in line:
+                #     line['img_dir'] = Path(Images.create_shape_plot(line['shape'], line['shape_data'])).stem
                 line['barcode_data'] = Images.format_qr_data(line)
                 print_data.append(line)
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
@@ -283,7 +296,7 @@ class Bartender:
         # Bar tender btw
         header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer + ' /R=3 /P /DD\n%END%\n'
-        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + pages.ts(mode="file_name") + ".txt"
+        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
         file_dir = file_dir.replace('.txt', '.tmp')
         testing = False

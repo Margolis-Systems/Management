@@ -9,9 +9,11 @@
 </table>
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
-        <form method=POST autocomplete="off" action="{{ url_for('edit_order') }}">
+        <form method=POST autocomplete="off" action="{{ url_for('orders_page') }}">
         <td>
-            <input type="text" name="order_id" placeholder="חיפוש הזמנה">
+            <label>חיפוש</label>
+            <input type="text" name="order_id" placeholder="מספר הזמנה">
+            <input type="text" name="info.costumer_name" placeholder="שם לקוח">
             <button type="submit">חפש</button>
         </td>
         </form>

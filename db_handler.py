@@ -45,6 +45,13 @@ class DBHandle:
         return dic
 
     @staticmethod
+    def read_collection_list(collect, query={}, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        dic = db[collect].find(query, {'_id': False})
+        return dic
+
+    @staticmethod
     def read_collection_last(collect, sort_by, query={}, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
@@ -89,39 +96,18 @@ class DBHandle:
         collection.delete_many(query)
 
     @staticmethod
-    def update_one_set(collect, key, doc, upsert=False, db_name=""):
+    def update_one(collect, key, doc, query, upsert=False, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
-        collection.update_one(key, {"$set": doc}, upsert=upsert)
+        collection.update_one(key, {query: doc}, upsert=upsert)
 
     @staticmethod
-    def update_many_set(collect, key, doc, upsert=False, db_name=""):
+    def update_many(collect, key, doc, query, upsert=False, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
-        collection.update_many(key, {"$set": doc}, upsert=upsert)
-
-    @staticmethod
-    def update_one_push(collect, key, doc, upsert=False, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
-        db.validate_collection(collect)
-        collection = db[collect]
-        collection.update_one(key, {"$push": doc}, upsert=upsert)
-
-    @staticmethod
-    def update_one_pull(collect, key, doc, upsert=False, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
-        db.validate_collection(collect)
-        collection = db[collect]
-        collection.update_one(key, {"$pull": doc}, upsert=upsert)
-
-    @staticmethod
-    def update_one_unset(collect, key, doc, upsert=False, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
-        db.validate_collection(collect)
-        collection = db[collect]
-        collection.update_one(key, {"$unset": doc}, upsert=upsert)
+        collection.update_many(key, {query: doc}, upsert=upsert)
 
     @staticmethod
     def dump(path, collections=[], db_name=""):
@@ -145,12 +131,18 @@ class DBHandle:
                     with open(os.path.join(path, coll), 'rb+') as f:
                         data = f.read()
                         if data:
-                            db[coll.split('.')[0]].insert_many(bson.decode_all())
+                            db[coll.split('.')[0]].insert_many(bson.decode_all(data))
                 except Exception as e:
                     DBHandle.delete_many(coll.split('.')[0])
                     try:
                         with open(os.path.join(path, coll), 'rb+') as f:
-                            db[coll.split('.')[0]].insert_many(bson.decode_all(f.read()))
+                            db[coll.split('.')[0]].insert_many(bson.decode_all(data))
                     except Exception as e:
                         print(e)
 
+    @staticmethod
+    def count_docs(collect, query={}, db_name=""):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        collection = db[collect]
+        return collection.count_documents(query)

@@ -1,0 +1,108 @@
+{% extends "layout_mob.html" %}
+{% block body %}
+{% if info %}
+<form name="scaling_form" id="form" method=POST action="{{ url_for('scaling_info') }}">
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td colspan="2"><button type="button" class="btn btn-primary btn-block" onclick="location.href='/new_scale'">שקילה חדשה</button></td>
+        <td></td>
+        <td colspan="2"><button type="button" class="btn btn-primary btn-block" onclick="location.href='/print_scale'">הדפס</button></td>
+    </tr>
+        <tr>
+            <td>שם נהג:  {{ info[0].driver }}</td>
+            <td>מספר רכב:  {{ info[0].truck }}</td>
+            <td>שם לקוח:  {{ info[0].costumer_name }}</td>
+            <td>שם מפעיל:  {{ user }}</td>
+            <td>מספר תעודה:  {{ info[0].id }}</td>
+        </tr>
+        <tr>
+            <td>{{ info[0].site.sensors[0] }}</td>
+            <td>{{ info[0].site.sensors[1] }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            {% if info[0].lc[0] %}
+            <td><input type="checkbox" style="width:40px;height:40px;" name="lc1" value="{{info[0].site.sensors[0]}}" checked></td>
+            {% else %}
+            <td><input type="checkbox" style="width:40px;height:40px;" name="lc1" value="{{info[0].site.sensors[0]}}"></td>
+            {% endif %}
+            {% if info[0].lc[1] %}
+            <td><input type="checkbox" style="width:40px;height:40px;" name="lc2" value="{{info[0].site.sensors[1]}}" checked></td>
+            {% else %}
+            <td><input type="checkbox" style="width:40px;height:40px;" name="lc2" value="{{info[0].site.sensors[1]}}"></td>
+            {% endif %}
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+</table>
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td>זמן שקילה</td>
+        <td>משקל</td>
+        <td>מוצר</td>
+        <td>Barcode</td>
+        <td></td>
+    </tr>
+        <tr>
+            <td><input name="timestamp" class="form-control" value="{{ info[2][1] }}" readonly></td>
+            <td><input name="weight" class="form-control" value="{{ info[2][0] }}" readonly></td>
+            <td><input list="product" name="product" class="form-control" placeholder="מוצר" required></td>
+            <datalist id="product">
+                {% for product in info[1] %}
+                <option>{{ product }}</option>
+                {% endfor %}
+            </datalist>
+            <td><input type="text" name="barcode" class="form-control" placeholder="ברקוד" autofocus></td>
+            <td><button type="submit" class="btn btn-primary btn-block">הוסף שקילה</button></td>
+        </tr>
+    {% for line in info[3] %}
+    <tr>
+        {%for item in line %}
+        <td>{{ line[item] }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</form>
+{% else %}
+<form name="scaling_form" id="form" method=POST action="{{ url_for('scaling_info') }}">
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td>שם מפעיל:</td>
+        <td>{{ user }}</td>
+    </tr>
+    <tr>
+        <td>שם נהג</td>
+        <td><input name="driver" placeholder="driver" class="form-control" required autofocus></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>מספר רכב</td>
+        <td><input name="truck" placeholder="truck" class="form-control" required></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>שם לקוח</td>
+        <td><input name="costumer_name" placeholder="costumer name" class="form-control" required></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>בחר עגורן</td>
+        <td><input name="site" list="site" class="form-control" value="{{defaults.site}}" required></td>
+        <datalist id="site">
+                {% for site in sites %}
+                <option>{{ site }}</option>
+                {% endfor %}
+        </datalist>
+    </tr>
+    <tr>
+        <td></td>
+        <td><button type="submit" class="btn btn-primary btn-block">אישור</button> </td>
+    </tr>
+</table>
+</form>
+{% endif %}
+{% endblock %}
