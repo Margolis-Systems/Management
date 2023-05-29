@@ -1,37 +1,29 @@
 {% extends "layout_mob.html" %}
 {% block body %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-4 col-md-offset-4">
-            <form method=POST action="{{ url_for('scan') }}">
-                {% if order!="" %}
-                <div class="form-group">
-                    <label>מספר הזמנה: {{order}}</label>
-                    <input type="hidden" name="order_id" value="{{order}}">
-                    <button type="submit" class="btn btn-primary btn-block" name="status" value="{{status}}">{{status}}</button>
-                    <button type="button" class="btn btn-primary btn-block" onclick="location.href='/scan'">Cancel</button>
-                </div>
-                {% else %}
-                <div class="form-group">
-                    <label>Scan barcode</label>
-                    <input type="text" class="form-control" id="scan" name="scan" placeholder="Scan barcode" autofocus>
-                </div>
-                <button type="reset" class="btn btn-primary btn-block" onclick="autoFocus()">Reset</button>
-                <button type="submit" class="btn btn-primary btn-block">Scan</button>
-                {% if msg != "" %}
-                <div>
-                    <label>{{msg}}</label>
-                </div>
-                {% endif %}
-                {% endif %}
-            </form>
-        </div>
-    </div>
-</div>
-<script>
-window.onclick = autoFocus;
-function autoFocus() {
-  document.getElementById("scan").focus();
-}
-</script>
+<table class="table table-striped" dir="rtl" align="center">
+    <form method=POST action="{{ url_for('scan') }}">
+    <tr>
+        <td class="d-grid gap-2">
+            {% if order!="" %}
+            <label>מספר הזמנה: {{order}}</label>
+            <input type="hidden" name="order_id" value="{{order}}">
+            <button type="submit" class="btn btn-primary btn-block" name="status" value="{{status}}">{{status}}</button>
+            <button type="button" class="btn btn-primary btn-block" onclick="location.href='/scan'">Cancel</button>
+            {% else %}
+            <label>Scan barcode</label>
+            <input type="text" class="form-control" id="scan" name="scan" placeholder="Scan barcode" autofocus>
+            <button type="reset" class="btn btn-primary btn-lg" onclick="autoFocus()">Reset</button>
+            <button type="submit" class="btn btn-primary btn-lg">Scan</button>
+        </td>
+    </tr>
+    {% endif %}
+    {% if msg != "" %}
+    <tr>
+        <td>
+            <label>{{msg}}</label>
+        </td>
+    </tr>
+    {% endif %}
+    </form>
+</table>
 {% endblock %}

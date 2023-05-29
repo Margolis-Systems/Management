@@ -19,17 +19,19 @@
 <body>
 <table dir="rtl" align="right">
     <tr>
-        <td>
+        <td rowspan="2">
             <img src="\static\images\logo.jpg" align="right">
         </td>
         <td>
-            <button onclick="location.href='/scan'" type="button">עבודה</button>
+            <button class="btn btn-secondary" onclick="location.href='/scan'" type="button">עבודה</button>
         </td>
         <td>
-            <button onclick="location.href='/scale'" type="button">שקילה</button>
+            <button class="btn btn-secondary" onclick="location.href='/scale'" type="button">שקילה</button>
         </td>
+    </tr>
+    <tr>
         <td>
-            <button onclick="location.href='\logout'" type="button">התנתק</button>
+            <button class="btn btn-secondary" onclick="location.href='\logout'" type="button">התנתק</button>
         </td>
     </tr>
 </table>
