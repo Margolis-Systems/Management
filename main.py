@@ -153,6 +153,8 @@ def tare_scale():
 
 @app.route('/print_scale', methods=['POST', 'GET'])
 def print_scale():
+    scale.print_scale()
+    # users.clear()
     return scale.main_page()
 
 
