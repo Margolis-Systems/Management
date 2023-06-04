@@ -4,24 +4,25 @@
 <form name="scaling_form" id="form" method=POST action="{{ url_for('scaling_info') }}">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/new_scale'">שקילה חדשה</button></td>
-        <td></td>
-        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/print_scale'">הדפס</button></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[0]}}</span><input name="timestamp1" class="form-control" value="{{ info[2][0] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['weight']}} (KG)</span><input name="weight1" class="form-control" value="{{ info[2][1] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[1]}}</span><input name="timestamp2" class="form-control" value="{{ info[2][2] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">משקל (KG)</span><input name="weight2" class="form-control" value="{{ info[2][3] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">מוצר</span><input list="product" name="product" class="form-control" placeholder="מוצר" aria-describedby="inputGroup-sizing-lg" required></td>
+        <datalist id="product">
+            {% for product in info[1] %}
+            <option>{{ product }}</option>
+            {% endfor %}
+        </datalist>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['barcode']}}</span><input type="text" name="barcode" class="form-control" placeholder="ברקוד" autofocus></td>
     </tr>
     <tr>
-        <td>שם מפעיל:  {{ user }}</td>
-        <td>מספר תעודה:  {{ info[0].doc_id }}</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>שם נהג:  {{ info[0].driver }}</td>
-        <td>מספר רכב:  {{ info[0].vehicle_id }}</td>
-        <td>שם לקוח:  {{ info[0].costumer }}</td>
+        <td><button type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="window.location.reload();">{{dictionary['refresh']}}</button></td>
     </tr>
     <tr>
         <td>{{ info[0].site.sensors[0] }}</td>
         <td>{{ info[0].site.sensors[1] }}</td>
-        <td></td>
     </tr>
     <tr>
         {% if info[0].lc[0] %}
@@ -34,24 +35,23 @@
         {% else %}
         <td><input type="checkbox" style="width:40px;height:40px;" name="lc2" value="{{info[0].site.sensors[1]}}"></td>
         {% endif %}
-        <td></td>
     </tr>
 </table>
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <td class="input-group input-group-lg"><span class="input-group-text">זמן שקילה</span><input name="timestamp" class="form-control" value="{{ info[2][1] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">משקל (KG)</span><input name="weight" class="form-control" value="{{ info[2][0] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">מוצר</span><input list="product" name="product" class="form-control" placeholder="מוצר" aria-describedby="inputGroup-sizing-lg" required></td>
-        <datalist id="product">
-            {% for product in info[1] %}
-            <option>{{ product }}</option>
-            {% endfor %}
-        </datalist>
-        <td class="input-group input-group-lg"><span class="input-group-text">ברקוד</span><input type="text" name="barcode" class="form-control" placeholder="ברקוד" autofocus></td>
+        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/new_scale'">{{dictionary['new_scale']}}</button></td>
+        <td></td>
+        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/print_scale'">{{dictionary['print']}}</button></td>
     </tr>
     <tr>
-        <td><button type="submit" class="btn btn-primary btn-lg">הוסף שקילה</button>
-            <button type="button" class="btn btn-primary btn-lg" disabled>רענן</button></td>
+        <td>{{dictionary['operator_name']}}:  {{ user }}</td>
+        <td>{{dictionary['doc_id']}}:  {{ info[0].doc_id }}</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>{{dictionary['driver']}}:  {{ info[0].driver }}</td>
+        <td>{{dictionary['vehicle_id']}}:  {{ info[0].vehicle_id }}</td>
+        <td>{{dictionary['costumer_name']}}:  {{ info[0].costumer }}</td>
     </tr>
 </table>
 {% if info[3] %}
@@ -75,26 +75,26 @@
 <form name="scaling_form" id="form" method=POST action="{{ url_for('scaling_info') }}">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <td>שם מפעיל:</td>
+        <td>{{dictionary['operator_name']}}:</td>
         <td>{{ user }}</td>
     </tr>
     <tr>
-        <td>שם נהג</td>
+        <td>{{dictionary['driver']}}</td>
         <td><input name="driver" placeholder="driver" class="form-control" required autofocus></td>
         <td></td>
     </tr>
     <tr>
-        <td>מספר רכב</td>
+        <td>{{dictionary['vehicle_id']}}</td>
         <td><input type="number" name="vehicle_id" placeholder="vehicle_id" class="form-control" required></td>
         <td></td>
     </tr>
     <tr>
-        <td>שם לקוח</td>
+        <td>{{dictionary['costumer_name']}}</td>
         <td><input name="costumer" placeholder="costumer name" class="form-control" required></td>
         <td></td>
     </tr>
     <tr>
-        <td>בחר עגורן</td>
+        <td>{{dictionary['pick_crane']}}</td>
         <td><input name="site" list="site" class="form-control" value="{{defaults.site}}" required></td>
         <datalist id="site">
                 {% for site in sites %}
@@ -104,7 +104,7 @@
     </tr>
     <tr>
         <td></td>
-        <td><button type="submit" class="btn btn-primary btn-block">אישור</button> </td>
+        <td><button type="submit" class="btn btn-primary btn-block">{{dictionary['ok']}}</button> </td>
     </tr>
 </table>
 </form>

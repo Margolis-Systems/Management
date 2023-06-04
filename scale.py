@@ -1,6 +1,8 @@
 import functions
 import main
 from datetime import datetime
+
+import pages
 import reports
 import users
 
@@ -16,7 +18,7 @@ def main_page():
             for i in range(len(cur['lc'])):
                 if cur['lc'][i]:
                     sensors.append(cur['site']['sensors'][i])
-            cur_weight = get_weight(cur['site']['crr'], sensors)
+            cur_weight = get_weight(cur['site'])
             cur_scale = main.mongo.read_collection_one('documents', {'doc_id': cur['doc_id']}, 'Scaling')
             if not cur_scale:
                 cur_scale = []
@@ -27,26 +29,30 @@ def main_page():
                 if 'lc1' in req_form:
                     if req_form['lc1']:
                         cur['lc'][0] = True
+                else:
+                    cur['lc'][0] = False
                 if 'lc2' in req_form:
                     if req_form['lc2']:
                         cur['lc'][1] = True
-                if req_form['weight'] != 'Error':
-                    new_line = {}
-                    for item in req_form:
-                        if 'lc' not in item:
-                            new_line[item] = req_form[item]
-                    # TODO: save to barcode too
+                else:
+                    cur['lc'][1] = False
+                weight = calc_weight(req_form, cur['site'])
+                if weight:
+                    new_line = weight
+                    new_line['barcode'] = ''
+                    doc = {'order_id': ''}
                     if req_form['barcode']:
                         decoded = reports.Images.decode_qr(req_form['barcode'])
                         if decoded:
+                            doc['order_id'] = decoded['order_id']
                             new_line['barcode'] = 'Order: ' + decoded['order_id'] + '   Job: ' + decoded['job_id']
                     cur_scale.append(new_line)
-                    doc = {'order_id': ''}
                     for item in cur:
                         if isinstance(cur[item], str):
                             doc[item] = cur[item]
                     doc['lines'] = cur_scale
                     main.mongo.upsert_collection_one('documents', {'doc_id': cur['doc_id']}, doc, 'Scaling')
+                    return main.redirect('/scale')
             product_types = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
             info = [cur, product_types, cur_weight, cur_scale]
     elif req_form:  # Enter info
@@ -54,31 +60,33 @@ def main_page():
         if cur:
             main.session['scale'] = cur
         return main.redirect('/scale')
+    sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())  # ['MIGRASH', 'MIFAL']
     return main.render_template('/scaling.html', info=info, user=main.session['username'],
-                                sites=['ROMAN', 'MESH'], defaults={'site': 'ROMAN'})  # TODO: sites and defaults mongo
+                                sites=sites, defaults={'site': 'MIGRASH'},
+                                dictionary=pages.get_dictionary(main.session['username']))
 
 
-def get_weight(crr, sensors):
+def get_weight(site_info):
+    crr, sensors = site_info['crr'], site_info['sensors']
     crr_data = main.mongo.read_collection_one('weights', db_name='Scaling',
                                               query={'CRR_ID': crr, 'error': {'$exists': False}})
-    total_weight = 0
-    last_update = ""
-    for sensor in sensors:
-        if sensor in crr_data:
-            cur_ts = datetime.strptime(crr_data[sensor]['last_update'],
-                                       '%d-%m-%Y_%H-%M-%S-%f')
-            if not last_update or cur_ts < last_update or True:
-                last_update = cur_ts
-            avg = sum(crr_data[sensor]['collector'][0]) / len(crr_data[sensor]['collector'][0])
-            act = crr_data[sensor]['actual']
+    ret = ['', '', '', '']
+    for sensor in range(len(sensors)):
+        if sensors[sensor] in crr_data:
+            cur_sense = crr_data[sensors[sensor]]
+            avg = sum(cur_sense['collector'][0]) / len(cur_sense['collector'][0])
+            act = cur_sense['actual']
             tolerance = 0.03
             if not act * (1 - tolerance) < avg < act * (1 + tolerance):
-                print('Tolerance ERROR\n', act * (1 - tolerance), avg, act * (1 + tolerance))
-                return 'Error', last_update
-            total_weight += round((float(crr_data[sensor]['actual']) - float(crr_data[sensor]['tare'])) * 1000, 1)
+                ret[sensor] = "ERROR"
+            else:
+                ret[sensor * 2] = datetime.strptime(cur_sense['last_update'], '%d-%m-%Y_%H-%M-%S-%f').strftime('%d/%m/%Y %H:%M:%S')
+                ret[sensor * 2 + 1] = round((act - float(cur_sense['tare'])) * 1000)
+                if ret[sensor * 2 + 1] < 0:
+                    ret[sensor * 2 + 1] = 0
         else:
-            print("No data from Sensor:", sensor)
-    return str(total_weight), last_update
+            print("No data from Sensor:", sensors[sensor])
+    return ret
 
 
 def form_request(req_form):
@@ -87,6 +95,8 @@ def form_request(req_form):
         if item == 'site':
             site = main.mongo.read_collection_one('data_lists', db_name='Scaling',
                                                   query={'name': 'sites', 'data.' + req_form[item]: {'$exists': True}})
+            if not site:
+                return {}
             scale_data['site'] = site['data'][req_form['site']]
             for sensor in range(len(site['data'][req_form['site']]['sensors'])):
                 scale_data['lc'][sensor] = True
@@ -104,7 +114,7 @@ def form_request(req_form):
 
 
 def gen_id():
-    return "1"
+    return functions.ts('s')
 
 
 def print_scale():
@@ -117,12 +127,12 @@ def print_scale():
     if not doc:
         return
     # Keep original template for multi pages todo: TBD
-    template = main.mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']['scaling_report_n']
-    bartender_format = template.copy()
+    template = main.mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']['scaling_report']
     # Add info
-    bartender_format['start_ts'] = doc['lines'][0]['timestamp']
-    bartender_format['end_ts'] = doc['lines'][-1]['timestamp']
-    bartender_format['username'] = main.session['username']
+    template['start_ts'] = doc['lines'][0]['timestamp'][:19]
+    template['end_ts'] = doc['lines'][-1]['timestamp'][:19]
+    template['username'] = main.session['username']
+    bartender_format = template.copy()
     for item in doc:
         if item in bartender_format:
             bartender_format[item] = doc[item]
@@ -131,8 +141,31 @@ def print_scale():
         l_st = str(line + 1)
         bartender_format['line'+l_st] = l_st
         bartender_format['weight'+l_st] = doc['lines'][line]['weight']
-        bartender_format['ts'+l_st] = doc['lines'][line]['timestamp']
+        bartender_format['ts'+l_st] = "---"  # doc['lines'][line]['timestamp']  # TODO: gen description
         bartender_format['product'+l_st] = doc['lines'][line]['product']
-    print(bartender_format)
-    reports.Bartender.bt_create_print_file('Page4', 'scaling_report_n', [bartender_format])
+    reports.Bartender.bt_create_print_file('Page4', 'scaling_report', [bartender_format])
 
+
+def calc_weight(req, site_info):
+    cur_weight = get_weight(site_info)
+    ret = {'ts': '', 'weight': 0}
+    if 'lc1' in req:
+        ret['weight'] += cur_weight[1]
+        if not ret['ts']:
+            ret['ts'] = cur_weight[0]
+    if 'lc2' in req:
+        ret['weight'] += cur_weight[3]
+        if not ret['ts']:
+            ret['ts'] = cur_weight[2]
+        elif cur_weight[2] < ret['ts']:
+            ret['ts'] = cur_weight[2]
+    return {'timestamp': ret['ts'], 'weight': ret['weight'], 'product': req['product']}
+
+
+def tare_scale(site_info):
+    weights = main.mongo.read_collection_one('weights', db_name='Scaling',
+                                             query={'CRR_ID': site_info['crr'], 'error': {'$exists': False}})
+    tare = {}
+    for sensor in site_info['sensors']:
+        tare[sensor+'.tare'] = weights[sensor]['actual']
+    main.mongo.update_one('weights', {'CRR_ID': site_info['crr']}, tare, '$set', db_name='Scaling', upsert=True)

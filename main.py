@@ -1,5 +1,6 @@
 # Server
 import flask
+import main
 from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory
 from waitress import serve
 from werkzeug.utils import secure_filename
@@ -148,13 +149,14 @@ def scaling_info():
 
 @app.route('/tare_scale', methods=['POST', 'GET'])
 def tare_scale():
+    scale.tare_scale(main.session['scale']['site'])
     return scale.main_page()
 
 
 @app.route('/print_scale', methods=['POST', 'GET'])
 def print_scale():
     scale.print_scale()
-    # users.clear()
+    users.clear()
     return scale.main_page()
 
 

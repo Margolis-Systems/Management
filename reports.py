@@ -294,7 +294,7 @@ class Bartender:
     @staticmethod
     def bt_create_print_file(printer, btw_file, print_data):
         # Bar tender btw
-        header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '6.btw /D="%Trigger File Name%" /PRN=' \
+        header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
