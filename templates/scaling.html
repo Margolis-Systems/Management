@@ -1,14 +1,15 @@
 {% extends "layout_mob.html" %}
 {% block body %}
+<script src="\static\js\shapes.js" ></script>
 {% if info %}
-<form name="scaling_form" id="form" method=POST action="{{ url_for('scaling_info') }}">
+<form name="scaling_form" id="form" method=POST>
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[0]}}</span><input name="timestamp1" class="form-control" value="{{ info[2][0] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['weight']}} (KG)</span><input name="weight1" class="form-control" value="{{ info[2][1] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[1]}}</span><input name="timestamp2" class="form-control" value="{{ info[2][2] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">משקל (KG)</span><input name="weight2" class="form-control" value="{{ info[2][3] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">מוצר</span><input list="product" name="product" class="form-control" placeholder="מוצר" aria-describedby="inputGroup-sizing-lg" required></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[0]}}</span><input name="timestamp1" id="timestamp1" class="form-control" value="{{ info[2][0] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['weight']}} (KG)</span><input name="weight1" id="weight1" class="form-control" value="{{ info[2][1] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[1]}}</span><input name="timestamp2" id="timestamp2" class="form-control" value="{{ info[2][2] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['weight']}} (KG)</span><input name="weight2" id="weight2" class="form-control" value="{{ info[2][3] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['product']}}</span><input list="product" name="product" class="form-control" placeholder="מוצר" aria-describedby="inputGroup-sizing-lg"></td>
         <datalist id="product">
             {% for product in info[1] %}
             <option>{{ product }}</option>
@@ -17,24 +18,8 @@
         <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['barcode']}}</span><input type="text" name="barcode" class="form-control" placeholder="ברקוד" autofocus></td>
     </tr>
     <tr>
-        <td><button type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button>
-            <button type="button" class="btn btn-primary btn-lg" onclick="window.location.reload();">{{dictionary['refresh']}}</button></td>
-    </tr>
-    <tr>
-        <td>{{ info[0].site.sensors[0] }}</td>
-        <td>{{ info[0].site.sensors[1] }}</td>
-    </tr>
-    <tr>
-        {% if info[0].lc[0] %}
-        <td><input type="checkbox" style="width:40px;height:40px;" name="lc1" value="{{info[0].site.sensors[0]}}" checked></td>
-        {% else %}
-        <td><input type="checkbox" style="width:40px;height:40px;" name="lc1" value="{{info[0].site.sensors[0]}}"></td>
-        {% endif %}
-        {% if info[0].lc[1] %}
-        <td><input type="checkbox" style="width:40px;height:40px;" name="lc2" value="{{info[0].site.sensors[1]}}" checked></td>
-        {% else %}
-        <td><input type="checkbox" style="width:40px;height:40px;" name="lc2" value="{{info[0].site.sensors[1]}}"></td>
-        {% endif %}
+        <td><button id="submit" type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button><!--
+            <button type="button" class="btn btn-primary btn-lg" onclick="openNewWindow('\scaling_pick_crane')">{{dictionary['pick_crane']}}</button></td>-->
     </tr>
 </table>
 <table class="table table-striped" dir="rtl" align="center">
@@ -71,8 +56,29 @@
 </table>
 {% endif %}
 </form>
+<script>
+  var intervalID = setInterval(update_values,2000);
+  function update_values() {
+  var data
+        $.getJSON('/scaling_weight', function(data) {
+        $('#result').text(data);
+        ts1 = document.getElementById('timestamp1');
+        ts2 = document.getElementById('timestamp2');
+        weight1 = document.getElementById('weight1');
+        weight2 = document.getElementById('weight2');
+        ts1.value = data.ts1;
+        ts2.value = data.ts2;
+        weight1.value = data.weight1;
+        weight2.value = data.weight2;
+
+      });
+    };
+    function stopTextColor() {
+      clearInterval(intervalID);
+    }
+</script>
 {% else %}
-<form name="scaling_form" id="form" method=POST action="{{ url_for('scaling_info') }}">
+<form name="scaling_form" id="form" method=POST>
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td>{{dictionary['operator_name']}}:</td>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tzomet ERP</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<div class="form-floating">
+    <form name="pick_crane" id="pick_crane" method=POST>
+        בחר עגורן <br>
+        <input list="site" type="text" class="form-control" name="site" placeholder="pick crane" autofocus="autofocus" required>
+            <datalist id="site">
+            {% for site in sites %}
+                <option value="{{ site }}">{{ site }}</option>
+            {% endfor %}
+            </datalist>
+        <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="refreshWindow();">אישור</button>
+        <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
+    </form>
+</div>
+<script src="\static\js\shapes.js" ></script>
+</body>
+</html>

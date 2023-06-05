@@ -33,7 +33,7 @@ def index():
         if login_user['group'] > 10:
             return render_template('main.html', user=user)
         else:
-            return render_template('scan.html', order="", msg="")
+            return redirect('/scale')
     return render_template('login.html')
 
 
@@ -142,9 +142,10 @@ def scaling():
     return scale.main_page()
 
 
-@app.route('/scaling_info', methods=['POST', 'GET'])
-def scaling_info():
-    return scale.main_page()
+@app.route('/scaling_weight', methods=['POST', 'GET'])
+def scaling_weight():
+    cur_weight = scale.get_weight(main.session['scale']['site'])
+    return {'ts1': cur_weight[0], 'weight1': cur_weight[1], 'ts2': cur_weight[2], 'weight2': cur_weight[3]}
 
 
 @app.route('/tare_scale', methods=['POST', 'GET'])
@@ -164,6 +165,20 @@ def print_scale():
 def new_scale():
     users.clear()
     return scale.main_page()
+
+
+# @app.route('/scaling_pick_crane', methods=['POST', 'GET'])
+# def scaling_pick_crane():
+#     if request.form:
+#         print(request.form)
+#         if 'scale' in session.keys():
+#             site = mongo.read_collection_one('data_lists', db_name='Scaling',
+#                                              query={'name': 'sites', 'data.' + request.form['site']: {'$exists': True}})
+#             if site:
+#                 session['scale']['site'] = site['data'][request.form['site']]
+#                 print(session)
+#     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
+#     return render_template('pick_crane.html', sites=sites)
 
 
 '''

@@ -1,6 +1,6 @@
 import functions
 import main
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pages
 import reports
@@ -14,10 +14,6 @@ def main_page():
         if main.session['scale']:
             # Current scaling info
             cur = main.session['scale']
-            sensors = []
-            for i in range(len(cur['lc'])):
-                if cur['lc'][i]:
-                    sensors.append(cur['site']['sensors'][i])
             cur_weight = get_weight(cur['site'])
             cur_scale = main.mongo.read_collection_one('documents', {'doc_id': cur['doc_id']}, 'Scaling')
             if not cur_scale:
@@ -26,16 +22,6 @@ def main_page():
                 cur_scale = cur_scale['lines']
             # Add new line to report
             if 'product' in req_form:
-                if 'lc1' in req_form:
-                    if req_form['lc1']:
-                        cur['lc'][0] = True
-                else:
-                    cur['lc'][0] = False
-                if 'lc2' in req_form:
-                    if req_form['lc2']:
-                        cur['lc'][1] = True
-                else:
-                    cur['lc'][1] = False
                 weight = calc_weight(req_form, cur['site'])
                 if weight:
                     new_line = weight
@@ -60,9 +46,9 @@ def main_page():
         if cur:
             main.session['scale'] = cur
         return main.redirect('/scale')
-    sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())  # ['MIGRASH', 'MIFAL']
+    sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
     return main.render_template('/scaling.html', info=info, user=main.session['username'],
-                                sites=sites, defaults={'site': 'MIGRASH'},
+                                sites=sites, defaults={},
                                 dictionary=pages.get_dictionary(main.session['username']))
 
 
@@ -70,17 +56,24 @@ def get_weight(site_info):
     crr, sensors = site_info['crr'], site_info['sensors']
     crr_data = main.mongo.read_collection_one('weights', db_name='Scaling',
                                               query={'CRR_ID': crr, 'error': {'$exists': False}})
+    # print(crr_data)
     ret = ['', '', '', '']
     for sensor in range(len(sensors)):
         if sensors[sensor] in crr_data:
             cur_sense = crr_data[sensors[sensor]]
+            # Compare last update timestamp with current time - tolerance
+            last_update = datetime.strptime(cur_sense['last_update'], '%d-%m-%Y_%H-%M-%S-%f')
+            delta = datetime.now() - timedelta(seconds=30)
+            # Validate the stability of the read values
             avg = sum(cur_sense['collector'][0]) / len(cur_sense['collector'][0])
             act = cur_sense['actual']
             tolerance = 0.03
             if not act * (1 - tolerance) < avg < act * (1 + tolerance):
-                ret[sensor] = "ERROR"
+                ret[sensor * 2] = "Not stable"
+            elif delta > last_update:
+                ret[sensor * 2] = "COMMUNICATION ERROR"
             else:
-                ret[sensor * 2] = datetime.strptime(cur_sense['last_update'], '%d-%m-%Y_%H-%M-%S-%f').strftime('%d/%m/%Y %H:%M:%S')
+                ret[sensor * 2] = last_update.strftime('%d/%m/%Y %H:%M:%S')
                 ret[sensor * 2 + 1] = round((act - float(cur_sense['tare'])) * 1000)
                 if ret[sensor * 2 + 1] < 0:
                     ret[sensor * 2 + 1] = 0
@@ -90,7 +83,7 @@ def get_weight(site_info):
 
 
 def form_request(req_form):
-    scale_data = {'doc_id': gen_id(), 'lc': [False, False]}
+    scale_data = {'doc_id': gen_id()}
     for item in req_form:
         if item == 'site':
             site = main.mongo.read_collection_one('data_lists', db_name='Scaling',
@@ -98,8 +91,6 @@ def form_request(req_form):
             if not site:
                 return {}
             scale_data['site'] = site['data'][req_form['site']]
-            for sensor in range(len(site['data'][req_form['site']]['sensors'])):
-                scale_data['lc'][sensor] = True
         elif 'BF2D@Hj ' in req_form[item]:
             order_id = reports.Images.decode_qr(req_form[item])['order_id']
             order_info = main.mongo.read_collection_one('orders',
@@ -137,23 +128,35 @@ def print_scale():
         if item in bartender_format:
             bartender_format[item] = doc[item]
     # Add lines
+    last_line = 0
+    total_weight = 0
     for line in range(len(doc['lines'])):
         l_st = str(line + 1)
         bartender_format['line'+l_st] = l_st
         bartender_format['weight'+l_st] = doc['lines'][line]['weight']
         bartender_format['ts'+l_st] = "---"  # doc['lines'][line]['timestamp']  # TODO: gen description
         bartender_format['product'+l_st] = doc['lines'][line]['product']
+        total_weight += int(doc['lines'][line]['weight'])
+        last_line = str(line + 2)
+    bartender_format['ts' + last_line] = "סהכ משקל:"  # doc['lines'][line]['timestamp']  # TODO: gen description
+    bartender_format['product' + last_line] = str(total_weight)
     reports.Bartender.bt_create_print_file('Page4', 'scaling_report', [bartender_format])
 
 
 def calc_weight(req, site_info):
+    if not req['product']:
+        req['product'] = 'ברזל'
+    cur_weight = [req['timestamp1'], req['weight1'], req['timestamp2'], req['weight2']]
     cur_weight = get_weight(site_info)
+    error_msg = ['Not stable', 'COMMUNICATION ERROR']
+    if cur_weight[0] in error_msg or cur_weight[2] in error_msg:
+        return {}
     ret = {'ts': '', 'weight': 0}
-    if 'lc1' in req:
+    if cur_weight[1]:
         ret['weight'] += cur_weight[1]
         if not ret['ts']:
             ret['ts'] = cur_weight[0]
-    if 'lc2' in req:
+    if cur_weight[3]:
         ret['weight'] += cur_weight[3]
         if not ret['ts']:
             ret['ts'] = cur_weight[2]
