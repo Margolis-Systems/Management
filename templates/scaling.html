@@ -16,18 +16,14 @@
             {% endfor %}
         </datalist>
         <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['barcode']}}</span><input type="text" name="barcode" class="form-control" placeholder="ברקוד" autofocus></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['description']}}</span><input type="text" name="quantity" class="form-control" placeholder="כמות" autofocus><input type="text" name="length" class="form-control" placeholder="אורך" autofocus><input type="text" name="diam" class="form-control" placeholder="קוטר" autofocus></td>
     </tr>
     <tr>
-        <td><button id="submit" type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button><!--
-            <button type="button" class="btn btn-primary btn-lg" onclick="openNewWindow('\scaling_pick_crane')">{{dictionary['pick_crane']}}</button></td>-->
+        <td><button id="submit" type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="location.href='/scaling_pick_crane'">{{dictionary['pick_crane']}}</button></td>
     </tr>
 </table>
 <table class="table table-striped" dir="rtl" align="center">
-    <tr>
-        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/new_scale'">{{dictionary['new_scale']}}</button></td>
-        <td></td>
-        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/print_scale'">{{dictionary['print']}}</button></td>
-    </tr>
     <tr>
         <td>{{dictionary['operator_name']}}:  {{ user }}</td>
         <td>{{dictionary['doc_id']}}:  {{ info[0].doc_id }}</td>
@@ -37,6 +33,11 @@
         <td>{{dictionary['driver']}}:  {{ info[0].driver }}</td>
         <td>{{dictionary['vehicle_id']}}:  {{ info[0].vehicle_id }}</td>
         <td>{{dictionary['costumer_name']}}:  {{ info[0].costumer }}</td>
+    </tr>
+    <tr>
+        <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/new_scale'">{{dictionary['new_scale']}}</button></td>
+        <td><button type="button" class="btn btn-danger btn-block" onclick="location.href='/scale_delete_last'">{{dictionary['delete_last']}}</button></td>
+        <td><button type="button" class="btn btn-success btn-block" onclick="location.href='/print_scale'">{{dictionary['print']}}</button></td>
     </tr>
 </table>
 {% if info[3] %}
@@ -70,7 +71,12 @@
         ts2.value = data.ts2;
         weight1.value = data.weight1;
         weight2.value = data.weight2;
-
+        if (data.ts1 == 'Not stable' || data.ts1 == 'COMMUNICATION ERROR' || data.ts2 == 'Not stable' || data.ts2 == 'COMMUNICATION ERROR'){
+            document.getElementById("submit").disabled = true;
+        }
+        else{
+            document.getElementById("submit").disabled = false;
+        }
       });
     };
     function stopTextColor() {
@@ -87,17 +93,14 @@
     <tr>
         <td>{{dictionary['driver']}}</td>
         <td><input name="driver" placeholder="driver" class="form-control" required autofocus></td>
-        <td></td>
     </tr>
     <tr>
         <td>{{dictionary['vehicle_id']}}</td>
         <td><input type="number" name="vehicle_id" placeholder="vehicle_id" class="form-control" required></td>
-        <td></td>
     </tr>
     <tr>
         <td>{{dictionary['costumer_name']}}</td>
         <td><input name="costumer" placeholder="costumer name" class="form-control" required></td>
-        <td></td>
     </tr>
     <tr>
         <td>{{dictionary['pick_crane']}}</td>
@@ -114,5 +117,21 @@
     </tr>
 </table>
 </form>
+{% if doc_list %}
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        {% for item in doc_list[0] %}
+        <td><b>{{item}}</b></td>
+        {% endfor %}
+    </tr>
+    {% for doc in doc_list %}
+    <tr ondblclick='openNewWindow("\scale_report?{{doc.doc_id}}")'>
+        {% for item in doc %}
+        <td>{{doc[item]}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
 {% endif %}
 {% endblock %}

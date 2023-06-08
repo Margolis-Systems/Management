@@ -44,8 +44,5 @@ def clean_empty_orders():
 
 
 if __name__ == '__main__':
-    # clean_reports_temp()
-    # configs.mongo.delete_many('orders', {'order_id': "9_R"})
-    # mongo_backup()
+    mongo_backup()
     # mongo_restore("C:\\Users\\MargoliSys\\Desktop\\15-05-2023_15-37-10-377286")
-    calc_rows_count_for_orders()

@@ -8,6 +8,9 @@ import users
 
 
 def main_page():
+    permission = users.validate_user()
+    if not permission:
+        return users.logout()
     info = []
     req_form = dict(main.request.form)
     if 'scale' in main.session.keys():  # Info entered
@@ -22,9 +25,16 @@ def main_page():
                 cur_scale = cur_scale['lines']
             # Add new line to report
             if 'product' in req_form:
-                weight = calc_weight(req_form, cur['site'])
+                weight = calc_weight(req_form)
                 if weight:
                     new_line = weight
+                    new_line['description'] = ''
+                    if req_form['length']:
+                        new_line['description'] += ' אורך: ' + req_form['length']
+                    if req_form['diam']:
+                        new_line['description'] += ' קוטר: ' + req_form['diam']
+                    if req_form['quantity']:
+                        new_line['description'] += ' כמות חבילות: ' + req_form['quantity']
                     new_line['barcode'] = ''
                     doc = {'order_id': ''}
                     if req_form['barcode']:
@@ -46,10 +56,21 @@ def main_page():
         if cur:
             main.session['scale'] = cur
         return main.redirect('/scale')
+    doc_list = []
+    if permission > 50:  # todo: config
+        doc_df = main.mongo.read_collection_df('documents', 'Scaling',
+                                                 {'$where': "this.lines.length > 0"}).to_dict('index')
+        for doc in doc_df:
+            doc_info = {}
+            for item in doc_df[doc]:
+                if item in ['doc_id', 'driver', 'vehicle_id']:
+                    doc_info[item] = doc_df[doc][item]
+            doc_info['scale_start'] = doc_df[doc]['lines'][0]['timestamp']
+            doc_info['scale_end'] = doc_df[doc]['lines'][-1]['timestamp']
+            doc_list.append(doc_info)
     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
-    return main.render_template('/scaling.html', info=info, user=main.session['username'],
-                                sites=sites, defaults={},
-                                dictionary=pages.get_dictionary(main.session['username']))
+    return main.render_template('/scaling.html', info=info, user=main.session['username'], sites=sites, defaults={},
+                                dictionary=pages.get_dictionary(main.session['username']), doc_list=doc_list)
 
 
 def get_weight(site_info):
@@ -117,7 +138,7 @@ def print_scale():
     doc = main.mongo.read_collection_one('documents', {'doc_id': info['doc_id']}, db_name='Scaling')
     if not doc:
         return
-    # Keep original template for multi pages todo: TBD
+    # Keep original template for multi pages
     template = main.mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']['scaling_report']
     # Add info
     template['start_ts'] = doc['lines'][0]['timestamp'][:19]
@@ -130,24 +151,27 @@ def print_scale():
     # Add lines
     last_line = 0
     total_weight = 0
+    # TODO: multi page
     for line in range(len(doc['lines'])):
         l_st = str(line + 1)
         bartender_format['line'+l_st] = l_st
         bartender_format['weight'+l_st] = doc['lines'][line]['weight']
-        bartender_format['ts'+l_st] = "---"  # doc['lines'][line]['timestamp']  # TODO: gen description
+        if 'description' in doc['lines'][line]:
+            bartender_format['ts'+l_st] = doc['lines'][line]['description']
+        else:
+            bartender_format['ts'+l_st] = "---"
         bartender_format['product'+l_st] = doc['lines'][line]['product']
         total_weight += int(doc['lines'][line]['weight'])
         last_line = str(line + 2)
-    bartender_format['ts' + last_line] = "סהכ משקל:"  # doc['lines'][line]['timestamp']  # TODO: gen description
+    bartender_format['ts' + last_line] = "סהכ משקל:"
     bartender_format['product' + last_line] = str(total_weight)
     reports.Bartender.bt_create_print_file('Page4', 'scaling_report', [bartender_format])
 
 
-def calc_weight(req, site_info):
+def calc_weight(req):
     if not req['product']:
         req['product'] = 'ברזל'
-    cur_weight = [req['timestamp1'], req['weight1'], req['timestamp2'], req['weight2']]
-    cur_weight = get_weight(site_info)
+    cur_weight = [req['timestamp1'], int(req['weight1']), req['timestamp2'], int(req['weight2'])]
     error_msg = ['Not stable', 'COMMUNICATION ERROR']
     if cur_weight[0] in error_msg or cur_weight[2] in error_msg:
         return {}
@@ -172,3 +196,38 @@ def tare_scale(site_info):
     for sensor in site_info['sensors']:
         tare[sensor+'.tare'] = weights[sensor]['actual']
     main.mongo.update_one('weights', {'CRR_ID': site_info['crr']}, tare, '$set', db_name='Scaling', upsert=True)
+
+
+def pick_crane():
+    if main.request.form:
+        if 'scale' in main.session.keys():
+            site = main.mongo.read_collection_one('data_lists', db_name='Scaling',
+                                                  query={'name': 'sites', 'data.' + main.request.form['site']:
+                                                      {'$exists': True}})
+            if site:
+                main.session['scale']['site'] = site['data'][main.request.form['site']]
+                return main.redirect('/scale')
+    sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
+    return main.render_template('pick_crane.html', sites=sites)
+
+
+def delete_last():
+    if 'scale' in main.session.keys():  # Info entered
+        if main.session['scale']:
+            doc_id = main.session['scale']['doc_id']
+            main.mongo.update_one('documents', {'doc_id': doc_id}, {'lines': 1}, '$pop', db_name='Scaling')
+    return main.redirect('/scale')
+
+
+def scale_report():
+    doc_id = list(main.request.values)[0]
+    doc = main.mongo.read_collection_one('documents', {'doc_id': doc_id}, 'Scaling')
+    info = {}
+    total_weight = 0
+    show_in_info = ['order_id', 'costumer', 'driver', 'vehicle_id']
+    for item in doc:
+        if item in show_in_info:
+            info[item] = doc[item]
+    for line in doc['lines']:
+        total_weight += int(line['weight'])
+    return main.render_template('/scale_report.html', doc=doc['lines'], info=info, total=total_weight)

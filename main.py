@@ -167,18 +167,19 @@ def new_scale():
     return scale.main_page()
 
 
-# @app.route('/scaling_pick_crane', methods=['POST', 'GET'])
-# def scaling_pick_crane():
-#     if request.form:
-#         print(request.form)
-#         if 'scale' in session.keys():
-#             site = mongo.read_collection_one('data_lists', db_name='Scaling',
-#                                              query={'name': 'sites', 'data.' + request.form['site']: {'$exists': True}})
-#             if site:
-#                 session['scale']['site'] = site['data'][request.form['site']]
-#                 print(session)
-#     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
-#     return render_template('pick_crane.html', sites=sites)
+@app.route('/scaling_pick_crane', methods=['POST', 'GET'])
+def scaling_pick_crane():
+    return scale.pick_crane()
+
+
+@app.route('/scale_delete_last', methods=['POST', 'GET'])
+def scale_delete_last():
+    return scale.delete_last()
+
+
+@app.route('/scale_report', methods=['POST', 'GET'])
+def scale_report():
+    return scale.scale_report()
 
 
 '''

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tzomet ERP</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+    <table class="table table-striped" dir="rtl" align="center">
+        <tr>
+            {% for item in info %}
+            <td><b>{{item}}</b></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for item in info %}
+            <td>{{info[item]}}</td>
+            {% endfor %}
+        </tr>
+    </table>
+    <table class="table table-striped" dir="rtl" align="center">
+        <tr>
+            {% for item in doc[0] %}
+            <td><b>{{item}}</b></td>
+            {% endfor %}
+        </tr>
+        {% for line in doc %}
+        <tr>
+            {% for item in line %}
+            <td>{{line[item]}}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        <tr>
+            <td><b>סהכ:</b></td>
+            <td colspan="10"><b>{{total}}</b></td>
+        </tr>
+    </table>
+<script src="\static\js\shapes.js" ></script>
+</body>
+</html>
