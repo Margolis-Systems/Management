@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<table class="table table-striped" dir="rtl" align="center">
+    <form id="shape_form" method=POST action="{{ url_for('plot_editor') }}">
+        <tr>
+            <td>
+                <input type="hidden" name="shape" value="{{shape}}">
+                <img src="{{shape}}" title="{{shape}}"/>
+            </td>
+        </tr>
+        {% for edge in shape_data.edges %}
+        <tr>
+            <td>
+                <input type="number" class="amount" name="{{edge}}_x" value="{{shape_data.positions[loop.index0][0]}}" placeholder="{{edge}}_x" required autofocus>
+                <input type="number" class="amount" name="{{edge}}_y" value="{{shape_data.positions[loop.index0][1]}}" placeholder="{{edge}}_y" required autofocus>
+            </td>
+        </tr>
+
+        {% endfor %}
+        <tr>
+            <td>
+            {% for ang in shape_data.angels %}
+                <input type="number" class="amount" name="ang_{{loop.index}}" placeholder="< {{ ang }}">
+            {% endfor %}
+            </td>
+        </tr>
+    <tr>
+        <td>
+            <button class="btn btn-primary btn-block" type="submit">אישור</button>
+        </td>
+    </tr>
+    </form>
+</table>
+{{shape_data}}
+</body>
+</html>

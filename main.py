@@ -13,6 +13,7 @@ import clients
 import users
 import orders
 import scale
+import plot_edit
 
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
@@ -180,6 +181,17 @@ def scale_delete_last():
 @app.route('/scale_report', methods=['POST', 'GET'])
 def scale_report():
     return scale.scale_report()
+
+
+@app.route('/dl_post', methods=['POST', 'GET'])
+def dl_post():
+    print('DataLogger POST\n', dict(request.values))
+    return '', 204
+
+
+@app.route('/plot_edit', methods=['POST', 'GET'])
+def plot_editor():
+    return plot_edit.plot_edit()
 
 
 '''
