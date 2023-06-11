@@ -39,6 +39,7 @@ window.addEventListener('message', (event) => {
     shapeData.value = event.data.shp;
     formInput.value = event.data.shp;
     lengInput.value = event.data.len;
+    calc_weight();
 });
 
 function confirmDel() {
@@ -116,4 +117,31 @@ function copyLastRow(dict, dataToDisplay){
         }
     }
     document.getElementById('quantity').focus();
+}
+
+function calc_weight(){
+diam = document.getElementById('diam');
+qnt = document.getElementById('quantity');
+weight = document.getElementById('weight');
+weights_list = {
+    "6": 0.222,
+    "8": 0.395,
+    "10": 0.617,
+    "12": 0.888,
+    "14": 1.208,
+    "16": 1.578,
+    "18": 1.998,
+    "20": 2.466,
+    "22": 2.98,
+    "25": 3.85,
+    "28": 4.834,
+    "32": 6.31,
+    "36": 7.986,
+    "5.5": 0.2,
+    "6.5": 0.27
+  };
+leng = lengInput.value;
+if (diam.value){
+    weight.value = leng * qnt.value * weights_list[diam.value] / 100;
+}
 }

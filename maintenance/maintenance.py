@@ -1,7 +1,8 @@
 import os
-os.chdir(os.path.dirname(os.getcwd()))
 import shutil
+os.chdir(os.path.dirname(os.getcwd()))
 import configs
+
 
 mongo = configs.mongo
 
@@ -43,6 +44,15 @@ def clean_empty_orders():
             mongo.delete_many('orders', {'order_id': order_id})
 
 
+def add_ang():
+    shapes = configs.shapes.copy()
+    for shape in shapes:
+        shapes[shape]['ang'] = list(range(1, len(shapes[shape]['positions'])))
+    print(configs.shapes)
+    configs.mongo.update_one('data_lists', {'name': 'shapes'}, {'data': shapes}, '$set')
+
+
 if __name__ == '__main__':
     mongo_backup()
+    add_ang()
     # mongo_restore("C:\\Users\\MargoliSys\\Desktop\\15-05-2023_15-37-10-377286")
