@@ -89,9 +89,14 @@ def shape_editor():
     else:
         req_vals = list(main.request.values)
         if len(req_vals) > 0:
+            # todo: remove this after db fix
+            if 'ang' in main.configs.shapes[req_vals[0]]:
+                ang = main.configs.shapes[req_vals[0]]['ang']
+            else:
+                ang = []
             shape_data = {'shape': req_vals[0], 'edges': list(range(1, main.configs.shapes[req_vals[0]]['edges'] + 1)),
                           'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
-                          'angels': main.configs.shapes[req_vals[0]]['ang']}
+                          'angels': ang}
     shapes = {}
     for shape in main.configs.shapes:
         if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\

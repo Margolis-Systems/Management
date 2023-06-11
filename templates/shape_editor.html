@@ -8,7 +8,6 @@
 {% if shape_data.edges == 0 %}
 <body onload="closeWindow({{shape_data.shape}}, {{shape_data.tot_len}})">
 {% else %}
-<body>
 <table class="table table-striped" dir="rtl" align="center">
     <form id="shape_form" method=POST action="{{ url_for('shape_editor') }}">
         <tr>
@@ -40,7 +39,7 @@
 </table>
 {% endif %}
 {% else %}
-<table border="1">
+<table class="table table-striped" dir="rtl" align="center">
     {% for shape in shapes %}
     <tr ondblclick="location.href='/shape_editor?{{shape}}'">
         <td width="30%"><img src="\static\images\shapes\{{shape}}.png" title="{{shape}}"/></td>

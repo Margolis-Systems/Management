@@ -1,7 +1,7 @@
 import functions
 import main
 from datetime import datetime, timedelta
-
+from operator import itemgetter
 import pages
 import reports
 import users
@@ -12,6 +12,7 @@ def main_page():
     if not permission:
         return users.logout()
     info = []
+    perm = False
     req_form = dict(main.request.form)
     if 'scale' in main.session.keys():  # Info entered
         if main.session['scale']:
@@ -58,8 +59,9 @@ def main_page():
         return main.redirect('/scale')
     doc_list = []
     if permission > 50:  # todo: config
-        doc_df = main.mongo.read_collection_df('documents', 'Scaling',
-                                                 {'$where': "this.lines.length > 0"}).to_dict('index')
+        perm = True
+        doc_df = main.mongo.read_collection_df_sort('documents', 'doc_id', 'Scaling',
+                                                    {'$where': "this.lines.length > 0"}, 50).to_dict('index')
         for doc in doc_df:
             doc_info = {}
             for item in doc_df[doc]:
@@ -68,9 +70,10 @@ def main_page():
             doc_info['scale_start'] = doc_df[doc]['lines'][0]['timestamp']
             doc_info['scale_end'] = doc_df[doc]['lines'][-1]['timestamp']
             doc_list.append(doc_info)
+        doc_list.sort(key=itemgetter('scale_start'), reverse=True)
     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
     return main.render_template('/scaling.html', info=info, user=main.session['username'], sites=sites, defaults={},
-                                dictionary=pages.get_dictionary(main.session['username']), doc_list=doc_list)
+                                dictionary=pages.get_dictionary(main.session['username']), doc_list=doc_list, perm=perm)
 
 
 def get_weight(site_info):

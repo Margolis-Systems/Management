@@ -22,7 +22,7 @@ class DBHandle:
         return db
 
     @staticmethod
-    def read_collection_df(collect, db_name="", query={}):
+    def read_collection_df(collect, db_name="", query=dict({})):
         gc.collect()
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
@@ -31,28 +31,40 @@ class DBHandle:
         return df
 
     @staticmethod
-    def read_collection_one_var(collect, var_name, query={}, db_name=""):
+    def read_collection_df_sort(collect, sort_by, db_name="", query=dict({}), limit=0):
+        gc.collect()
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        if limit:
+            cur = db[collect].find(query, {'_id': False}).sort([(sort_by, -1)]).limit(limit)
+        else:
+            cur = db[collect].find(query, {'_id': False}).sort([(sort_by, -1)])
+        df = pd.DataFrame(list(cur))
+        return df
+
+    @staticmethod
+    def read_collection_one_var(collect, var_name, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False})
         return dic[var_name]
 
     @staticmethod
-    def read_collection_one(collect, query={}, db_name=""):
+    def read_collection_one(collect, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False})
         return dic
 
     @staticmethod
-    def read_collection_list(collect, query={}, db_name=""):
+    def read_collection_list(collect, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find(query, {'_id': False})
         return dic
 
     @staticmethod
-    def read_collection_last(collect, sort_by, query={}, db_name=""):
+    def read_collection_last(collect, sort_by, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         query[sort_by] = {'$exists': True}
@@ -89,7 +101,7 @@ class DBHandle:
         collection.delete_many({})
 
     @staticmethod
-    def delete_many(collect, query={}, db_name=""):
+    def delete_many(collect, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
@@ -141,7 +153,7 @@ class DBHandle:
                         print(e)
 
     @staticmethod
-    def count_docs(collect, query={}, db_name=""):
+    def count_docs(collect, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]

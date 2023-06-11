@@ -1,4 +1,8 @@
+{% if perm %}
+{% extends "layout.html" %}
+{% else %}
 {% extends "layout_mob.html" %}
+{% endif %}
 {% block body %}
 <script src="\static\js\shapes.js" ></script>
 {% if info %}
