@@ -232,5 +232,6 @@ def scale_report():
         if item in show_in_info:
             info[item] = doc[item]
     for line in doc['lines']:
-        total_weight += int(line['weight'])
-    return main.render_template('/scale_report.html', doc=doc['lines'], info=info, total=total_weight)
+        total_weight += float(line['weight'])
+    return main.render_template('/scale_report.html', doc=doc['lines'], info=info, total=int(total_weight),
+                                dictionary=pages.get_dictionary(main.session['username']))

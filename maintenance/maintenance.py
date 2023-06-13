@@ -53,6 +53,6 @@ def add_ang():
 
 
 if __name__ == '__main__':
-    mongo_backup()
-    add_ang()
-    # mongo_restore("C:\\Users\\MargoliSys\\Desktop\\15-05-2023_15-37-10-377286")
+    # mongo_backup()
+    # add_ang()
+    mongo_restore("C:\\Projects\\Tzomet\\old ver\\11-06-2023_12-38-27-853132")

@@ -1,5 +1,7 @@
 # Server
 import flask
+
+import data_logger
 import main
 from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory
 from waitress import serve
@@ -185,6 +187,7 @@ def scale_report():
 
 @app.route('/dl_post', methods=['POST', 'GET'])
 def dl_post():
+    data_logger.save_dl_data()
     print('DataLogger POST\n', dict(request.values))
     return '', 204
 
