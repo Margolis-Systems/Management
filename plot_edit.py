@@ -36,17 +36,17 @@ def create_shape_plot(shape, data):
     font_size = 20
     positions = configs.shapes[shape]['positions']
     static_dir = os.path.dirname(__file__)+'\\static\\'
-    img_dir = static_dir + 'images\\shapes_orig\\' + str(shape) + '.png'
+    img_dir = static_dir + 'images\\shapes_orig\\' + str(shape) + '.jpg'
     if os.path.exists(img_dir):
         img = Image.open(img_dir)
     else:
         img = Image.open(static_dir + 'images\\shapes\\0.png')
     draw = ImageDraw.Draw(img)
     for i in range(len(data)):
-        text_box_pos = positions[i][0] - 2, positions[i][1] - 2
-        bbox = draw.textbbox(text_box_pos, str(data[i]), font=ImageFont.truetype("segoeuib.ttf", font_size + 2))
+        text_box_pos = positions[i][0], positions[i][1] - 4
+        bbox = draw.textbbox(text_box_pos, str(data[i]), font=ImageFont.truetype("impact.ttf", font_size + 4))
         draw.rectangle(bbox, fill="white")
-        draw.text(positions[i], str(data[i]), font=ImageFont.truetype("segoeui.ttf", font_size), fill="black")
+        draw.text(positions[i], str(data[i]), font=ImageFont.truetype("impact.ttf", font_size), fill="black")
     file_out = img_dir.replace('_orig', '')
-    img.save(file_out)
+    img.save(file_out, quality=95)
     return file_out

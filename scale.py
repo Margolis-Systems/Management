@@ -29,7 +29,7 @@ def main_page():
                 weight = calc_weight(req_form)
                 if weight:
                     new_line = weight
-                    new_line['description'] = ''
+                    new_line['description'] = ' '
                     if req_form['length']:
                         new_line['description'] += ' אורך: ' + req_form['length']
                     if req_form['diam']:
@@ -80,7 +80,6 @@ def get_weight(site_info):
     crr, sensors = site_info['crr'], site_info['sensors']
     crr_data = main.mongo.read_collection_one('weights', db_name='Scaling',
                                               query={'CRR_ID': crr, 'error': {'$exists': False}})
-    # print(crr_data)
     ret = ['', '', '', '']
     for sensor in range(len(sensors)):
         if sensors[sensor] in crr_data:
@@ -168,7 +167,7 @@ def print_scale():
         last_line = str(line + 2)
     bartender_format['ts' + last_line] = "סהכ משקל:"
     bartender_format['product' + last_line] = str(total_weight)
-    reports.Bartender.bt_create_print_file('Page4', 'scaling_report', [bartender_format])
+    reports.Bartender.bt_create_print_file('ROMAN_container', 'scaling_report', [bartender_format])
 
 
 def calc_weight(req):
@@ -209,6 +208,7 @@ def pick_crane():
                                                       {'$exists': True}})
             if site:
                 main.session['scale']['site'] = site['data'][main.request.form['site']]
+                main.session.modified = True
                 return main.redirect('/scale')
     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
     return main.render_template('pick_crane.html', sites=sites)

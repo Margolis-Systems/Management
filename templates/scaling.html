@@ -13,14 +13,14 @@
         <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['weight']}} (KG)</span><input name="weight1" id="weight1" class="form-control" value="{{ info[2][1] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
         <td class="input-group input-group-lg"><span class="input-group-text">{{info[0].site.sensors[1]}}</span><input name="timestamp2" id="timestamp2" class="form-control" value="{{ info[2][2] }}" aria-describedby="inputGroup-sizing-lg" readonly></td>
         <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['weight']}} (KG)</span><input name="weight2" id="weight2" class="form-control" value="{{ info[2][3] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['product']}}</span><input list="product" name="product" class="form-control" placeholder="מוצר" aria-describedby="inputGroup-sizing-lg"></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['product']}}</span><input list="product" name="product" class="form-control" placeholder="{{dictionary['product']}}" aria-describedby="inputGroup-sizing-lg"></td>
         <datalist id="product">
             {% for product in info[1] %}
             <option>{{ product }}</option>
             {% endfor %}
         </datalist>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['barcode']}}</span><input type="text" name="barcode" class="form-control" placeholder="ברקוד" autofocus></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['description']}}</span><input type="text" name="quantity" class="form-control" placeholder="כמות" autofocus><input type="text" name="length" class="form-control" placeholder="אורך" autofocus><input type="text" name="diam" class="form-control" placeholder="קוטר" autofocus></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['barcode']}}</span><input type="text" name="barcode" class="form-control" placeholder="{{dictionary['barcode']}}" autofocus></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['description']}}</span><input type="text" name="quantity" class="form-control" placeholder="{{dictionary['quantity']}}" autofocus><input type="text" name="length" class="form-control" placeholder="{{dictionary['length']}}" autofocus><input type="text" name="diam" class="form-control" placeholder="{{dictionary['diam']}}" autofocus></td>
     </tr>
     <tr>
         <td><button id="submit" type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button>
@@ -96,15 +96,15 @@
     </tr>
     <tr>
         <td>{{dictionary['driver']}}</td>
-        <td><input name="driver" placeholder="driver" class="form-control" required autofocus></td>
+        <td><input name="driver" placeholder="{{dictionary['driver']}}" class="form-control" required autofocus></td>
     </tr>
     <tr>
         <td>{{dictionary['vehicle_id']}}</td>
-        <td><input type="number" name="vehicle_id" placeholder="vehicle_id" class="form-control" required></td>
+        <td><input type="number" name="vehicle_id" placeholder="{{dictionary['vehicle_id']}}" class="form-control" required></td>
     </tr>
     <tr>
         <td>{{dictionary['costumer_name']}}</td>
-        <td><input name="costumer" placeholder="costumer name" class="form-control" required></td>
+        <td><input name="costumer" placeholder="{{dictionary['costumer_name']}}" class="form-control" required></td>
     </tr>
     <tr>
         <td>{{dictionary['pick_crane']}}</td>

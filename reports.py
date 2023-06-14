@@ -56,7 +56,7 @@ class Images:
     def create_shape_plot(shape, data):
         import os
         from PIL import Image, ImageDraw, ImageFont
-        font_size = 20
+        font_size = 16
         positions = configs.shapes[shape]['positions']
         static_dir = os.path.dirname(__file__)+'\\static\\'
         img_dir = static_dir + 'images\\shapes\\' + str(shape) + '.png'
@@ -67,9 +67,9 @@ class Images:
         draw = ImageDraw.Draw(img)
         for i in range(len(data)):
             text_box_pos = positions[i][0], positions[i][1] - 2
-            bbox = draw.textbbox(text_box_pos, str(data[i]), font=ImageFont.truetype("segoeuib.ttf", font_size + 2))
+            bbox = draw.textbbox(text_box_pos, str(data[i]), font=ImageFont.truetype("impact.ttf", font_size+2)) #segoeuib.ttf
             draw.rectangle(bbox, fill="white")
-            draw.text(positions[i], str(data[i]), font=ImageFont.truetype("segoeui.ttf", font_size), fill="black")
+            draw.text(positions[i], str(data[i]), font=ImageFont.truetype("impact.ttf", font_size), fill="black")
         file_out = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".bmp"
         img.save(file_out)
         return file_out
@@ -148,8 +148,8 @@ class Bartender:
                     line[obj] = item[obj]
                 for obj in info:
                     line[obj] = info[obj]
-                # if 'shape_data' in line:
-                #     line['img_dir'] = Path(Images.create_shape_plot(line['shape'], line['shape_data'])).stem
+                if 'shape_data' in line:
+                    line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.bmp', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 print_data.append(line)
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
@@ -298,7 +298,7 @@ class Bartender:
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        # file_dir = file_dir.replace('.txt', '.tmp')
+        file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"
