@@ -101,7 +101,7 @@ class Images:
 
 class Bartender:
     @staticmethod
-    def net_print(order_id, printer, print_type):
+    def net_print(order_id, printer, print_type, disable_weight=False):
         # Format data
         rows, info, additional = orders.get_order_data(order_id, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
@@ -152,6 +152,12 @@ class Bartender:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.bmp', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 print_data.append(line)
+        # TODO: validate!!!
+        if disable_weight:
+            for print_line in print_data:
+                for print_item in print_line:
+                    if 'weight' in print_item:
+                        print_data[print_line][print_item] = ""
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:
@@ -293,12 +299,13 @@ class Bartender:
 
     @staticmethod
     def bt_create_print_file(printer, btw_file, print_data):
+        tempfix = btw_file
         # Bar tender btw
-        header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
+        header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + tempfix.replace('scaling_report', 'scaling_report_fix') + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        file_dir = file_dir.replace('.txt', '.tmp')
+        # file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"

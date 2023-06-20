@@ -29,13 +29,15 @@ def main_page():
                 weight = calc_weight(req_form)
                 if weight:
                     new_line = weight
-                    new_line['description'] = ' '
+                    new_line['description'] = ''
                     if req_form['length']:
-                        new_line['description'] += ' אורך: ' + req_form['length']
+                        new_line['description'] += ' א:' + req_form['length']
                     if req_form['diam']:
-                        new_line['description'] += ' קוטר: ' + req_form['diam']
+                        new_line['description'] += ' ק:' + req_form['diam']
                     if req_form['quantity']:
-                        new_line['description'] += ' כמות חבילות: ' + req_form['quantity']
+                        new_line['description'] += ' כ:' + req_form['quantity']
+                    if not new_line['description']:
+                        new_line['description'] = '---'
                     new_line['barcode'] = ''
                     doc = {'order_id': ''}
                     if req_form['barcode']:
@@ -167,7 +169,8 @@ def print_scale():
         last_line = str(line + 2)
     bartender_format['ts' + last_line] = "סהכ משקל:"
     bartender_format['product' + last_line] = str(total_weight)
-    reports.Bartender.bt_create_print_file('ROMAN_container', 'scaling_report', [bartender_format])
+    # print(bartender_format)
+    reports.Bartender.bt_create_print_file('Page4', 'scaling_report', [bartender_format])  # ROMAN_container
 
 
 def calc_weight(req):

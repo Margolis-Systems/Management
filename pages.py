@@ -107,6 +107,9 @@ def shape_editor():
 def choose_printer():
     copies = 1
     if main.request.form:
+        disable_weight = False
+        if 'disable_weight' in main.request.form:
+            disable_weight = True
         printer = main.request.form['printer']
         print_type = main.request.form['print_type']
         if 'sub_type' in main.request.form.keys():
@@ -116,7 +119,7 @@ def choose_printer():
             if main.request.form['copies']:
                 copies = int(main.request.form['copies'])
         for r in range(copies):
-            reports.Bartender.net_print(main.session['order_id'], printer, print_type)
+            reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
