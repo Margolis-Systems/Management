@@ -207,7 +207,7 @@ def order_files():
 
 
 def download_attachment():
-    attach_dir = 'C:\\projects\\Tzomet\\Management\\attachments\\orders'
+    attach_dir = os.getcwd() + '\\attachments\\orders'
     order_id = main.session['order_id']
     file_name = main.mongo.read_collection_one('attachments', {'id': list(main.request.values)[0]})['name']
     file = os.path.join(attach_dir, order_id, file_name)
