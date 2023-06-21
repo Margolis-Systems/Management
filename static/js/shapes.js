@@ -142,6 +142,6 @@ weights_list = {
   };
 leng = lengInput.value;
 if (diam.value){
-    weight.value = leng * qnt.value * weights_list[diam.value] / 100;
+    weight.value = (leng * qnt.value * weights_list[diam.value] / 100).toFixed(1);
 }
 }

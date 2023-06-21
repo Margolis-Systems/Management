@@ -134,6 +134,7 @@ def gen_id():
 
 
 def print_scale():
+    req = dict(main.request.values)
     if 'scale' not in main.session.keys():
         return
     elif not main.session['scale']:
@@ -155,8 +156,10 @@ def print_scale():
     # Add lines
     last_line = 0
     total_weight = 0
+    lines_qnt = len(doc['lines'])
+    i = 0
     # TODO: multi page
-    for line in range(len(doc['lines'])):
+    for line in range(lines_qnt):
         l_st = str(line + 1)
         bartender_format['line'+l_st] = l_st
         bartender_format['weight'+l_st] = doc['lines'][line]['weight']
@@ -170,7 +173,8 @@ def print_scale():
     bartender_format['ts' + last_line] = "סהכ משקל:"
     bartender_format['product' + last_line] = str(total_weight)
     # print(bartender_format)
-    reports.Bartender.bt_create_print_file('Page4', 'scaling_report', [bartender_format])  # ROMAN_container
+    # ROMAN_container 'Page4'
+    reports.Bartender.bt_create_print_file(req['printer'], 'scaling_report', [bartender_format])
 
 
 def calc_weight(req):

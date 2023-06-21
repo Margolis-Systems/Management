@@ -41,7 +41,8 @@
     <tr>
         <td><button type="button" class="btn btn-primary btn-block" onclick="location.href='/new_scale'">{{dictionary['new_scale']}}</button></td>
         <td><button type="button" class="btn btn-danger btn-block" onclick="location.href='/scale_delete_last'">{{dictionary['delete_last']}}</button></td>
-        <td><button type="button" class="btn btn-success btn-block" onclick="location.href='/print_scale'">{{dictionary['print']}}</button></td>
+        <td><button type="button" class="btn btn-success btn-block" onclick="location.href='/print_scale?printer=ROMAN_container'">{{dictionary['print']}}</button>
+        <button type="button" class="btn btn-success btn-block" onclick="location.href='/print_scale?printer=Page4'">{{dictionary['print']}} Rami</button></td>
     </tr>
 </table>
 {% if info[3] %}

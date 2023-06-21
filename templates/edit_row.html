@@ -56,51 +56,7 @@ div {
         {% endfor %}
     </tr>
     <tr>
-        {% for item in order_data.data_to_display %}
-        {% if dictionary[item] %}
-        {% set name = dictionary[item] %}
-        {% else %}
-        {% set name = item %}
-        {% endif %}
-        <td>
-            {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
-            <input type="text" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}">
-            {% else %}
-            {% if order_data.data_to_display[item] == 1 %} <!-- Regular required -->
-            <input type="number" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" autofocus="autofocus" required>
-            {% else %}
-            {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
-            <input type="text" class="form-control" name="{{ item }}" id="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" readonly>
-            {% else %}
-            {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
-            <input list="{{ item }}" class="form-control" name="{{ item }}" value="{{order_data.order_rows[0][item]}}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
-                <datalist id="{{ item }}">
-                {% for optn in lists[item] %}
-                    <option value="{{ optn }}">{{dictionary[optn]}}</option>
-                {% endfor %}
-                </datalist>
-            {% else %}
-            {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
-            <input list="{{ item }}" type="number" id="{{ item }}" value="{{order_data.order_rows[0][item]}}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='openEditWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" required>
-                <datalist id="{{ item }}">
-                {% for optn in lists[item] %}
-                    <option value="{{ optn }}">{{dictionary[optn]}}</option>
-                {% endfor %}
-                </datalist>
-            <input name="{{ item }}_hid" id="shape_data" type="number" required>
-            {% else %}
-            {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
-            <input type="checkbox" value="Yes" class="form-control" name="{{ item }}">
-            {% else %}
-            ------
-            {% endif %}
-            {% endif %}
-            {% endif %}
-            {% endif %}
-            {% endif %}
-            {% endif %}
-        </td>
-        {% endfor %}
+        {% include 'input_types.html'%}
     </tr>
 </table>
 </form>

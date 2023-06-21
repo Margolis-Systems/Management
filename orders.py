@@ -185,7 +185,7 @@ def new_order_row():
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'shape' in req_form_data:
         new_row['description'] = ""
-        if int(new_row['diam']) < 7:
+        if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
         if temp_order_data:
             if temp_order_data['shape_data'] == new_row['shape']:
@@ -207,6 +207,10 @@ def new_order_row():
             return
     else:
         return
+    # Takes to manual input for weight
+    if 'weight' in req_form_data:
+        if req_form_data['weight'].replace('.', '').isdigit():
+            new_row['weight'] = float(req_form_data['weight'])
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
@@ -315,6 +319,7 @@ def edit_row():
                             defaults[item] = order_data['order_rows'][0][item][li]
                 else:
                     defaults[item] = order_data['order_rows'][0][item]
+            print(defaults)
             return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
                                         lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
