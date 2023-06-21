@@ -183,8 +183,7 @@ def order_files():
     msg = ""
     if main.request.method == 'POST':
         try:
-            attach_dir = 'C:\\projects\\Tzomet\\Management\\attachments\\orders'
-            # TODO: main.app.instance_path  <--> 'C:\\projects\\Tzomet\\Management'
+            attach_dir = os.getcwd() + '\\attachments\\orders'
             f = main.request.files['file']
             # file_dir = os.path.join(main.app.instance_path, attach_dir, order_id)
             file_dir = os.path.join(attach_dir, order_id)
