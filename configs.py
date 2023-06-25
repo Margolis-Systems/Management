@@ -3,7 +3,7 @@ import db_handler
 
 mongo = db_handler.DBHandle()
 
-with open("config.json", 'r', encoding="utf-8") as config_file:
+with open("C:\\Server\\config.json", 'r', encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 server = config['server']

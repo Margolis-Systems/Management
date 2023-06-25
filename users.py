@@ -15,6 +15,9 @@ def login():
                 resp.headers['location'] = main.url_for('index')
                 resp.set_cookie('userhash', username_input)
                 return resp, 302
+            else:
+                # TODO: log failed login
+                print('Failed to login from IP:', main.request.remote_addr)
     return main.render_template('login.html', msg=msg)
 
 
