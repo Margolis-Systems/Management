@@ -2,15 +2,11 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 from configs import mongo
 
-# INPUT
-pos = [(5, 30), (195, 30)]
-data = ['100', '50']
-
 # CONFIG
 config = {'size': (200, 60), 'text_en': True, 'update_mongo': True}
 
 
-def shape_plot(positions, file_name, text=['100']):
+def shape_plot(positions, file_name, text=[]):
     if not text:
         text = list(range(1, len(positions)))
     shape = file_name.split('\\')[-1].replace('.png', '')
@@ -34,4 +30,9 @@ def shape_plot(positions, file_name, text=['100']):
 
 
 if __name__ == '__main__':
-    shape_plot(pos, os.getcwd()+'\\shapes\\1.png')
+    # SIZE 200 X 60
+    # INPUT
+    # pos = [(15, 5), (15, 30), (185, 30), (185, 55)]
+    pos = [(15, 5), (15, 50), (185, 50), (185, 5)]
+    name = '4'
+    shape_plot(pos, os.getcwd()+'\\shapes\\'+name+'.png')
