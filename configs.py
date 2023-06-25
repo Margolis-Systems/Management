@@ -1,9 +1,14 @@
 import json
+import os
+
 import db_handler
 
 mongo = db_handler.DBHandle()
 
-with open("C:\\Server\\config.json", 'r', encoding="utf-8") as config_file:
+conf_dir = "C:\\Server\\config.json"
+if not os.path.exists(conf_dir):
+    conf_dir = "C:\\projects\\Tzomet\\Management\\config.json"
+with open(conf_dir, 'r', encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 server = config['server']

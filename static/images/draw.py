@@ -3,11 +3,11 @@ from PIL import Image, ImageDraw, ImageFont
 from configs import mongo
 
 # INPUT
-pos = [(5, 55), (395, 55)]
+pos = [(5, 30), (195, 30)]
 data = ['100', '50']
 
 # CONFIG
-config = {'size': (400, 110), 'text_en': True, 'update_mongo': True}
+config = {'size': (200, 60), 'text_en': True, 'update_mongo': True}
 
 
 def shape_plot(positions, file_name, text=['100']):
@@ -23,6 +23,7 @@ def shape_plot(positions, file_name, text=['100']):
         for i in range(len(pos)-1):
             position = ((positions[i][0] + positions[i+1][0] - len(str(text[i])) * 2) / 2,
                         (positions[i][1] + positions[i+1][1] - len(str(text[i]))) / 2 - 3)
+            print(position)
             bbox = draw.textbbox((position[0]-1, position[1]), str(text[i]))
             draw.rectangle(bbox, fill="white")
             draw.text(position, str(text[i]), fill="black")
