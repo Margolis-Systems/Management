@@ -16,23 +16,29 @@ def shape_plot(positions, file_name, text=[]):
     draw.line(pos, fill="black", width=4)
     if config['text_en']:
         text_pos = []
-        for i in range(len(pos)-1):
-            position = ((positions[i][0] + positions[i+1][0] - len(str(text[i])) * 2) / 2,
-                        (positions[i][1] + positions[i+1][1] - len(str(text[i]))) / 2 - 3)
+        for i in range(len(pos) - 1):
+            position = ((positions[i][0] + positions[i + 1][0] - len(str(text[i])) * 2) / 2,
+                        (positions[i][1] + positions[i + 1][1] - len(str(text[i]))) / 2 - 3)
             print(position)
-            bbox = draw.textbbox((position[0]-1, position[1]), str(text[i]))
+            bbox = draw.textbbox((position[0] - 1, position[1]), str(text[i]))
             draw.rectangle(bbox, fill="white")
             draw.text(position, str(text[i]), fill="black")
             text_pos.append(position)
         if config['update_mongo']:
-            mongo.update_one('data_lists', {'name': 'shapes_'}, {'data.'+shape+'.positions': text_pos}, '$set')
+            mongo.update_one('data_lists', {'name': 'shapes_'}, {'data.' + shape + '.positions': text_pos}, '$set')
     im.save(file_name)
+    im.show(file_name)
 
 
 if __name__ == '__main__':
     # SIZE 200 X 60
+    todo = [57, 925, 966]
+    print(sorted(todo))
+    x_r = 185
+    x_l = 15
+    y_top = 5
+    y_bot = 55
     # INPUT
-    # pos = [(15, 5), (15, 30), (185, 30), (185, 55)]
-    pos = [(15, 5), (15, 50), (185, 50), (185, 5)]
-    name = '4'
-    shape_plot(pos, os.getcwd()+'\\shapes\\'+name+'.png')
+    pos = []
+    name = '966'
+    shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')
