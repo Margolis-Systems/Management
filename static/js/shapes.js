@@ -145,3 +145,47 @@ if (diam.value){
     weight.value = (leng * qnt.value * weights_list[diam.value] / 100).toFixed(1);
 }
 }
+
+const inputs = Array.prototype.slice.call(
+  document.querySelectorAll('.form input')
+);
+
+inputs.forEach((input) => {
+  input.addEventListener('keydown', (event) => {
+    const num = Number(event.key);
+    if (num && num >= 0 && num <= 9) { // Only allow numbers
+      if (input.value.length >= input.maxLength) {
+        event.preventDefault();
+        focusNext();
+      }
+    }
+  });
+});
+
+function focusNext(inputIndex) {
+    if (event.keyCode === 16){
+        document.getElementById('submit').click();
+        return
+    }
+    inputNames = dtd_order
+    console.log(inputNames)
+    console.log(dtd_order)
+    if (event.keyCode === 13){
+        while (true){
+            inputIndex += 1;
+            if (inputIndex >= inputNames.length){
+                inputIndex = 0;
+            }
+            if (datatodisp[inputNames[inputIndex]] != 2){
+                inputName = inputNames[inputIndex];
+                break
+            }
+            else{
+            console.log(inputIndex)
+            console.log(inputNames[inputIndex])
+            console.log(datatodisp[inputNames[inputIndex]])
+            }
+        }
+        document.getElementById(inputName).focus();
+    }
+}

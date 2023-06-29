@@ -14,7 +14,7 @@ div {
 <table class="table table-striped" dir="rtl" align="center" >
     <tr>
     {% for item in order_data.info %}
-    {% if item != 'comment' %}
+    {% if item not in ['comment','date_delivery'] %}
         <td>
             <b>
                 {% if dictionary[item] %}
@@ -33,23 +33,26 @@ div {
     {% endfor %}
     </tr>
 </table>
-<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}">
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;" onkeydown="return event.key != 'Enter';">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td>
             <button onclick='openNewWindow("\order_files")' type="button" class="btn btn-primary btn-block">קבצים מצורפים</button>
         </td>
-        <td colspan="100">
+        <td colspan="3">
             <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}">
+        </td>
+        <td colspan="100">
+            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" value="{{ order_data.info['date_delivery'] }}">
         </td>
     </tr>
     <tr>
-        <td><button type=submit class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
+        <td><button type=submit id="submit" class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
         <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
         <td><button onclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
         <td><button onclick='openNewWindow("\choose_printer?test_page")' type="button" class="btn btn-primary btn-block">הדפס דוגמה</button></td>
         <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
-        {% if order_data.info.status == "NEW" %}
+        {% if order_data.info.status == "order_status_NEW" %}
         <td><button onclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
         {% else %}
         <td><button onclick='openNewWindow("\change_order_status")' type="button" class="btn btn-primary btn-block">שנה סטטוס</button></td>
@@ -59,7 +62,7 @@ div {
 {% if order_data.include %}
     {% include order_data.include %}
 {% endif %}
-{% if order_data.info.status != "NEW" %}
+{% if order_data.info.status != "order_status_NEW" %}
 <table class="table table-bordered" dir="rtl" align="center">
 {% else %}
 <table class="table table-striped" dir="rtl" align="center">
@@ -76,14 +79,14 @@ div {
         </td>
         {% endfor %}
     </tr>
-    {% if order_data.info.status == "NEW" %}
+    {% if order_data.info.status == "order_status_NEW" %}
     <tr>
         {% include 'input_types.html'%}
     </tr>
     {% endif %}
     {% for row in order_data.order_rows %}
     {% if row['job_id'] != "0" %}
-    {% if order_data.info.status == "NEW" %}
+    {% if order_data.info.status == "order_status_NEW" %}
     <tr ondblclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;">
@@ -99,4 +102,8 @@ div {
 </table>
 </form>
 <script src="\static\js\shapes.js" ></script>
+<script>
+datatodisp = JSON.parse('{{order_data.data_to_display|tojson}}');
+dtd_order = {{order_data.dtd_order|safe}}
+</script>
 {% endblock %}

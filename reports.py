@@ -2,6 +2,8 @@ import orders
 import functions
 import configs
 import math
+import os
+from PIL import Image, ImageDraw, ImageFont
 
 
 class Images:
@@ -53,26 +55,32 @@ class Images:
         return formatted
 
     @staticmethod
-    def create_shape_plot(shape, data):
-        import os
-        from PIL import Image, ImageDraw, ImageFont
+    def create_shape_plot(shape, text=[], enable_text_plot=True):
+        _positions = configs.shapes[shape]['draw_positions']
+        positions = []
+        for i in _positions:
+            positions.append(tuple(i))
+        file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
+        if not text:
+            text = list(range(1, len(positions)))
+        size = (200, 60)
         font_size = 16
-        positions = configs.shapes[shape]['positions']
-        static_dir = os.path.dirname(__file__)+'\\static\\'
-        img_dir = static_dir + 'images\\shapes\\' + str(shape) + '.png'
-        if os.path.exists(img_dir):
-            img = Image.open(img_dir)
-        else:
-            img = Image.open(static_dir + 'images\\shapes\\0.png')
-        draw = ImageDraw.Draw(img)
-        for i in range(len(data)):
-            text_box_pos = positions[i][0], positions[i][1] - 2
-            bbox = draw.textbbox(text_box_pos, str(data[i]), font=ImageFont.truetype("impact.ttf", font_size+2)) #segoeuib.ttf
-            draw.rectangle(bbox, fill="white")
-            draw.text(positions[i], str(data[i]), font=ImageFont.truetype("impact.ttf", font_size), fill="black")
-        file_out = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".bmp"
-        img.save(file_out)
-        return file_out
+        # font_dir = "c:\\server\\fonts\\CrashNumberingSerif-KVjW.ttf"
+        font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
+        im = Image.new('RGB', size, 'white')
+        draw = ImageDraw.Draw(im)
+        draw.line(positions, fill="black", width=3)
+        if enable_text_plot:
+            text_pos = []
+            for i in range(len(positions) - 1):
+                position = ((positions[i][0] + positions[i + 1][0] - len(str(text[i])) * 6) / 2,
+                            (positions[i][1] + positions[i + 1][1]) / 2 - 6)
+                bbox = draw.textbbox((position[0] - 1, position[1]-2), str(text[i]), font=ImageFont.truetype(font_dir, font_size + 4))
+                draw.rectangle(bbox, fill="white")
+                draw.text(position, str(text[i]), fill="black", font=ImageFont.truetype(font_dir, font_size))
+                text_pos.append(position)
+        im.save(file_name)
+        return file_name
 
     @staticmethod
     def decode_qr(qr):
@@ -117,7 +125,7 @@ class Bartender:
                 template_row = {'temp_select': table_selector}
                 for indx in range(table_rows):
                     if table_rows * row_n + indx >= len(rows):
-                        print("break ", row_n + indx, " > ", len(rows) - 1)
+                        # print("break ", row_n + indx, " > ", len(rows) - 1)
                         break
                     n = table_rows * row_n + indx
                     i = table_cells * indx
@@ -149,23 +157,23 @@ class Bartender:
                 for obj in info:
                     line[obj] = info[obj]
                 if 'shape_data' in line:
-                    line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.bmp', '')
+                    line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 print_data.append(line)
         # TODO: validate!!!
         if disable_weight:
-            for print_line in print_data:
-                for print_item in print_line:
+            for print_line in range(len(print_data)):
+                for print_item in print_data[print_line]:
                     if 'weight' in print_item:
                         print_data[print_line][print_item] = ""
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:
-            summary_data = Bartender.gen_summary_data(rows, info)
+            summary_data = Bartender.gen_summary_data(rows, info, disable_weight)
             Bartender.bt_create_print_file(printer, bt_format[1], summary_data)
 
     @staticmethod
-    def gen_summary_data(rows, info):
+    def gen_summary_data(rows, info, disable_weight):
         info['temp_select'] = 1
         summary_data = []
         if 'rebar' in info['type']:
@@ -206,12 +214,14 @@ class Bartender:
         else:
             table_data = {}
             special_sum = {}
+            total_weight = 0
             summary_data.append(info)
             for row in rows:
                 if 'bar_type' not in row:
                     row['bar_type'] = "מצולע"
                 # Summary data
                 quantity = int(row['quantity'])
+                total_weight += row['weight']
                 if row['diam'] in table_data.keys():
                     table_data[row['diam']]['weight'] += row['weight']
                     table_data[row['diam']]['length'] += int(row['length']) * quantity
@@ -229,7 +239,8 @@ class Bartender:
                         special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
                     special_sum['כיפוף']['qnt'] += quantity
                     special_sum['כיפוף']['weight'] += row['weight']
-                if row['shape'] in []:
+                # TODO: Update חישוק
+                if row['shape'] in ['925', '966', '215', '216', '78', '79']:
                     if 'חישוק' not in special_sum.keys():
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק']['qnt'] += quantity
@@ -245,7 +256,7 @@ class Bartender:
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
                 # todo: Config!!!
-                x_length = 2000
+                x_length = 16000
                 if int(row['length']) > x_length:
                     if 'ברזל_ארוך' not in special_sum.keys():
                         special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
@@ -265,7 +276,7 @@ class Bartender:
                 template_row = {'temp_select': table_selector}
                 for indx in range(table_rows):
                     if table_rows * row + indx >= len(table_data.keys()):
-                        print("break ", row + indx, " > ", len(table_data.keys()) - 1)
+                        # print("break ", row + indx, " > ", len(table_data.keys()) - 1)
                         break
                     diam = list(table_data.keys())[table_rows * row + indx]
                     template_row["tb" + str(1 + table_cells * indx)] = table_data[diam]['type']
@@ -282,13 +293,15 @@ class Bartender:
             spec_sum_lines = math.ceil(len(special_sum) / table_rows)
             if spec_sum_lines:
                 template_row = {'temp_select': table_selector}
+                # Add total weight to summary
+                template_row['tb30'] = int(total_weight)
                 summary_data.append(template_row.copy())
                 table_selector = 4
                 for row in range(spec_sum_lines):
                     template_row = {'temp_select': table_selector}
                     for indx in range(table_rows):
                         if table_rows * row + indx >= len(special_sum.keys()):
-                            print("break ", row + indx, " > ", len(special_sum) - 1)
+                            # print("break ", row + indx, " > ", len(special_sum) - 1)
                             break
                         description = list(special_sum.keys())[table_rows * row + indx]
                         template_row["tb" + str(1 + table_cells * indx)] = description.replace("_", " ")

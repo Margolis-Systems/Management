@@ -5,11 +5,14 @@ import db_handler
 
 mongo = db_handler.DBHandle()
 
-conf_dir = "C:\\Server\\config.json"
-if not os.path.exists(conf_dir):
-    conf_dir = "C:\\projects\\Tzomet\\Management\\config.json"
-with open(conf_dir, 'r', encoding="utf-8") as config_file:
+main_dir = "C:\\Server\\"
+if not os.path.exists(main_dir):
+    main_dir = "C:\\projects\\Tzomet\\Management\\"
+with open(main_dir+'config.json', 'r', encoding="utf-8") as config_file:
     config = json.load(config_file)
+
+with open(main_dir+'lists\\shapes.json') as shapes_file:
+    shapes = json.load(shapes_file)
 
 server = config['server']
 server_port = config['server_port']
@@ -24,7 +27,7 @@ company_name = config['company_name']
 # rebar_weights = mongo.read_collection_one("data_lists", {"name": "rebar_weights"})['data']
 data_to_display = mongo.read_collection_one("data_lists", {"name": "data_to_display"})['data']
 weights = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
-shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
+# shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
 rebar_catalog = mongo.read_collection_one("data_lists", {"name": "rebar_catalog"})['data']
 print_dict = mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']
 bartender_formats = mongo.read_collection_one('data_lists', {'name': 'bartender_formats'})['data']

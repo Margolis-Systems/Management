@@ -94,6 +94,9 @@ def new_order_row():
     if 'comment_hid' in req_form_data:
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                         {'info.comment': req_form_data['comment_hid']}, '$set')
+    if 'date_delivery_hid' in req_form_data:
+        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                                        {'info.date_delivery': req_form_data['date_delivery_hid']}, '$set')
     # Order peripheral data handling
     if 'shape_data' in req_form_data.keys():
         new_row = {'order_id': order_id, 'job_id': "0"}
@@ -199,11 +202,11 @@ def new_order_row():
                 new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
             else:
                 # Shape data not compatible with form data
-                print("Shape data not compatible with form data")
+                print("Shape data not compatible with form data\n", main.session)
                 return
         else:
             # No shape data
-            print("No shape data")
+            print("No shape data\n", main.session)
             return
     else:
         return
@@ -224,10 +227,6 @@ def edit_order():
     if not users.validate_user():
         return users.logout()
     if len(list(main.request.values)) == 1:
-        # if 'order_id' in main.request.values.keys():
-        #     main.session['order_id'] = main.request.values['order_id']
-        # else:
-        #     main.session['order_id'] = list(main.request.values)[0]
         main.session['order_id'] = list(main.request.values)[0]
     elif len(main.request.form.keys()) > 1:
         new_order_row()
@@ -239,6 +238,10 @@ def edit_order():
         return close_order()
     # todo: gen_defaults
     defaults = {'bar_type': 'מצולע', 'comment': order_data}
+    # Copy last element fix
+    if order_data['order_rows']:
+        if 'element' in order_data['order_rows'][0]:
+            defaults['element'] = order_data['order_rows'][0]['element']
     return main.render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
                                 dictionary=page_data[2], rebar_data={}, defaults=defaults)
 
@@ -251,9 +254,11 @@ def get_order_data(order_id, job_id="", reverse=True):
     info = order[order['info'].notnull()]['info'][0]
     order_data_df = order[order['info'].isnull()].drop(['info'], axis=1).fillna("")
     if not order_data_df.empty:
-        # order_data_df['weight'] = order_data_df['weight'].astype(int)
         order_data_df['weight'] = order_data_df['weight'].round(1)
         order_data_df['status'] = 'order_status_' + order_data_df['status'].astype(str)
+        # Data display fix
+        if info['type'] == 'rebar':
+            order_data_df.rename(columns={'diam_x': 'diam', 'x_pitch': 'pitch'}, inplace=True)
     order_data = order_data_df.to_dict('index')
     rows = []
     for key in order_data:
@@ -261,6 +266,7 @@ def get_order_data(order_id, job_id="", reverse=True):
             row_data = order_data[key]
             rows.append(row_data)
     info['order_id'] = order_id
+    info['status'] = 'order_status_' + info['status']
     rows.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return rows, info, additional
 
@@ -289,10 +295,9 @@ def edit_order_data():
 
     if not info:
         return {}, []
-
-    # 0: Not required, 1: Required, 2: Autofill, 3: Drop menu, 4: Checkbox
     keys_to_display = main.configs.data_to_display['new_row_' + info['type']]
-    order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows}
+    order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows,
+                  'dtd_order': list(keys_to_display.keys())}
     if additional:
         order_data['include_data'] = additional
     if info['type'] == 'rebar_special':
@@ -319,7 +324,7 @@ def edit_row():
                             defaults[item] = order_data['order_rows'][0][item][li]
                 else:
                     defaults[item] = order_data['order_rows'][0][item]
-            print(defaults)
+                    defaults[item] = order_data['order_rows'][0][item]
             return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
                                         lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
@@ -330,7 +335,7 @@ def change_order_status():
     user_group = users.validate_user()
     if not user_group:
         return users.logout()
-    elif user_group < 80:
+    elif user_group < 70:
         return '', 204
     if main.request.form:
         update_order_status(main.request.form['status'], main.request.form['order_id'])
@@ -359,8 +364,11 @@ def close_order():
     if len(list(main.request.values)) > 0:
         req_vals = list(main.request.values)
         additional_func = req_vals[0]
-        if additional_func == 'delete':
+        if additional_func == 'delete_order':
             main.mongo.delete_many('orders', {'order_id': main.session['order_id']})
+        elif additional_func == 'delete_row':
+            main.mongo.delete_many('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
+            return main.redirect('/orders')
         elif additional_func == 'scan':
             return main.redirect('/scan')
     users.clear()
@@ -377,13 +385,13 @@ def peripheral_orders(add_orders, order_id, job_id):
     for order in range(len(add_orders)):
         job_id += '_' + str(order)
         order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
-        info = {'costumer_name': 'צומת ברזל', 'created_by': main.session['username'], 'date_created': ts(),
-                'type': 'regular', 'status': 'NEW'}
+        info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'],
+                'date_created': ts(), 'type': 'regular', 'status': 'NEW'}
         main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                          {'order_id': order_id, 'info': info})
         peripheral_order = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts(),
                             'description': description, 'quantity': add_orders[order]['qnt'], 'shape': "1",
-                            'length': add_orders[order]['length'],
+                            'length': add_orders[order]['length'], 'bar_type': 'מצולע',
                             'diam': add_orders[order]['diam'], 'weight': order_weight,
                             'shape_data': [add_orders[order]['length']]}
         main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': job_id}, peripheral_order)

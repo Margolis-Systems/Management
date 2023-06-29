@@ -38,12 +38,19 @@ div {
     {% include order_data.include %}
 {% endif %}
 <table class="table table-striped" dir="rtl" align="center">
-        <td colspan="100">
+        <td colspan="5">
             <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}">
+        </td>
+        <td colspan="100">
+            <input type="date" class="form-control" name="date_delivery_hid" placeholder="תאריך אספקה" value="{{ order_data.info['date_delivery'] }}">
         </td>
     <tr>
         <td><button type=submit class="btn btn-primary btn-block" >עדכן</button></td>
         <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>
+        <td><button onclick="location.href='\close?delete_row'" type="button" class="btn btn-primary btn-block" >מחק שורה</button></td>
+        <td></td>
+        <td></td>
+        <td></td>
     </tr>
     <tr>
         {% for item in order_data.data_to_display %}
