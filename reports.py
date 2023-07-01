@@ -255,9 +255,7 @@ class Bartender:
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
-                # todo: Config!!!
-                x_length = 16000
-                if int(row['length']) > x_length:
+                if int(row['length']) > 16000:
                     if 'ברזל_ארוך' not in special_sum.keys():
                         special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
                     special_sum['ברזל_ארוך']['qnt'] += quantity
