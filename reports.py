@@ -250,7 +250,7 @@ class Bartender:
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
                     special_sum['ספירלים']['weight'] += row['weight']
-                if row['shape'] in []:
+                if row['shape'] in ['49','59']:
                     if 'ספסלים' not in special_sum.keys():
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספסלים']['qnt'] += quantity
@@ -292,9 +292,8 @@ class Bartender:
             table_rows = 3
             spec_sum_lines = math.ceil(len(special_sum) / table_rows)
             if spec_sum_lines:
-                template_row = {'temp_select': table_selector}
+                template_row = {'temp_select': table_selector, 'tb30': int(total_weight)}
                 # Add total weight to summary
-                template_row['tb30'] = int(total_weight)
                 summary_data.append(template_row.copy())
                 table_selector = 4
                 for row in range(spec_sum_lines):

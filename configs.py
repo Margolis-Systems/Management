@@ -1,6 +1,6 @@
 import json
 import os
-
+from collections import OrderedDict
 import db_handler
 
 mongo = db_handler.DBHandle()
@@ -12,7 +12,7 @@ with open(main_dir+'config.json', 'r', encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 with open(main_dir+'lists\\shapes.json') as shapes_file:
-    shapes = json.load(shapes_file)
+    shapes = OrderedDict(sorted(json.load(shapes_file).items()))
 
 server = config['server']
 server_port = config['server_port']
