@@ -140,51 +140,33 @@ weights_list = {
     "5.5": 0.2,
     "6.5": 0.27
   };
-leng = lengInput.value;
-if (diam.value){
-    weight.value = (leng * qnt.value * weights_list[diam.value] / 100).toFixed(1);
-}
-}
-
-const inputs = Array.prototype.slice.call(
-  document.querySelectorAll('.form input')
-);
-
-inputs.forEach((input) => {
-  input.addEventListener('keydown', (event) => {
-    const num = Number(event.key);
-    if (num && num >= 0 && num <= 9) { // Only allow numbers
-      if (input.value.length >= input.maxLength) {
-        event.preventDefault();
-        focusNext();
-      }
+    leng = lengInput.value;
+    if (diam.value){
+        weight.value = (leng * qnt.value * weights_list[diam.value] / 100).toFixed(1);
     }
-  });
-});
+}
+
 
 function focusNext(inputIndex) {
     if (event.keyCode === 16){
         document.getElementById('submit').click();
         return
     }
-    inputNames = dtd_order
-    console.log(inputNames)
-    console.log(dtd_order)
+    inputNames = dtd_order;
     if (event.keyCode === 13){
-        while (true){
+        var safety = 0;
+        while (safety < 20){
             inputIndex += 1;
+            console.log(inputIndex)
             if (inputIndex >= inputNames.length){
                 inputIndex = 0;
             }
-            if (datatodisp[inputNames[inputIndex]] != 2){
+            console.log(inputNames[inputIndex])
+            if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){
                 inputName = inputNames[inputIndex];
                 break
             }
-            else{
-            console.log(inputIndex)
-            console.log(inputNames[inputIndex])
-            console.log(datatodisp[inputNames[inputIndex]])
-            }
+            safety += 1;
         }
         document.getElementById(inputName).focus();
     }

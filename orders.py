@@ -93,10 +93,10 @@ def new_order_row():
     # Order comment
     if 'comment_hid' in req_form_data:
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                        {'info.comment': req_form_data['comment_hid']}, '$set')
+                              {'info.comment': req_form_data['comment_hid']}, '$set')
     if 'date_delivery_hid' in req_form_data:
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                        {'info.date_delivery': req_form_data['date_delivery_hid']}, '$set')
+                              {'info.date_delivery': req_form_data['date_delivery_hid']}, '$set')
     # Order peripheral data handling
     if 'shape_data' in req_form_data.keys():
         new_row = {'order_id': order_id, 'job_id': "0"}
@@ -218,8 +218,9 @@ def new_order_row():
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
     main.mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']}, new_row)
-    order_rows_count = main.mongo.count_docs('orders', query={'order_id': new_row['order_id'], 'info': {'$exists': False},
-                                                              'job_id': {'$ne': '0'}})
+    order_rows_count = main.mongo.count_docs('orders',
+                                             query={'order_id': new_row['order_id'], 'info': {'$exists': False},
+                                                    'job_id': {'$ne': '0'}})
     main.mongo.update_one('orders', {'order_id': new_row['order_id']}, {'info.rows': str(order_rows_count)}, '$set')
 
 
@@ -302,6 +303,8 @@ def edit_order_data():
         order_data['include_data'] = additional
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
+        order_data['dtd_order'].extend(
+            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
     lists, patterns = pages.gen_patterns(info['type'])
     dictionary = pages.get_dictionary(username)
     return order_data, [lists, patterns, dictionary]
@@ -353,9 +356,9 @@ def update_order_status(new_status, order_id, job_id=""):
         update_order_status('Finished', order_id)
     else:
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                        {'info.status': new_status}, '$set')
+                              {'info.status': new_status}, '$set')
         main.mongo.update_many('orders', {'order_id': order_id, 'info': {'$exists': False}},
-                                        {'status': new_status}, '$set')
+                               {'status': new_status}, '$set')
 
 
 def close_order():
