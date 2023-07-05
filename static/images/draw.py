@@ -34,7 +34,7 @@ def shape_plot(positions, file_name, text=[], enable_text_plot=True):
             shapes = json.load(shapes_json)
         edges = len(positions) - 1
         shapes[shape] = {'description': '---', 'edges': edges, 'positions': text_pos,
-                         'draw_positions': positions, 'ang': list(range(edges))}
+                         'draw_positions': positions, 'ang': list(range(1, edges))}
         print(list(shapes.keys()))
         with open('C:\\Server\\lists\\shapes.json', 'w', encoding='utf-8') as shapes_json:
             json.dump(shapes, shapes_json)
@@ -43,7 +43,7 @@ def shape_plot(positions, file_name, text=[], enable_text_plot=True):
 if __name__ == '__main__':
     # SIZE 200 X 60
     # INPUT
-    pos = [(140,30),(170,50),(170,5),(15,5),(15,50),(185,50),(160,20)]
+    pos = [(15,30),(185,30)]
     # pos = [(110, 10), (15, 10), (15, 50), (185, 50)]
-    name = '966'
+    name = '1'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')

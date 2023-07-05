@@ -73,14 +73,17 @@ def jobs():
     if not users.validate_user():
         return users.logout()
     order_type = "regular"
-    if 'order_type' in main.request.form.keys():
-        order_type = main.request.form['order_type']
+    if 'filter' in main.session['user_config']:
+        if main.session['user_config']['filter']:
+            order_type = main.session['user_config']['filter']
     dictionary = get_dictionary(main.session['username'])
     return main.render_template('/jobs.html', jobs=jobs_list(order_type), dictionary=dictionary)
 
 
 def shape_editor():
     shape_data = {}
+    shapes = {}
+    defaults = {'edges': [], 'ang': []}
     if main.request.form:
         shape_data = {'edges': 0, 'shape': main.request.form['shape_data'], 'tot_len': 0}
         for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
@@ -89,7 +92,6 @@ def shape_editor():
     else:
         req_vals = list(main.request.values)
         if len(req_vals) > 0:
-            # todo: remove this after db fix
             if 'ang' in main.configs.shapes[req_vals[0]]:
                 ang = main.configs.shapes[req_vals[0]]['ang']
             else:
@@ -97,11 +99,17 @@ def shape_editor():
             shape_data = {'shape': req_vals[0], 'edges': list(range(1, main.configs.shapes[req_vals[0]]['edges'] + 1)),
                           'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
                           'angels': ang}
-    shapes = {}
-    for shape in main.configs.shapes:
-        if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\
-            shapes[shape] = main.configs.shapes[shape]['description']
-    return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data)
+        else:
+            for shape in main.configs.shapes:
+                if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\
+                    shapes[shape] = {'description': main.configs.shapes[shape]['description'],
+                                     'edges': main.configs.shapes[shape]['edges']}
+    if 'job_id' in main.session:
+        if main.session['job_id']:
+            job_data = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
+            if job_data:
+                defaults = {'edges': job_data['shape_data'], 'ang': job_data['shape_ang']}
+    return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data, defaults=defaults)
 
 
 def choose_printer():

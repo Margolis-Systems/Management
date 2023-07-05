@@ -4,7 +4,13 @@ import pages
 
 
 def clients():
-    clients_list = main.mongo.read_collection_df('costumers').to_dict('index')
+    query = {}
+    if main.request.form:
+        req_form = dict(main.request.form)
+        for item in req_form:
+            if req_form[item]:
+                query[item] = {'$regex': req_form[item]}
+    clients_list = main.mongo.read_collection_df('costumers', query=query).to_dict('index')
     display_those_keys = ['name', 'id']
     dictionary = pages.get_dictionary(main.session['username'])
     return main.render_template('clients.html', clients=clients_list, display_items=display_those_keys,

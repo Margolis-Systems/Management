@@ -6,6 +6,7 @@ import pandas as pd
 import pages
 from functions import ts
 import math
+from collections import OrderedDict
 
 
 def orders():
@@ -15,6 +16,9 @@ def orders():
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
     query = {'info': {'$exists': True}}
+    if 'filter' in main.session['user_config']:
+        if main.session['user_config']['filter']:
+            query['info.type'] = {'$regex': main.session['user_config']['filter']}
     if main.request.form:
         req_form = dict(main.request.form)
         for item in req_form:
@@ -35,11 +39,11 @@ def orders():
     for item in main.configs.data_to_display['orders']:
         if item not in new_df.columns:
             new_df[item] = ""
-    orders_info = new_df[
-        main.configs.data_to_display['orders']].copy()  # .sort_values(by='date_created', ascending=False)
+    orders_info = new_df[main.configs.data_to_display['orders']].copy()
     sorter = {'NEW': 0, 'Processed': 1, 'Production': 2}
     orders_info['sorter'] = orders_info['status'].map(sorter)
     orders_info['status'] = 'order_status_' + orders_info['status'].astype(str)
+    orders_info['total_weight'] = orders_info['total_weight'].astype(int)
     orders_info.sort_values(by=['sorter', 'date_created'], ascending=[True, False], inplace=True)
     dictionary = pages.get_dictionary(main.session['username'])
     return main.render_template('orders.html', orders=orders_info.to_dict('index'),
@@ -222,6 +226,7 @@ def new_order_row():
                                              query={'order_id': new_row['order_id'], 'info': {'$exists': False},
                                                     'job_id': {'$ne': '0'}})
     main.mongo.update_one('orders', {'order_id': new_row['order_id']}, {'info.rows': str(order_rows_count)}, '$set')
+    main.mongo.update_one('orders', {'order_id': new_row['order_id']}, {'info.total_weight': new_row['weight']}, '$inc')
 
 
 def edit_order():
@@ -234,17 +239,16 @@ def edit_order():
         return main.redirect('/orders')
     if 'order_id' not in main.session.keys():
         return main.redirect('/orders')
-    order_data, page_data = edit_order_data()
+    order_data, page_data, total_weight = edit_order_data()
     if not order_data:
         return close_order()
-    # todo: gen_defaults
-    defaults = {'bar_type': 'מצולע', 'comment': order_data}
+    defaults = {'bar_type': 'מצולע'}
     # Copy last element fix
     if order_data['order_rows']:
         if 'element' in order_data['order_rows'][0]:
             defaults['element'] = order_data['order_rows'][0]['element']
     return main.render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                                dictionary=page_data[2], rebar_data={}, defaults=defaults)
+                                dictionary=page_data[2], rebar_data={}, defaults=defaults, total_weight=total_weight)
 
 
 def get_order_data(order_id, job_id="", reverse=True):
@@ -268,6 +272,7 @@ def get_order_data(order_id, job_id="", reverse=True):
             rows.append(row_data)
     info['order_id'] = order_id
     info['status'] = 'order_status_' + info['status']
+    info = OrderedDict(sorted(info.items(), key=lambda t: t[0]))
     rows.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return rows, info, additional
 
@@ -286,17 +291,22 @@ def new_order_id():
 
 
 def edit_order_data():
+    total_weight = 0
     order_id, username = main.session['order_id'], main.session['username']
     job_id = ""
     if 'job_id' in main.session.keys():
         job_id = main.session['job_id']
     # Read all data of this order
     rows, info, additional = get_order_data(order_id, job_id)
+    for row in rows:
+        total_weight += row['weight']
     # if info['created_by'] != main.session['username']:
-
     if not info:
         return {}, []
-    keys_to_display = main.configs.data_to_display['new_row_' + info['type']]
+    if info['type'] == 'R':
+        keys_to_display = main.configs.data_to_display['new_row_regular']
+    else:
+        keys_to_display = main.configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows,
                   'dtd_order': list(keys_to_display.keys())}
     if additional:
@@ -307,7 +317,7 @@ def edit_order_data():
             ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
     lists, patterns = pages.gen_patterns(info['type'])
     dictionary = pages.get_dictionary(username)
-    return order_data, [lists, patterns, dictionary]
+    return order_data, [lists, patterns, dictionary], round(total_weight)
 
 
 def edit_row():
@@ -315,7 +325,7 @@ def edit_row():
         return users.logout()
     if main.request.method == 'GET':
         main.session['order_id'], main.session['job_id'] = list(main.request.values)[0].split('job')
-        order_data, page_data = edit_order_data()
+        order_data, page_data, total_weight = edit_order_data()
         if order_data:
             defaults = {}
             for item in order_data['order_rows'][0]:
@@ -340,10 +350,21 @@ def change_order_status():
         return users.logout()
     elif user_group < 70:
         return '', 204
+    req_vals = dict(main.request.values)
     if main.request.form:
-        update_order_status(main.request.form['status'], main.request.form['order_id'])
+        if '|' in main.request.form['order_id']:
+            temp = main.request.form['order_id'].split('|')
+            order_id = temp[0]
+            job_id = temp[1]
+        else:
+            order_id = main.request.form['order_id']
+            job_id = ''
+        update_order_status(main.request.form['status'], order_id, job_id)
         return '', 204
-    return main.render_template('change_order_status.html', order_id=main.session['order_id'])
+    order_id = main.session['order_id']
+    if req_vals:
+        order_id += '|'+req_vals['job_id']
+    return main.render_template('change_order_status.html', order_id=order_id)
 
 
 def update_order_status(new_status, order_id, job_id=""):
@@ -389,7 +410,7 @@ def peripheral_orders(add_orders, order_id, job_id):
         job_id += '_' + str(order)
         order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
         info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'],
-                'date_created': ts(), 'type': 'regular', 'status': 'NEW'}
+                'date_created': ts(), 'type': 'R', 'status': 'NEW'}
         main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                          {'order_id': order_id, 'info': info})
         peripheral_order = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts(),
@@ -398,6 +419,12 @@ def peripheral_orders(add_orders, order_id, job_id):
                             'diam': add_orders[order]['diam'], 'weight': order_weight,
                             'shape_data': [add_orders[order]['length']]}
         main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': job_id}, peripheral_order)
+    order_data = main.mongo.read_collection_df('orders', query={'order_id': order_id,
+                                                                'info': {'$exists': False}, 'job_id': {'$ne': '0'}})
+    weight_list = order_data['weight'].to_list()
+    total_weight = sum(weight_list)
+    main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                          {'info.total_weight': total_weight, 'info.rows': len(weight_list)}, '$set')
 
 
 def gen_job_id(order_id):

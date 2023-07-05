@@ -57,6 +57,7 @@ div {
         {% else %}
         <td><button onclick='openNewWindow("\change_order_status")' type="button" class="btn btn-primary btn-block">שנה סטטוס</button></td>
         {% endif %}
+        <td><label>סה"כ משקל</label><input type="number" value="{{ total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
     </tr>
 </table>
 {% if order_data.include %}
@@ -89,7 +90,7 @@ div {
     {% if order_data.info.status == "order_status_NEW" %}
     <tr ondblclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
     {% else %}
-    <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;">
+    <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")'>
     {% endif %}
         {% for item in order_data.data_to_display %}
         <td>

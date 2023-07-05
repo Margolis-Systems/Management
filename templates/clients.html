@@ -3,6 +3,13 @@
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
         <td><button onclick="location.href='/edit_client'" type="button" class="btn btn-primary btn-block">לקוח חדש</button></td>
+        <form method=POST autocomplete="off" action="{{ url_for('clients_page') }}">
+        <td>
+            <label>חיפוש</label>
+            <input type="text" name="name" placeholder="שם לקוח">
+            <button type="submit">חפש</button>
+        </td>
+        </form>
      </tr>
     <tr>
 </table>

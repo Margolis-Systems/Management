@@ -2,6 +2,7 @@ import orders
 import functions
 import configs
 import math
+from collections import OrderedDict
 import os
 from PIL import Image, ImageDraw, ImageFont
 
@@ -160,7 +161,6 @@ class Bartender:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 print_data.append(line)
-        # TODO: validate!!!
         if disable_weight:
             for print_line in range(len(print_data)):
                 for print_item in print_data[print_line]:
@@ -239,8 +239,8 @@ class Bartender:
                         special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
                     special_sum['כיפוף']['qnt'] += quantity
                     special_sum['כיפוף']['weight'] += row['weight']
-                # TODO: Update חישוק
-                if row['shape'] in ['925', '966', '215', '216', '78', '79']:
+                if (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                        or row['shape'] in ['925', '966', '215', '216', '78', '79']:
                     if 'חישוק' not in special_sum.keys():
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק']['qnt'] += quantity
@@ -265,6 +265,7 @@ class Bartender:
                         special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
                     special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
                     special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
+            table_data = OrderedDict(sorted(table_data.items(), key=lambda t: t[0]))
             # Bartender Table filler
             # Summary
             table_cells = 5
@@ -280,8 +281,12 @@ class Bartender:
                     template_row["tb" + str(1 + table_cells * indx)] = table_data[diam]['type']
                     template_row["tb" + str(2 + table_cells * indx)] = diam
                     template_row["tb" + str(3 + table_cells * indx)] = table_data[diam]['length']
-                    template_row["tb" + str(4 + table_cells * indx)] = table_data[diam]['weight_per_M']
-                    template_row["tb" + str(5 + table_cells * indx)] = int(table_data[diam]['weight'])
+                    if disable_weight:
+                        template_row["tb" + str(4 + table_cells * indx)] = '---'
+                        template_row["tb" + str(5 + table_cells * indx)] = '---'
+                    else:
+                        template_row["tb" + str(4 + table_cells * indx)] = table_data[diam]['weight_per_M']
+                        template_row["tb" + str(5 + table_cells * indx)] = int(table_data[diam]['weight'])
                 summary_data.append(template_row.copy())
             # Bartender Table filler
             # Special summary
@@ -303,7 +308,10 @@ class Bartender:
                         description = list(special_sum.keys())[table_rows * row + indx]
                         template_row["tb" + str(1 + table_cells * indx)] = description.replace("_", " ")
                         template_row["tb" + str(2 + table_cells * indx)] = special_sum[description]['qnt']
-                        template_row["tb" + str(3 + table_cells * indx)] = int(special_sum[description]['weight'])
+                        if disable_weight:
+                            template_row["tb" + str(3 + table_cells * indx)] = '---'
+                        else:
+                            template_row["tb" + str(3 + table_cells * indx)] = int(special_sum[description]['weight'])
                     summary_data.append(template_row.copy())
         return summary_data
 

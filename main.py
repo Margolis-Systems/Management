@@ -31,6 +31,7 @@ def index():
     if 'username' in session:
         user = session['username']
         session.clear()
+        main.session['user_config'] = {}
         session['username'] = user
         login_user = mongo.read_collection_one(configs.users_collection, {'name': session['username']})
         if login_user['group'] > 10:
@@ -87,6 +88,7 @@ def scan():
 
 @app.route('/jobs', methods=['POST', 'GET'])
 def jobs():
+    users.clear()
     return pages.jobs()
 
 
@@ -117,6 +119,7 @@ def download_attachment():
 
 @app.route('/clients', methods=['POST', 'GET'])
 def clients_page():
+    users.clear()
     return clients.clients()
 
 
@@ -142,6 +145,7 @@ def remove_site():
 
 @app.route('/scale', methods=['POST', 'GET'])
 def scaling():
+    # users.clear()
     return scale.main_page()
 
 
@@ -195,6 +199,11 @@ def dl_post():
 @app.route('/plot_edit', methods=['POST', 'GET'])
 def plot_editor():
     return plot_edit.plot_edit()
+
+
+@app.route('/user_config', methods=['POST', 'GET'])
+def user_config():
+    return users.user_configs()
 
 
 '''

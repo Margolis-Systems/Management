@@ -5,6 +5,10 @@
         <td><button onclick="location.href='/new_order?regular'" type="button" class="btn btn-primary btn-block">הזמנת ברזל חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
+        <td><label>הצג הזמנות מיום</label>
+            <input type="date" value="2023-06-05">
+            <label>עד יום</label>
+            <input type="date" value="2023-07-05"></td>
     </tr>
 </table>
 <table class="table table-striped" align="center" dir="rtl">
@@ -17,6 +21,19 @@
             <button type="submit">חפש</button>
         </td>
         </form>
+        <td>סינון לפי:</td>
+        <td>
+            <button onclick="location.href='/user_config?filter=regular';refreshWindow();">הזמנות ברזל</button>
+        </td>
+        <td>
+            <button onclick="location.href='/user_config?filter=rebar';refreshWindow();">הזמנות רשת</button>
+        </td>
+        <td>
+            <button onclick="location.href='/user_config?filter=R';refreshWindow();">ייצור רשת</button>
+        </td>
+        <td>
+            <button onclick="location.href='/user_config?filter=';refreshWindow();">איפוס</button>
+        </td>
     </tr>
 </table>
 <table class="table table-condensed" dir="rtl" align="center">
@@ -41,4 +58,12 @@
     </tr>
     {% endfor %}
 </table >
+<script>
+const refreshWindow = () => {
+setTimeout(function(){
+location.reload();
+}, 300);
+setTimeout("window.close()",300)
+};
+</script>
 {% endblock %}

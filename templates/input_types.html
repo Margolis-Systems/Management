@@ -6,19 +6,19 @@
 {% endif %}
     {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
     <td>
-    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeyup='focusNext({{loop.index0}})'>
+    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
     {% else %}
     {% if order_data.data_to_display[item] == '0.1' %} <!-- Regular not required -->
     <td>
-    <input type="number" step="0.1" id="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeyup='focusNext({{loop.index0}})'>
+    <input type="number" step="0.1" id="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
     {% else %}
     {% if order_data.data_to_display[item] == 1 %} <!-- Regular required numeric -->
     <td>
-    <input type="number" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" onkeyup='focusNext({{loop.index0}})' required>
+    <input type="number" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
     {% else %}
     {% if order_data.data_to_display[item] == 1.1 %} <!-- Regular required text -->
     <td>
-    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" onkeyup='focusNext({{loop.index0}})' required>
+    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
     {% else %}
     {% if order_data.data_to_display[item] == 2 %} <!-- Auto calculated NOT an input1 -->
     <td width="80">
@@ -27,7 +27,7 @@
     {% else %}
     {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
     <td>
-    <input list="{{ item }}_l" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeyup='focusNext({{loop.index0}})' required>
+    <input list="{{ item }}_l" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
         <datalist id="{{ item }}_l">
         {% for optn in lists[item] %}
             <option value="{{ optn }}">{{dictionary[optn]}}</option>
@@ -36,17 +36,17 @@
     {% else %}
     {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
     <td>
-    <input list="{{ item }}_l" type="number" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='openEditWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeyup='focusNext({{loop.index0}})' required>
+    <input list="{{ item }}_l" type="number" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='openEditWindow("{{ dictionary["editor_" + item] }}")' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
         <datalist id="{{ item }}_l">
         {% for optn in lists[item] %}
             <option value="{{ optn }}">{{dictionary[optn]}}</option>
         {% endfor %}
         </datalist>
-    <input name="{{ item }}_hid" value="{{ defaults[item] }}" id="shape_data" type="number" onkeyup='focusNext({{loop.index0}})' required>
+    <input name="{{ item }}_hid" value="{{ defaults[item] }}" id="shape_data" type="number" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
     {% else %}
     {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
     <td>
-    <input type="checkbox" id="{{ item }}" value="Yes" class="form-check-input" name="{{ item }}" onkeyup='focusNext({{loop.index0}})'>
+    <input type="checkbox" id="{{ item }}" value="Yes" class="form-check-input" name="{{ item }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
     {% else %}
     ------
     {% endif %}

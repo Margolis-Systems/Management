@@ -2,18 +2,24 @@
 {% block body %}
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
+        <td>סינון לפי:</td>
+        <td>
+            <button onclick="location.href='/user_config?filter=regular';refreshWindow();">הזמנות ברזל</button>
+        </td>
+        <td>
+            <button onclick="location.href='/user_config?filter=rebar';refreshWindow();">הזמנות רשת</button>
+        </td>
+        <td>
+            <button onclick="location.href='/user_config?filter=R';refreshWindow();">ייצור רשת</button>
+        </td>
+        <td>
+            <button onclick="location.href='/user_config?filter=';refreshWindow();">איפוס</button>
+        </td>
         <form name="form" id="form" method=POST action="{{ url_for('jobs') }}">
-        <td>
-            <input list="order_type" name="order_type" class="form-control" placeholder="בחר סוג הזמנה לתצוגה" pattern="regular|rebar|rebar_special">
-            <datalist id="order_type">
-                <option value="regular">ברזל</option>
-                <option value="rebar">רשת</option>
-                <option value="rebar_special">רשת מיוחדת</option>
-            </datalist>
-        </td>
-        <td>
-            <button type="submit">אישור</button>
-        </td>
+        <td><label>הצג הזמנות מיום</label>
+            <input type="date" value="2023-06-05">
+            <label>עד יום</label>
+            <input type="date" value="2023-07-05"></td>
         </form>
     </tr>
 </table>
@@ -43,4 +49,12 @@
     </tr>
     {% endfor %}
 </table>
+<script>
+const refreshWindow = () => {
+setTimeout(function(){
+location.reload();
+}, 300);
+setTimeout("window.close()",300)
+};
+</script>
 {% endblock %}

@@ -18,12 +18,12 @@
             </td>
             <td>
             {% for edge in shape_data.edges %}
-                <input type="number" class="amount" name="{{edge}}" id="{{edge}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' placeholder="{{edge}}" required autofocus>
+                <input type="number" class="amount" name="{{edge}}" id="{{edge}}" value="{{defaults.edges[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' placeholder="{{edge}}" required autofocus>
             {% endfor %}
             </td>
             <td>
             {% for ang in shape_data.angels %}
-                <input type="number" class="amount" name="ang_{{loop.index}}" id="ang_{{loop.index}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0 + 5}})' placeholder="< {{ ang }}">
+                <input type="number" class="amount" name="ang_{{loop.index}}" id="ang_{{loop.index}}" value="{{defaults.ang[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0 + 5}})' placeholder="< {{ ang }}">
             {% endfor %}
             </td>
         </tr>
@@ -41,18 +41,39 @@
 {% endif %}
 {% else %}
 <table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td>חיפוש לפי מספר צלעות</td>
+        <td><input type="number" name="search" id="search"><button type="button" onclick="search()">חיפוש</button><button type="button" onclick="window.location.reload();">איפוס</button> </td>
+    </tr>
     {% for shape in shapes %}
-    <tr ondblclick="location.href='/shape_editor?{{shape}}'">
+    <tr ondblclick="location.href='/shape_editor?{{shape}}'" class="edges_{{ shapes[shape].edges }}">
         <td width="30%"><img src="\static\images\shapes\{{shape}}.png" title="{{shape}}"/></td>
-        <td width="60%" style="text-align:center;">{{shape}}: <br> {{ shapes[shape] }}</td>
+        <td width="60%" style="text-align:center;">{{shape}}: <br> {{ shapes[shape].description }}</td>
     </tr>
     {% endfor %}
 </table>
+<script>
+    shapes = JSON.parse('{{shapes|tojson}}');
+    const search_edges = document.getElementById("search");
+    function search(){
+        for (shape in shapes){
+            if (shape != search_edges.value){
+                tr_list = document.getElementsByClassName('edges_'+shape);
+                if (tr_list){
+                    for (let tr = 0; tr < tr_list.length; tr++){
+                    console.log(tr);
+                        tr_list[tr].setAttribute('hidden', true);
+                    }
+                }
+            }
+        }
+    }
+</script>
 {% endif %}
 <script src="\static\js\shapes.js"></script>
 <script>
-datatodisp = JSON.parse('{"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "ang_1": 1, "ang_2": 1, "ang_3": 1, "ang_4": 1}');
-dtd_order = ['1', '2', '3', '4', '5', 'ang_1', 'ang_2', 'ang_3', 'ang_4'];
+datatodisp = JSON.parse('{"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "ang_1": 1, "ang_2": 1, "ang_3": 1, "ang_4": 1, "ang_5": 1, "ang_6": 1}');
+dtd_order = ['1', '2', '3', '4', '5', '6', '7', 'ang_1', 'ang_2', 'ang_3', 'ang_4', 'ang_5', 'ang_6'];
 </script>
 </body>
 </html>

@@ -11,6 +11,7 @@ def login():
         if login_user:
             if bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
                 main.session['username'] = username_input
+                main.session['user_config'] = {}
                 resp = main.flask.make_response()
                 resp.headers['location'] = main.url_for('index')
                 resp.set_cookie('userhash', username_input)
@@ -62,5 +63,17 @@ def validate_user():
 
 def clear():
     user = main.session['username']
+    user_config = main.session['user_config']
     main.session.clear()
     main.session['username'] = user
+    main.session['user_config'] = user_config
+
+
+def user_configs():
+    req_vals = dict(main.request.values)
+    print(req_vals)
+    if req_vals:
+        if 'filter' in req_vals:
+            main.session['user_config']['filter'] = req_vals['filter']
+            main.session.modified = True
+    return '', 204

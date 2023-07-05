@@ -52,7 +52,19 @@ def add_ang():
     configs.mongo.update_one('data_lists', {'name': 'shapes'}, {'data': shapes}, '$set')
 
 
+def update_orders_total_weight():
+    orders_df = mongo.read_collection_df('orders', query={'info': {'$exists': True}})
+    order_data_df = mongo.read_collection_df('orders', query={'info': {'$exists': False}, 'job_id': {'$ne': "0"}})
+    orders = orders_df['order_id'].to_list()
+    for order in orders:
+        print(order)
+        total_weight = sum(order_data_df[order_data_df['order_id'] == order]['weight'].to_list())
+        print(total_weight)
+        mongo.update_one('orders', {'order_id': order}, {'info.total_weight': int(total_weight)}, '$set')
+
+
 if __name__ == '__main__':
-    mongo_backup()
+    # mongo_backup()
     # add_ang()
+    update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\25-06-2023_10-34-50-663724")
