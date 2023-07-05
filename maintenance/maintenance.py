@@ -1,6 +1,7 @@
 import os
+import sys
 import shutil
-os.chdir(os.path.dirname(os.getcwd()))
+sys.path.insert(1, 'C:\\Server')
 import configs
 
 
@@ -64,7 +65,7 @@ def update_orders_total_weight():
 
 
 if __name__ == '__main__':
-    # mongo_backup()
+    mongo_backup()
     # add_ang()
-    update_orders_total_weight()
+    # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\25-06-2023_10-34-50-663724")
