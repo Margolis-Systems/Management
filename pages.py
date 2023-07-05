@@ -12,15 +12,23 @@ def jobs_list(order_type='regular'):
     all_orders = main.mongo.read_collection_df('orders', query={'order_id': {'$in': type_list},
                                                                 'job_id': {'$ne': "0", '$exists': True},
                                                                 'status': {'$nin': ['NEW', 'Processed']}})
+    info_list = list(main.mongo.read_collection_list('orders', {'order_id': {'$in': type_list}, 'info': {'$exists': True}}))
+    cost_n = {}
+    ord_type = {}
+    for i in info_list:
+        if i['order_id'] not in cost_n.keys():
+            cost_n[i['order_id']] = i['info']['costumer_name']
+            ord_type[i['order_id']] = i['info']['type']
+    all_orders['costumer_name'] = all_orders['order_id'].map(cost_n)
+    all_orders['type'] = all_orders['order_id'].map(ord_type)
     if all_orders.empty:
         return {}
     all_jobs = all_orders[all_orders['job_id'].notna()]
-    # all_jobs.sort_values(by=['order_id', 'job_id'], ascending=[False, True], inplace=True)
-    sorter = {'Finished': 1, 'Production': 0}
+    sorter = {'Finished': 2, 'Production': 0, 'Start': 1}
     all_jobs['sorter'] = all_jobs['status'].map(sorter)
     all_jobs.sort_values(by=['sorter', 'date_created'], ascending=[True, False], inplace=True)
     all_jobs['status'] = 'order_status_' + all_jobs['status'].astype(str)
-    columns = ['order_id', 'job_id', 'status', 'date_created', 'description']
+    columns = ['costumer_name', 'order_id', 'job_id', 'type', 'status', 'date_created', 'description']
     return all_jobs[columns].to_dict('records')
 
 
@@ -155,31 +163,34 @@ def choose_printer():
 def scan():
     if not users.validate_user():
         return users.logout()
-    full_id = ""
     order_id = ""
+    job_id = ""
+    order = main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': main.session['username']})
+    if order:
+        order_id = order['order_id']
+        job_id = order['job_id']
     msg = ""
     status = ""
     if 'scan' in main.request.form.keys():
         decode = reports.Images.decode_qr(main.request.form['scan'])
         order_id, job_id = decode['order_id'], decode['job_id']
     elif 'order_id' in main.request.form.keys() and 'close' not in main.request.form.keys():
-        order_id, job_id = main.request.form['order_id'].split("|")
+        order_id = main.request.form['order_id']
+        job_id = main.request.form['job_id']
         orders.update_order_status(main.request.form['status'], order_id, job_id)
         return main.redirect('/scan')
     if order_id:
         job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if job:
-            full_id = order_id + "|" + job_id
             if job['status'] == 'Production':
-                status = main.session['username'] + "__Start"
-            elif job['status'] == main.session['username'] + "__Start":
+                status = "Start"
+            elif job['status'] == "Start":
                 status = "Finished"
             else:
-                full_id = ""
                 msg = job['status']
         else:
             msg = "Not found"
-    return main.render_template('/scan.html', order=full_id, msg=msg, status=status)
+    return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status)
 
 
 def get_defaults():

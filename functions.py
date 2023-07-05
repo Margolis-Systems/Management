@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import main
 
 
 def ts(mode=""):
@@ -18,3 +19,8 @@ def uniquify(path):
         path = filename + "(" + str(counter) + ")" + extension
         counter += 1
     return path
+
+
+def log(operation):
+    main.mongo.insert_collection_one('logs', {'username': main.session['username'],
+                                              'timestamp': ts(), 'operation': operation})

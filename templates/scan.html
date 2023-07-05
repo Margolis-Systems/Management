@@ -1,19 +1,22 @@
 {% extends "layout_mob.html" %}
 {% block body %}
 <table class="table table-striped" dir="rtl" align="center">
-    <form method=POST action="{{ url_for('scan') }}">
+    <form method=POST id="form" action="{{ url_for('scan') }}">
     <tr>
         <td class="d-grid gap-2">
             {% if order!="" %}
-            <label>מספר הזמנה: {{order}}</label>
+            <label style="font-size:50px;">מספר הזמנה: {{order}}</label>
+            <label style="font-size:50px;">מספר שורה: {{job}}</label>
             <input type="hidden" name="order_id" value="{{order}}">
-            <button type="submit" class="btn btn-primary btn-block" name="status" value="{{status}}">{{status}}</button>
-            <button type="button" class="btn btn-primary btn-block" onclick="location.href='/scan'">Cancel</button>
+            <input type="hidden" name="job_id" value="{{job}}">
+            <button type="submit" class="btn btn-success btn-block btn-lg" name="status" value="{{status}}">{{status}}</button>
+            <button type="button" class="btn btn-danger btn-block btn-lg" onclick="location.href='/scan'">Cancel</button>
             {% else %}
             <label>Scan barcode</label>
-            <input type="text" class="form-control" id="scan" name="scan" placeholder="Scan barcode" autofocus>
+            <input type="text" class="form-control" id="scan" name="scan" placeholder="Scan barcode" onfocusout="scanFocus();" onkeyup="scanSubmit();" autofocus>
+            <!--
             <button type="reset" class="btn btn-primary btn-lg" onclick="autoFocus()">Reset</button>
-            <button type="submit" class="btn btn-primary btn-lg">Scan</button>
+            <button type="submit" class="btn btn-primary btn-lg">Scan</button>-->
         </td>
     </tr>
     {% endif %}
@@ -26,4 +29,15 @@
     {% endif %}
     </form>
 </table>
+<script>
+    function scanFocus(){
+        document.getElementById('scan').focus();
+    }
+    function scanSubmit(){
+        scanVal = document.getElementById('scan').value
+        if (scanVal.includes('BF2D')){
+            document.getElementById('form').submit();
+        }
+    }
+</script>
 {% endblock %}

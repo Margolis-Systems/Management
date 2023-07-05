@@ -27,11 +27,13 @@
     <tr>
         {% for key in jobs[0] %}
         <td>
+            <b>
             {% if dictionary[key] %}
             {{ dictionary[key] }}
             {% else %}
             {{ key }}
             {% endif %}
+            </b>
         </td>
         {% endfor %}
     </tr>

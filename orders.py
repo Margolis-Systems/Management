@@ -369,7 +369,8 @@ def change_order_status():
 
 def update_order_status(new_status, order_id, job_id=""):
     if job_id != "":
-        main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_id}, {'status': new_status}, '$set')
+        main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_id},
+                              {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
         rows, info, additional = get_order_data(order_id)
         for row in rows:
             if row['status'] != "Finished":
@@ -377,9 +378,9 @@ def update_order_status(new_status, order_id, job_id=""):
         update_order_status('Finished', order_id)
     else:
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.status': new_status}, '$set')
+                              {'info.status': new_status, 'info.status_updated_by': main.session['username']}, '$set')
         main.mongo.update_many('orders', {'order_id': order_id, 'info': {'$exists': False}},
-                               {'status': new_status}, '$set')
+                               {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
 
 
 def close_order():
