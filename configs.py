@@ -12,7 +12,8 @@ with open(main_dir+'config.json', 'r', encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 with open(main_dir+'lists\\shapes.json') as shapes_file:
-    shapes = OrderedDict(sorted(json.load(shapes_file).items()))
+    shapes_json = json.load(shapes_file)
+    shapes = dict(OrderedDict(sorted(shapes_json.items(), key=lambda t: int(t[0]))))
 
 server = config['server']
 server_port = config['server_port']

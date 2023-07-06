@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import shutil
@@ -48,9 +49,23 @@ def clean_empty_orders():
 def add_ang():
     shapes = configs.shapes.copy()
     for shape in shapes:
-        shapes[shape]['ang'] = list(range(1, len(shapes[shape]['positions'])))
-    print(configs.shapes)
+        print(shape)
+        shapes[shape]['ang'] = get_ang(shapes[shape])
+    with open(os.path.dirname(os.getcwd()) + '\\lists\\shapes.json', 'w') as f:
+        json.dump(shapes, f)
     configs.mongo.update_one('data_lists', {'name': 'shapes'}, {'data': shapes}, '$set')
+
+
+def get_ang(shape_data):
+    ang = []
+    for ind in list(range(1, len(shape_data['draw_positions'])-1)):
+        pos1, pos2, pos3 = shape_data['draw_positions'][ind - 1], shape_data['draw_positions'][ind], shape_data['draw_positions'][ind+1]
+        print(pos1, pos2, pos3)
+        if (pos1[0] - pos2[0] == 0 or pos1[1] - pos2[1] == 0) and (pos3[0] - pos2[0] == 0 or pos3[1] - pos2[1] == 0):
+            ang.append(90)
+        else:
+            ang.append(45)
+    return ang
 
 
 def update_orders_total_weight():
@@ -65,7 +80,7 @@ def update_orders_total_weight():
 
 
 if __name__ == '__main__':
-    mongo_backup()
-    # add_ang()
+    # mongo_backup()
+    add_ang()
     # update_orders_total_weight()
-    # mongo_restore("C:\\Projects\\Tzomet\\old ver\\25-06-2023_10-34-50-663724")
+    # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
