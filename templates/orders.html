@@ -5,10 +5,15 @@
         <td><button onclick="location.href='/new_order?regular'" type="button" class="btn btn-primary btn-block">הזמנת ברזל חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
-        <td><label>הצג הזמנות מיום</label>
-            <input type="date" value="2023-06-05">
-            <label>עד יום</label>
-            <input type="date" value="2023-07-05"></td>
+        <td><button onclick='openNewWindow("\copy_order")' type="button" class="btn btn-primary btn-block" >העתק הזמנה</button></td>
+        <td>
+            <form method=POST id="date_form" autocomplete="off" action="{{ url_for('orders_page') }}">
+                <label>הצג הזמנות מיום</label>
+                <input type="date" name="date_from" value="{{defaults.from}}" onchange="formSubmit('date_form');">
+                <label>עד יום</label>
+                <input type="date" name="date_to" value="{{defaults.to}}" onchange="formSubmit('date_form');">
+            </form>
+        </td>
     </tr>
 </table>
 <table class="table table-striped" align="center" dir="rtl">
@@ -58,6 +63,7 @@
     </tr>
     {% endfor %}
 </table >
+<script src="\static\js\shapes.js" ></script>
 <script>
 const refreshWindow = () => {
 setTimeout(function(){
@@ -65,5 +71,8 @@ location.reload();
 }, 300);
 setTimeout("window.close()",300)
 };
+function formSubmit(formName){
+    document.getElementById(formName).submit();
+}
 </script>
 {% endblock %}

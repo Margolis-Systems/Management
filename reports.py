@@ -3,7 +3,6 @@ import functions
 import configs
 import math
 from collections import OrderedDict
-import os
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -50,9 +49,6 @@ class Images:
             chksm += ord(char)
         chksm = 96 - (chksm % 32)
         formatted += str(chksm) + '@'
-        # print('CheckSum: ', chksm)
-        # print(len(formatted))
-        # print(formatted)
         return formatted
 
     @staticmethod
@@ -66,11 +62,14 @@ class Images:
             text = list(range(1, len(positions)))
         size = (200, 60)
         font_size = 16
-        # font_dir = "c:\\server\\fonts\\CrashNumberingSerif-KVjW.ttf"
         font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
         im = Image.new('RGB', size, 'white')
         draw = ImageDraw.Draw(im)
-        draw.line(positions, fill="black", width=3)
+        if shape != '332':
+            draw.line(positions, fill="black", width=3)
+        else:
+            draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
+            positions = [(10,30),(20,30),(200,30)]
         if enable_text_plot:
             text_pos = []
             for i in range(len(positions) - 1):
@@ -115,6 +114,7 @@ class Bartender:
         rows, info, additional = orders.get_order_data(order_id, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
+        element_buf = []
         if 'rebar' in info['type'] and 'page' in print_type:
             info['temp_select'] = 1
             print_data.append(info)
@@ -149,17 +149,30 @@ class Bartender:
                 print_data.append(template_row.copy())
             print_data.append({'temp_select': 3, 'tb1': total_weight})
         else:
-            for item in rows:
-                if item['job_id'] == "0":
+            for row in rows:
+                if row['job_id'] == "0":
                     break
                 line = {}
-                for obj in item:
-                    line[obj] = item[obj]
+                kora = {'temp_select': 1, 'z15': 0, 'z16': 0}
+                for obj in row:
+                    line[obj] = row[obj]
                 for obj in info:
                     line[obj] = info[obj]
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
+                if 'element' in line:
+                    if 'ק' in line['element'] and line['element'] not in element_buf:
+                        kora.update(line)
+                        for _row in rows:
+                            if _row['element'] == line['element']:
+                                kora['z15'] += 1
+                                kora['z16'] += _row['weight']
+                        kora['z16'] = int(kora['z16'])
+                        # todo: barcode DATA
+                        kora['barcode_data'] = ''
+                        element_buf.append(line['element'])
+                        print_data.append(kora)
                 print_data.append(line)
         if disable_weight:
             for print_line in range(len(print_data)):
@@ -317,9 +330,8 @@ class Bartender:
 
     @staticmethod
     def bt_create_print_file(printer, btw_file, print_data):
-        tempfix = btw_file
         # Bar tender btw
-        header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + tempfix.replace('scaling_report', 'scaling_report_fix') + '.btw /D="%Trigger File Name%" /PRN=' \
+        header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------

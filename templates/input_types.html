@@ -6,11 +6,11 @@
 {% endif %}
     {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
     <td>
-    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
+    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' autofocus>
     {% else %}
     {% if order_data.data_to_display[item] == '0.1' %} <!-- Regular not required -->
     <td>
-    <input type="number" step="0.1" id="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
+    <input type="number" step="0.1" id="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' autofocus>
     {% else %}
     {% if order_data.data_to_display[item] == 1 %} <!-- Regular required numeric -->
     <td>

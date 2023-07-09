@@ -27,17 +27,28 @@ def shape_plot(positions, file_name, text=[], enable_text_plot=True):
             text_pos.append(position)
     im.save(file_name)
     im.show(file_name)
-    if config['update_mongo']:
-        mongo.update_one('data_lists', {'name': 'shapes'}, {'data.' + shape + '.positions': text_pos}, '$set')
     if config['update_file']:
         with open('C:\\Server\\lists\\shapes.json', 'r', encoding='utf-8') as shapes_json:
             shapes = json.load(shapes_json)
         edges = len(positions) - 1
+        ang = get_ang(positions)
         shapes[shape] = {'description': '---', 'edges': edges, 'positions': text_pos,
-                         'draw_positions': positions, 'ang': list(range(1, edges))}
+                         'draw_positions': positions, 'ang': ang}
         print(list(shapes.keys()))
         with open('C:\\Server\\lists\\shapes.json', 'w', encoding='utf-8') as shapes_json:
             json.dump(shapes, shapes_json)
+
+
+def get_ang(shape_data):
+    ang = []
+    for ind in list(range(1, len(shape_data)-1)):
+        pos1, pos2, pos3 = shape_data[ind - 1], shape_data[ind], shape_data[ind+1]
+        print(pos1, pos2, pos3)
+        if (pos1[0] - pos2[0] == 0 or pos1[1] - pos2[1] == 0) and (pos3[0] - pos2[0] == 0 or pos3[1] - pos2[1] == 0):
+            ang.append(90)
+        else:
+            ang.append(45)
+    return ang
 
 
 if __name__ == '__main__':

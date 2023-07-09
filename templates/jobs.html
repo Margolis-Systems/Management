@@ -16,10 +16,10 @@
             <button onclick="location.href='/user_config?filter=';refreshWindow();">איפוס</button>
         </td>
         <form name="form" id="form" method=POST action="{{ url_for('jobs') }}">
-        <td><label>הצג הזמנות מיום</label>
-            <input type="date" value="2023-06-05">
+        <td><label>הצג הזמנות מיום(בפיתוח)</label>
+            <input type="date" value="2023-06-05" readonly>
             <label>עד יום</label>
-            <input type="date" value="2023-07-05"></td>
+            <input type="date" value="2023-07-05"></td readonly>
         </form>
     </tr>
 </table>

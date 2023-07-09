@@ -20,6 +20,9 @@
             {% for edge in shape_data.edges %}
                 <input type="number" class="amount" name="{{edge}}" id="{{edge}}" value="{{defaults.edges[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' placeholder="{{edge}}" required autofocus>
             {% endfor %}
+            {% if shape_data.shape == '332' %}
+                <input type="text" class="amount" name="2" id="2" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(1)' placeholder="ליפופים" required autofocus>
+            {% endif %}
             </td>
             <td>
             {% for ang in shape_data.angels %}

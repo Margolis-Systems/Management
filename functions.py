@@ -1,15 +1,17 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import main
 
 
-def ts(mode=""):
+def ts(mode="", days=0):
     if not mode:
-        return datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     elif mode == "file_name":
         return datetime.now().strftime('%d-%m-%Y_%H-%M-%S-%f')
     elif mode == 's':
         return datetime.now().strftime('%Y%m%d%H%M%S%f')[:16]
+    elif mode == 'html_date':
+        return (datetime.now()-timedelta(days=days)).strftime('%Y-%m-%d')
 
 
 def uniquify(path):

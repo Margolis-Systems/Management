@@ -81,6 +81,7 @@ def update_orders_total_weight():
 
 if __name__ == '__main__':
     # mongo_backup()
-    add_ang()
+    # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
+    mongo.delete_many('orders')

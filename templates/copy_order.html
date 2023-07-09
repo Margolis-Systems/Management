@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tzomet ERP</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<div class="form-floating">
+    <form name="choose_printer" id="copy_order" method=POST action="{{ url_for('copy_order') }}">
+        מספר הזמנה<br>
+        <input type="number" class="form-control" name="order_id" placeholder="מספר הזמנה" autofocus="autofocus" required>
+        כמות העתקים<br>
+        <input type="number" class="form-control" name="copies" min="1" value="1" placeholder="כמות עותקים">
+        <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="refreshWindow();">אישור</button>
+        <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
+        <input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label>
+    </form>
+</div>
+<script src="\static\js\shapes.js" ></script>
+</body>
+</html>

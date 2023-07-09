@@ -1,4 +1,5 @@
 import configs
+import functions
 import main
 import users
 import clients
@@ -19,23 +20,28 @@ def orders():
     if 'filter' in main.session['user_config']:
         if main.session['user_config']['filter']:
             query['info.type'] = {'$regex': main.session['user_config']['filter']}
+    defaults = {'from': functions.ts('html_date', 14), 'to': functions.ts('html_date')}
     if main.request.form:
         req_form = dict(main.request.form)
         for item in req_form:
-            if req_form[item]:
-                query[item] = {'$regex': req_form[item]}
+            if 'date' in item:
+                defaults['from'] = req_form['date_from']
+                defaults['to'] = req_form['date_to']
+                query['info.date_created'] = {'$gte': req_form['date_from'], '$lte': req_form['date_to']+'T23:59:59'}
+            else:
+                if req_form[item]:
+                    query[item] = {'$regex': req_form[item]}
     # Read all orders data with Info, mean that it's not including order rows
     orders_df = main.mongo.read_collection_df('orders', query=query)
-
     if orders_df.empty:
         if not main.request.form:
-            return main.render_template('orders.html', orders={}, display_items=[], dictionary={})
+            return main.render_template('orders.html', orders={}, display_items=[], dictionary={}, defaults={})
         return main.redirect('/orders')
     # normalize json to df
     info_df = pd.json_normalize(orders_df['info'])
-    info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%d-%m-%Y %H:%M:%S')
+    info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
     # add order id from main df
-    new_df = pd.concat([orders_df['order_id'], info_df], axis=1)
+    new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
     for item in main.configs.data_to_display['orders']:
         if item not in new_df.columns:
             new_df[item] = ""
@@ -48,7 +54,7 @@ def orders():
     dictionary = pages.get_dictionary(main.session['username'])
     return main.render_template('orders.html', orders=orders_info.to_dict('index'),
                                 display_items=main.configs.data_to_display['orders'],
-                                dictionary=dictionary)
+                                dictionary=dictionary, defaults=defaults)
 
 
 def new_order(client="", order_type=""):
@@ -104,6 +110,9 @@ def new_order_row():
     # Order peripheral data handling
     if 'shape_data' in req_form_data.keys():
         new_row = {'order_id': order_id, 'job_id': "0"}
+        # if req_form_data['shape_data'] == '332':
+        #     new_row.update({'shape_data': '332', '1': ''+req_form_data['1']})
+        # else:
         for item in req_form_data:
             if item.isdigit() or item == 'shape_data' or 'ang' in item:
                 new_row[item] = req_form_data[item]
@@ -203,7 +212,10 @@ def new_order_row():
                         new_row['shape_data'].append(temp_order_data[item])
                     elif 'ang_' in item:
                         new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
-                new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
+                if new_row['shape'] == '332':
+                    new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
+                else:
+                    new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
             else:
                 # Shape data not compatible with form data
                 print("Shape data not compatible with form data\n", main.session)
@@ -434,3 +446,19 @@ def gen_job_id(order_id):
         return "1"
     job_ids = job_ids_df['job_id'].astype(int).tolist()
     return str(int(max(job_ids)) + 1)
+
+
+def copy_order():
+    if main.request.form:
+        req_form = dict(main.request.form)
+        order_id = req_form['order_id']
+        copies = int(req_form['copies'])
+        for copy in list(range(copies)):
+            new_id = new_order_id()
+            order_data = list(main.mongo.read_collection_list('orders', {'order_id': order_id}))
+            for doc in order_data:
+                doc['order_id'] = new_id
+                main.mongo.insert_collection_one('orders', doc)
+        return '', 204
+    return main.render_template('/copy_order.html')
+

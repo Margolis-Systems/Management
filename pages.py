@@ -94,8 +94,22 @@ def shape_editor():
     defaults = {'edges': [], 'ang': []}
     if main.request.form:
         shape_data = {'edges': 0, 'shape': main.request.form['shape_data'], 'tot_len': 0}
-        for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
-            shape_data['tot_len'] += int(main.request.form[str(item)])
+        if main.request.form['shape_data'] != '332':
+            for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
+                shape_data['tot_len'] += int(main.request.form[str(item)])
+        else:
+            if 'x' in main.request.form['2'] or 'X' in main.request.form['2']:
+                loops = main.request.form['2'].replace('X','x')
+                loops = loops.split('x')
+                tot_l = 0
+                for _l in loops:
+                    if tot_l == 0:
+                        tot_l += int(_l)
+                    else:
+                        tot_l *= int(_l)
+            else:
+                tot_l = int(main.request.form['2'])
+            shape_data['tot_len'] = int(main.request.form['1']) * tot_l * 3.25
         orders.new_order_row()
     else:
         req_vals = list(main.request.values)

@@ -39,7 +39,9 @@ window.addEventListener('message', (event) => {
     shapeData.value = event.data.shp;
     formInput.value = event.data.shp;
     lengInput.value = event.data.len;
-    calc_weight();
+    if (event.data.shp != '332'){
+        calc_weight();
+    }
 });
 
 function confirmDel() {
