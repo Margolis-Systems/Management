@@ -358,3 +358,9 @@ class Bartender:
                         print_line += '~'
                 print_file.write(print_line + "\n")
         return file_dir
+
+
+class Docs:
+    @staticmethod
+    def print_doc(title, table_data):
+        return

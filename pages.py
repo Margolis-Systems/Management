@@ -253,3 +253,40 @@ def gen_file_id():
     if last_attach:
         new_id = int(last_attach['id']) + 1
     return str(new_id)
+
+
+def reports_page():
+    report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
+    report_data = []
+    report = ''
+    req_vals = dict(main.request.values)
+    # Report date handle
+    if main.request.form:
+        req_form = dict(main.request.form)
+        for item in req_form:
+            if 'date' in item:
+                report_date['from'] = req_form['date_from']
+                report_date['to'] = req_form['date_to']
+    # Report type handle
+    if 'report' in req_vals.keys():
+        report = req_vals['report']
+        if report == 'production':
+            query = {'timestamp': {'$gte': report_date['from'], '$lte': report_date['to']}}
+            if 'machine' in req_vals.keys():
+                query['macine'] = req_vals['machine']
+            if 'operator' in req_vals.keys():
+                query['username'] = req_vals['operator']
+            report_data = list(main.mongo.read_collection_list('machines', query))
+        elif report == 'orders':
+            query = {'timestamp': {'$gte': report_date['from'], '$lte': report_date['to']}}
+            if 'client_name' in req_vals.keys():
+                query['client_name'] = req_vals['client_name']
+            if 'username' in req_vals.keys():
+                query['username'] = req_vals['username']
+            report_data = list(main.mongo.read_collection_list('orders', query))
+    # Print
+    if 'print' in req_vals:
+        title = req_vals['print']
+        reports.Docs.print_doc(title, report_data)
+    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report)
+

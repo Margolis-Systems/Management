@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block body %}
+<table class="table table-striped" align="center" dir="rtl">
+    <tr>
+        <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
+        <td><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
+        <td><button onclick="location.href='/reports?report=clear'" type="button" class="btn btn-danger btn-block">איפוס</button></td>
+    </tr>
+    {% if report_data %}
+    <tr>
+        <form method=POST id="date_form" autocomplete="off" action="{{ url_for('orders_page') }}">
+            <input type="hidden" name="report" value="{{report}}">
+        <td>
+            <label>מיום
+            <input type="date" name="date_from" value="{{date.from}}" onchange="formSubmit('date_form');"></label>
+        </td>
+        <td>
+            <label>עד יום
+            <input type="date" name="date_to" value="{{date.to}}" onchange="formSubmit('date_form');"></label>
+        </td>
+        </form>
+        <td><button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" >הדפס</button></td>
+    </tr>
+    {% endif %}
+</table>
+{% if report_data %}
+<table class="table table-striped" align="center" dir="rtl">
+    <tr>
+        {% for item in report_data[0] %}
+        <td><b>{{item}}</b></td>
+        {% endfor %}
+    </tr>
+    {% for line in report_data %}
+    <tr>
+        {% for item in line %}
+        <td>{{line[item]}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+<script src="\static\js\shapes.js" ></script>
+{% endblock %}

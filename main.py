@@ -211,6 +211,11 @@ def user_config():
     return users.user_configs()
 
 
+@app.route('/reports', methods=['POST', 'GET'])
+def reports_page():
+    return pages.reports_page()
+
+
 '''
 @app.route('/mep', methods=['POST'])
 '''
