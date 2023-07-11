@@ -1,3 +1,4 @@
+import functions
 import main
 import bcrypt
 
@@ -17,7 +18,7 @@ def login():
                 resp.set_cookie('userhash', username_input)
                 return resp, 302
             else:
-                # TODO: log failed login
+                functions.log('login_fail', {'ip': main.request.remote_addr})
                 print('Failed to login from IP:', main.request.remote_addr)
     return main.render_template('login.html', msg=msg)
 
@@ -71,7 +72,6 @@ def clear():
 
 def user_configs():
     req_vals = dict(main.request.values)
-    print(req_vals)
     if req_vals:
         if 'filter' in req_vals:
             main.session['user_config']['filter'] = req_vals['filter']

@@ -49,7 +49,8 @@ def orders():
     sorter = {'NEW': 0, 'Processed': 1, 'Production': 2}
     orders_info['sorter'] = orders_info['status'].map(sorter)
     orders_info['status'] = 'order_status_' + orders_info['status'].astype(str)
-    orders_info['total_weight'] = orders_info['total_weight'].astype(int)
+    if orders_info['total_weight'].any():
+        orders_info['total_weight'] = orders_info['total_weight'].astype(int)
     orders_info.sort_values(by=['sorter', 'date_created'], ascending=[True, False], inplace=True)
     dictionary = pages.get_dictionary(main.session['username'])
     return main.render_template('orders.html', orders=orders_info.to_dict('index'),
@@ -63,6 +64,13 @@ def new_order(client="", order_type=""):
         return users.logout()
     if 'name' in main.request.form.keys() or client:
         if 'site' in main.request.form.keys() and 'sites_list' in main.session.keys():
+            if 'order_type' in main.request.form and 'order_id' in main.session.keys():
+                if main.request.form['order_type'] == main.session['order_id']:
+                    doc = {'info.costumer_name': main.request.form['name'],
+                           'info.costumer_id': main.mongo.read_collection_one('costumers', {'name': main.request.form['name']})['id'],
+                           'info.costumer_site': main.request.form['site']}
+                    main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists': True}}, doc, '$set')
+                    return main.redirect('/orders')
             if main.request.form['site'] in main.session['sites_list']:
                 main.session['sites_list'] = []
                 user = main.session['username']
@@ -255,12 +263,15 @@ def edit_order():
     if not order_data:
         return close_order()
     defaults = {'bar_type': 'מצולע'}
+    msg = ''
+    # if order_data['info']['status'] == 'order_status_canceled':
+    #     msg = main.mongo.read_collection_one()
     # Copy last element fix
     if order_data['order_rows']:
         if 'element' in order_data['order_rows'][0]:
             defaults['element'] = order_data['order_rows'][0]['element']
     return main.render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                                dictionary=page_data[2], rebar_data={}, defaults=defaults, total_weight=total_weight)
+                                dictionary=page_data[2], rebar_data={}, defaults=defaults, total_weight=total_weight, msg=msg)
 
 
 def get_order_data(order_id, job_id="", reverse=True):
@@ -275,7 +286,8 @@ def get_order_data(order_id, job_id="", reverse=True):
         order_data_df['status'] = 'order_status_' + order_data_df['status'].astype(str)
         # Data display fix
         if info['type'] == 'rebar':
-            order_data_df.rename(columns={'diam_x': 'diam', 'x_pitch': 'pitch'}, inplace=True)
+            order_data_df['diam'] = order_data_df['diam_x']
+            order_data_df['pitch'] = order_data_df['x_pitch']
     order_data = order_data_df.to_dict('index')
     rows = []
     for key in order_data:
@@ -284,6 +296,8 @@ def get_order_data(order_id, job_id="", reverse=True):
             rows.append(row_data)
     info['order_id'] = order_id
     info['status'] = 'order_status_' + info['status']
+    if 'total_weight' in info:
+        info['total_weight'] = round(info['total_weight'])
     info = OrderedDict(sorted(info.items(), key=lambda t: t[0]))
     rows.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return rows, info, additional
@@ -373,26 +387,53 @@ def change_order_status():
             job_id = ''
         update_order_status(main.request.form['status'], order_id, job_id)
         return '', 204
-    order_id = main.session['order_id']
     if req_vals:
-        order_id += '|'+req_vals['job_id']
+        if 'order_id' in req_vals:
+            order_id = req_vals['order_id']
+        else:
+            order_id = main.session['order_id']
+        if 'job_id' in req_vals:
+            order_id += '|'+req_vals['job_id']
+    else:
+        order_id = main.session['order_id']
     return main.render_template('change_order_status.html', order_id=order_id)
+
+
+def cancel_order():
+    user_group = users.validate_user()
+    if not user_group:
+        return users.logout()
+    elif user_group < 70:
+        return '', 204
+    order_id = main.session['order_id']
+    return main.render_template('cancel_order.html', order_id=order_id)
 
 
 def update_order_status(new_status, order_id, job_id=""):
     if job_id != "":
-        main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_id},
-                              {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
+        resp = main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_id},
+                                     {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
+        if resp.matched_count > 0:
+            functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
         rows, info, additional = get_order_data(order_id)
         for row in rows:
             if row['status'] != "Finished":
                 return
         update_order_status('Finished', order_id)
     else:
-        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.status': new_status, 'info.status_updated_by': main.session['username']}, '$set')
+        resp = main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}}, {'info.status':
+                                     new_status, 'info.status_updated_by': main.session['username']}, '$set')
         main.mongo.update_many('orders', {'order_id': order_id, 'info': {'$exists': False}},
                                {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
+        if 'reason' in main.request.form:
+            functions.log('cancel_order', main.request.form['reason'])
+            main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                                  {'info.cancel_reason': main.request.form['reason']}, '$set')
+        else:
+            main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                                  {'info.cancel_reason': ''}, '$unset')
+        if resp.matched_count > 0:
+            functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
 
 
 def close_order():
@@ -405,11 +446,26 @@ def close_order():
             main.mongo.delete_many('orders', {'order_id': main.session['order_id']})
         elif additional_func == 'delete_row':
             main.mongo.delete_many('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
+            fix_order_job_id()
             return main.redirect('/orders')
         elif additional_func == 'scan':
             return main.redirect('/scan')
     users.clear()
     return main.redirect('/orders')
+
+
+def fix_order_job_id():
+    job_list = list(main.mongo.read_collection_list('orders', {'order_id': main.session['order_id'],
+                                                          'info': {'$exists': False}}))
+    rows = len(job_list)
+    if job_list:
+        for job in job_list:
+            if int(job['job_id']) > int(main.session['order_id']):
+                print(job['job_id'])
+                main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'job_id': job['job_id']},
+                                      {'job_id': str(int(job['job_id']) - 1)}, '$set')
+        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists': True}},
+                              {'info.rows': str(rows)}, '$set')
 
 
 def calc_weight(diam, length, qnt):
@@ -437,7 +493,7 @@ def peripheral_orders(add_orders, order_id, job_id):
     weight_list = order_data['weight'].to_list()
     total_weight = sum(weight_list)
     main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                          {'info.total_weight': total_weight, 'info.rows': len(weight_list)}, '$set')
+                          {'info.total_weight': round(total_weight), 'info.rows': len(weight_list)}, '$set')
 
 
 def gen_job_id(order_id):

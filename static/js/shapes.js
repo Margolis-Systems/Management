@@ -150,10 +150,10 @@ weights_list = {
 
 
 function focusNext(inputIndex) {
-    if (event.keyCode === 16){
-        document.getElementById('submit').click();
-        return
-    }
+    //if (event.keyCode === 13 && event.shiftKey){
+    //    document.getElementById('submit').click();
+    //    return
+    //}
     inputNames = dtd_order;
     if (event.keyCode === 13){
         var safety = 0;
@@ -161,9 +161,10 @@ function focusNext(inputIndex) {
             inputIndex += 1;
             console.log(inputIndex)
             if (inputIndex >= inputNames.length){
-                inputIndex = 0;
+                //inputIndex = 0;
+                document.getElementById('submit').click();
+                return
             }
-            console.log(inputNames[inputIndex])
             if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){
                 inputName = inputNames[inputIndex];
                 break

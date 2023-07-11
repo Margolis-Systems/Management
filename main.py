@@ -138,6 +138,11 @@ def change_order_status():
     return orders.change_order_status()
 
 
+@app.route('/cancel_order', methods=['GET', 'POST'])
+def cancel_order():
+    return orders.cancel_order()
+
+
 @app.route('/copy_order', methods=['GET', 'POST'])
 def copy_order():
     return orders.copy_order()

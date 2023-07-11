@@ -26,7 +26,7 @@
             </td>
             <td>
             {% for ang in shape_data.angels %}
-                <input type="number" class="amount" name="ang_{{loop.index}}" id="ang_{{loop.index}}" value="{{defaults.ang[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0 + 5}})' placeholder="< {{ ang }}">
+                <input type="number" class="amount" name="ang_{{loop.index}}" id="ang_{{loop.index}}" value="{{defaults.ang[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0 + shape_data.edges|length}})' placeholder="< {{ ang }}">
             {% endfor %}
             </td>
         </tr>
@@ -75,8 +75,10 @@
 {% endif %}
 <script src="\static\js\shapes.js"></script>
 <script>
-datatodisp = JSON.parse('{"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "ang_1": 1, "ang_2": 1, "ang_3": 1, "ang_4": 1, "ang_5": 1, "ang_6": 1}');
-dtd_order = ['1', '2', '3', '4', '5', '6', '7', 'ang_1', 'ang_2', 'ang_3', 'ang_4', 'ang_5', 'ang_6'];
+// datatodisp = JSON.parse('{"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "ang_1": 1, "ang_2": 1, "ang_3": 1, "ang_4": 1, "ang_5": 1, "ang_6": 1}');
+// dtd_order = ['1', '2', '3', '4', '5', '6', '7', 'ang_1', 'ang_2', 'ang_3', 'ang_4', 'ang_5', 'ang_6'];
+datatodisp = JSON.parse('{{datatodisp|tojson}}');
+dtd_order = {{dtd_order|safe}}
 </script>
 </body>
 </html>

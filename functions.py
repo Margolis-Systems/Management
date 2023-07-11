@@ -23,6 +23,9 @@ def uniquify(path):
     return path
 
 
-def log(operation):
-    main.mongo.insert_collection_one('logs', {'username': main.session['username'],
-                                              'timestamp': ts(), 'operation': operation})
+def log(title, operation):
+    user = 'None'
+    if 'username' in main.session:
+        user = main.session['username']
+    log_data = {'username': user, 'timestamp': ts(), 'title': title, 'operation': operation}
+    main.mongo.insert_collection_one('logs', log_data)

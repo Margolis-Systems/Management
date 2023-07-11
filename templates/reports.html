@@ -4,11 +4,11 @@
     <tr>
         <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
         <td><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
+        <td><button onclick="location.href='/reports?report=status'" type="button" class="btn btn-primary btn-block">דוח סטטוס הודפס</button></td>
         <td><button onclick="location.href='/reports?report=clear'" type="button" class="btn btn-danger btn-block">איפוס</button></td>
     </tr>
-    {% if report_data %}
     <tr>
-        <form method=POST id="date_form" autocomplete="off" action="{{ url_for('orders_page') }}">
+        <form method=POST id="date_form" autocomplete="off" action="{{ url_for('reports_page') }}">
             <input type="hidden" name="report" value="{{report}}">
         <td>
             <label>מיום
@@ -19,9 +19,11 @@
             <input type="date" name="date_to" value="{{date.to}}" onchange="formSubmit('date_form');"></label>
         </td>
         </form>
-        <td><button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" >הדפס</button></td>
+        <td>
+        {% if report_data %}<button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" >הדפס</button>
+        {% endif %}
+        </td>
     </tr>
-    {% endif %}
 </table>
 {% if report_data %}
 <table class="table table-striped" align="center" dir="rtl">
@@ -40,4 +42,9 @@
 </table>
 {% endif %}
 <script src="\static\js\shapes.js" ></script>
+<script>
+function formSubmit(formName){
+    document.getElementById(formName).submit();
+}
+</script>
 {% endblock %}

@@ -5,6 +5,7 @@
         <td><button onclick="location.href='/new_order?regular'" type="button" class="btn btn-primary btn-block">הזמנת ברזל חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
+        <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block" disabled>הזמנת קלונסאות חדשה</button></td>
         <td><button onclick='openNewWindow("\copy_order")' type="button" class="btn btn-primary btn-block" >העתק הזמנה</button></td>
         <td>
             <form method=POST id="date_form" autocomplete="off" action="{{ url_for('orders_page') }}">
@@ -28,16 +29,16 @@
         </form>
         <td>סינון לפי:</td>
         <td>
-            <button onclick="location.href='/user_config?filter=regular';refreshWindow();">הזמנות ברזל</button>
+            <button onclick="location.href='/user_config?filter=regular';refresh();">הזמנות ברזל</button>
         </td>
         <td>
-            <button onclick="location.href='/user_config?filter=rebar';refreshWindow();">הזמנות רשת</button>
+            <button onclick="location.href='/user_config?filter=rebar';refresh();">הזמנות רשת</button>
         </td>
         <td>
-            <button onclick="location.href='/user_config?filter=R';refreshWindow();">ייצור רשת</button>
+            <button onclick="location.href='/user_config?filter=R';refresh();">ייצור רשת</button>
         </td>
         <td>
-            <button onclick="location.href='/user_config?filter=';refreshWindow();">איפוס</button>
+            <button onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
         </td>
     </tr>
 </table>
@@ -48,11 +49,12 @@
             <b>{{dictionary[item]}}</b>
         </td>
         {% endfor %}
+        <td width="5%"  style="outline: thin solid;text-align: center"></td>
     </tr>
     {% for order in orders %}
-    <tr ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'" bgcolor="{{dictionary.html_colors[orders[order].status]}}">
+    <tr bgcolor="{{dictionary.html_colors[orders[order].status]}}">
         {% for item in display_items %}
-        <td height="50" style="outline: thin solid;text-align: center">
+        <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'">
         {% if dictionary[orders[order][item]] %}
             {{dictionary[orders[order][item]]}}
         {% else %}
@@ -60,12 +62,13 @@
         {% endif %}
         </td>
         {% endfor %}
+        <td height="50" style="outline: thin solid;text-align: center"><button type="button" onclick='openNewWindow("\change_order_status?order_id={{orders[order]["order_id"]}}")'>שנה סטטוס</button></td>
     </tr>
     {% endfor %}
 </table >
 <script src="\static\js\shapes.js" ></script>
 <script>
-const refreshWindow = () => {
+const refresh = () => {
 setTimeout(function(){
 location.reload();
 }, 300);

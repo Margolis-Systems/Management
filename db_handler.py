@@ -112,14 +112,14 @@ class DBHandle:
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
-        collection.update_one(key, {query: doc}, upsert=upsert)
+        return collection.update_one(key, {query: doc}, upsert=upsert)
 
     @staticmethod
     def update_many(collect, key, doc, query, upsert=False, db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
-        collection.update_many(key, {query: doc}, upsert=upsert)
+        return collection.update_many(key, {query: doc}, upsert=upsert)
 
     @staticmethod
     def dump(path, collections=[], db_name=""):

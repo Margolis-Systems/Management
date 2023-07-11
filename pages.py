@@ -91,6 +91,8 @@ def jobs():
 def shape_editor():
     shape_data = {}
     shapes = {}
+    datatodisp = {}
+    dtd_order = []
     defaults = {'edges': [], 'ang': []}
     if main.request.form:
         shape_data = {'edges': 0, 'shape': main.request.form['shape_data'], 'tot_len': 0}
@@ -121,6 +123,12 @@ def shape_editor():
             shape_data = {'shape': req_vals[0], 'edges': list(range(1, main.configs.shapes[req_vals[0]]['edges'] + 1)),
                           'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
                           'angels': ang}
+            defaults['ang'] = ang
+            dtd_order = list(map(str, shape_data['edges']))
+            for _ang in range(1, len(shape_data['angels']) + 1):
+                dtd_order.append('ang_'+str(_ang))
+            for item in dtd_order:
+                datatodisp[item] = 1
         else:
             for shape in main.configs.shapes:
                 if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\
@@ -131,7 +139,8 @@ def shape_editor():
             job_data = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
             if job_data:
                 defaults = {'edges': job_data['shape_data'], 'ang': job_data['shape_ang']}
-    return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data, defaults=defaults)
+    return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data, defaults=defaults,
+                                datatodisp=datatodisp, dtd_order=dtd_order)
 
 
 def choose_printer():
@@ -161,12 +170,12 @@ def choose_printer():
             sub_type = req_vals[1]
         default_printer = main.mongo.read_collection_one('users', {'name': main.session['username']})
         if default_printer:
-            if print_type in default_printer['default_printer']:
-                default_printer = default_printer['default_printer'][print_type]
-            else:
-                default_printer = ''
             if print_type == 'page':
                 copies = 2
+            if print_type.replace('test_', '') in default_printer['default_printer']:
+                default_printer = default_printer['default_printer'][print_type.replace('test_', '')]
+            else:
+                default_printer = ''
         else:
             default_printer = ''
         printer_list = main.configs.printers[print_type.replace('test_', '')]
@@ -196,12 +205,14 @@ def scan():
     if order_id:
         job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if job:
+            print(job['status'])
             if job['status'] == 'Production':
                 status = "Start"
             elif job['status'] == "Start":
                 status = "Finished"
             else:
                 msg = job['status']
+                order_id = ''
         else:
             msg = "Not found"
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status)
@@ -278,12 +289,18 @@ def reports_page():
                 query['username'] = req_vals['operator']
             report_data = list(main.mongo.read_collection_list('machines', query))
         elif report == 'orders':
-            query = {'timestamp': {'$gte': report_date['from'], '$lte': report_date['to']}}
+            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             if 'client_name' in req_vals.keys():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
-            report_data = list(main.mongo.read_collection_list('orders', query))
+            print(query)
+            _report_data = list(main.mongo.read_collection_list('orders', query))
+            if _report_data:
+                for item in _report_data:
+                    item['info']['total_weight'] = int(item['info']['total_weight'])
+                    report_data.append(item['info'])
+            print(report_data)
     # Print
     if 'print' in req_vals:
         title = req_vals['print']

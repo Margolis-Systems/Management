@@ -24,7 +24,7 @@ class Images:
     def format_qr_data(data):
         formatted = 'BF2D@Hj @r' + data['order_id'] + '@i@p' + data['job_id']
         if 'length' in data.keys():
-            formatted += '@l' + str(data['length'])
+            formatted += '@l' + str(int(data['length'])*10)
         if 'quantity' in data.keys():
             formatted += '@n' + str(data['quantity'])
         if 'weight' in data.keys():
@@ -37,7 +37,7 @@ class Images:
             for item in range(len(data['shape_data'])):
                 if item > 0:
                     formatted += '@l'
-                formatted += str(data['shape_data'][item])
+                formatted += str(int(data['shape_data'][item])*10)
                 if 'shape_ang' in data.keys():
                     if item < len(data['shape_ang']):
                         formatted += '@w' + str(data['shape_ang'][item])
@@ -162,7 +162,7 @@ class Bartender:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
-                    if 'ק' in line['element'] and line['element'] not in element_buf:
+                    if 'ק' in line['element'] and line['element'] not in element_buf and 'label' in print_type:
                         kora.update(line)
                         for _row in rows:
                             if _row['element'] == line['element']:
@@ -208,18 +208,15 @@ class Bartender:
                             line['width_trim'] = '['+']['.join(row['x_length'])+']'
                         else:
                             line['width_trim'] = 250
-                    elif obj == 'pitch':
-                        line['x_pitch'] = row[obj].split('X')[0]
-                        line['y_pitch'] = row[obj].split('X')[0]
-                    elif '_pitch' in obj:
+                    elif '_pitch' in obj and not isinstance(row[obj], str) and not isinstance(row[obj], int):
                         line[obj] = ""
-                        if len(row[obj]) > 1:
-                            for pit in row[obj]:
-                                line[obj] += "(" + pit + ")"
-                        else:
-                            line[obj] += row[obj][0]
+                        for pit in row[obj]:
+                            line[obj] += "(" + pit + ")"
                     else:
-                        line[obj] = row[obj]
+                        if isinstance(line[obj], float):
+                            line[obj] = round(row[obj])
+                        else:
+                            line[obj] = row[obj]
                 for obj in info:
                     line[obj] = info[obj]
                 line['barcode_data'] = Images.format_qr_data(line)
@@ -308,7 +305,9 @@ class Bartender:
             table_rows = 3
             spec_sum_lines = math.ceil(len(special_sum) / table_rows)
             if spec_sum_lines:
-                template_row = {'temp_select': table_selector, 'tb30': int(total_weight)}
+                if disable_weight:
+                    total_weight = '---'
+                template_row = {'temp_select': table_selector, 'tb30': total_weight}
                 # Add total weight to summary
                 summary_data.append(template_row.copy())
                 table_selector = 4
