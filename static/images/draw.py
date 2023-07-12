@@ -54,7 +54,7 @@ def get_ang(shape_data):
 if __name__ == '__main__':
     # SIZE 200 X 60
     # INPUT
-    pos = [(15,30),(185,30)]
+    pos = [(160,5),(130,5),(130,50),(185,50),(185,15),(15,15),(15,50)]
     # pos = [(110, 10), (15, 10), (15, 50), (185, 50)]
-    name = '1'
+    name = '139'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')

@@ -60,7 +60,7 @@ def main_page():
             main.session['scale'] = cur
         return main.redirect('/scale')
     doc_list = []
-    if permission > 50:  # todo: config
+    if permission > 50:
         perm = True
         doc_df = main.mongo.read_collection_df_sort('documents', 'doc_id', 'Scaling',
                                                     {'$where': "this.lines.length > 0"}, 50).to_dict('index')
@@ -72,7 +72,7 @@ def main_page():
             doc_info['scale_start'] = doc_df[doc]['lines'][0]['timestamp']
             doc_info['scale_end'] = doc_df[doc]['lines'][-1]['timestamp']
             doc_list.append(doc_info)
-        doc_list.sort(key=itemgetter('scale_start'), reverse=True)
+        doc_list.sort(key=itemgetter('doc_id'), reverse=True)
     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
     return main.render_template('/scaling.html', info=info, user=main.session['username'], sites=sites, defaults={},
                                 dictionary=pages.get_dictionary(main.session['username']), doc_list=doc_list, perm=perm)
@@ -157,24 +157,29 @@ def print_scale():
     last_line = 0
     total_weight = 0
     lines_qnt = len(doc['lines'])
+    report_data = []
     i = 0
     # TODO: multi page
-    for line in range(lines_qnt):
-        l_st = str(line + 1)
-        bartender_format['line'+l_st] = l_st
-        bartender_format['weight'+l_st] = doc['lines'][line]['weight']
-        if 'description' in doc['lines'][line]:
-            bartender_format['ts'+l_st] = doc['lines'][line]['description']
-        else:
-            bartender_format['ts'+l_st] = "---"
-        bartender_format['product'+l_st] = doc['lines'][line]['product']
-        total_weight += int(doc['lines'][line]['weight'])
-        last_line = str(line + 2)
-    bartender_format['ts' + last_line] = "סהכ משקל:"
-    bartender_format['product' + last_line] = str(total_weight)
-    # print(bartender_format)
-    # ROMAN_container 'Page4'
-    reports.Bartender.bt_create_print_file(req['printer'], 'scaling_report', [bartender_format])
+    while i == 0:
+        new_line = bartender_format.copy()
+        for line in range(lines_qnt):
+            l_st = str(line + 1)
+            new_line['line'+l_st] = l_st
+            new_line['weight'+l_st] = doc['lines'][line]['weight']
+            if 'description' in doc['lines'][line]:
+                new_line['ts'+l_st] = doc['lines'][line]['description']
+            else:
+                new_line['ts'+l_st] = "---"
+            new_line['product'+l_st] = doc['lines'][line]['product']
+            total_weight += int(doc['lines'][line]['weight'])
+            last_line = str(line + 2)
+        if True:
+            new_line['ts' + last_line] = "סהכ משקל:"
+            new_line['product' + last_line] = str(total_weight)
+            report_data.append(new_line)
+            break
+        report_data.append(new_line)
+    reports.Bartender.bt_create_print_file(req['printer'], 'scaling_report', report_data)
 
 
 def calc_weight(req):
@@ -232,6 +237,8 @@ def delete_last():
 def scale_report():
     doc_id = list(main.request.values)[0]
     doc = main.mongo.read_collection_one('documents', {'doc_id': doc_id}, 'Scaling')
+    main.session['scale'] = {'doc_id': doc_id}
+    main.session.modified = True
     info = {}
     total_weight = 0
     show_in_info = ['order_id', 'costumer', 'driver', 'vehicle_id']

@@ -213,7 +213,7 @@ class Bartender:
                         for pit in row[obj]:
                             line[obj] += "(" + pit + ")"
                     else:
-                        if isinstance(line[obj], float):
+                        if isinstance(row[obj], float):
                             line[obj] = round(row[obj])
                         else:
                             line[obj] = row[obj]

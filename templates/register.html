@@ -3,16 +3,55 @@
 <div class="container">
     <div class="row">
         <div class="col-md-4 col-md-offset-4">
+            <p>משתמש חדש</p>
+            <br>
             <form method=POST action="{{ url_for('register') }}">
                 <div class="form-group">
-                    <label for="exampleInputEmail1">Username</label>
-                    <input type="text" class="form-control" name="username" placeholder="Username">
+                    <label>שם משתמש \ Username</label>
+                    <input type="text" class="form-control" name="username" placeholder="Username" required>
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputPassword1">Password</label>
-                    <input type="password" class="form-control" name="pass" placeholder="Password">
+                    <label>סיסמה \ Password</label>
+                    <input type="password" class="form-control" name="pass" placeholder="Password" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Register</button>
+                <div class="form-group">
+                    <label>שפה</label>
+                    <input list="lang" class="form-control" name="lang" required>
+                    <datalist id="lang">
+                        <option value="he">עברית</option>
+                        <option value="ru">רוסית</option>
+                        <option value="ar">ערבית</option>
+                    </datalist>
+                 </div>
+                <button type="submit" class="btn btn-primary btn-block">משתמש חדש</button>
+                <div class="errmsg">
+                 {{msg}}
+                </div>
+            </form>
+            <br>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+            <p>עדכן משתמש</p>
+            <br>
+            <form method=POST action="{{ url_for('update_user') }}">
+                <div class="form-group">
+                    <label>שם משתמש \ Username</label>
+                    <input type="text" class="form-control" name="username" placeholder="Username" required>
+                </div>
+                <div class="form-group">
+                    <label>סיסמה \ Password</label>
+                    <input type="password" class="form-control" name="pass" placeholder="Password" required>
+                </div>
+                <div class="form-group">
+                    <label>שפה</label>
+                    <input list="lang" class="form-control" name="lang" required>
+                    <datalist id="lang">
+                        <option value="he">עברית</option>
+                        <option value="ru">רוסית</option>
+                        <option value="ar">ערבית</option>
+                    </datalist>
+                 </div>
+                <button type="submit" class="btn btn-primary btn-block">עדכן</button>
                 <div class="errmsg">
                  {{msg}}
                 </div>

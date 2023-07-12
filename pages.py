@@ -205,7 +205,6 @@ def scan():
     if order_id:
         job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if job:
-            print(job['status'])
             if job['status'] == 'Production':
                 status = "Start"
             elif job['status'] == "Start":
@@ -260,7 +259,7 @@ def download_attachment():
 
 def gen_file_id():
     new_id = 1
-    last_attach = main.mongo.read_collection_last('attachments', 'timestamp')
+    last_attach = main.mongo.read_collection_last('attachments', 'id')
     if last_attach:
         new_id = int(last_attach['id']) + 1
     return str(new_id)
@@ -294,16 +293,18 @@ def reports_page():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
-            print(query)
             _report_data = list(main.mongo.read_collection_list('orders', query))
             if _report_data:
                 for item in _report_data:
                     item['info']['total_weight'] = int(item['info']['total_weight'])
                     report_data.append(item['info'])
-            print(report_data)
     # Print
     if 'print' in req_vals:
         title = req_vals['print']
         reports.Docs.print_doc(title, report_data)
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report)
 
+
+def machines_page():
+    # todo: complete
+    return main.render_template('machines.html', machine_list=[1,2,3,4], users_list=['a','b','c'])

@@ -40,11 +40,25 @@ def register():
         if existing_user is None:
             main.mongo.insert_collection_one(main.configs.users_collection, {'name': main.request.form['username'].lower(), 'password':
                                             bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), bcrypt.gensalt()),
-                                        'group': 0, 'lang': 'he'})
-            main.session['username'] = main.request.form['username']
-            return main.redirect(main.url_for('index'))
-        message = "That username already exists!"
+                                        'group': 1, 'lang': main.request.form['lang']})
+            # main.session['username'] = main.request.form['username']
+            # return main.redirect(main.url_for('index'))
+        else:
+            message = "That username already exists!"
     return main.render_template('register.html', msg=message)
+
+
+def edit_user():
+    req_form = dict(main.request.form)
+    doc = {}
+    if 'password' in req_form:
+        if req_form['password']:
+            doc['password'] = bcrypt.hashpw(req_form['pass'].encode('utf-8'), bcrypt.gensalt())
+    if 'lang' in req_form:
+        if req_form['lang']:
+            doc['lang'] = req_form['lang']
+    main.mongo.update_one('users', {'name': req_form['username']}, doc)
+    return '', 204
 
 
 def validate_user():

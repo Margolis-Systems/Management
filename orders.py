@@ -199,10 +199,10 @@ def new_order_row():
         y_bars = {'length': new_row['length'],
                   'qnt': int(((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity'])),
                   'diam': new_row['diam_y']}
-        new_row['description'] = "V250X" + str(int(int(new_row['length']) / pitch)) + "X" + new_row[
-            'diam_x'] + "WBX" + str(pitch) + \
-                                 " H600X" + str(int((int(new_row['width']) - 10) / pitch + 1)) + "X" + new_row[
-                                     'diam_y'] + "WBX" + str(pitch)
+        # new_row['description'] = "V250X" + str(int(int(new_row['length']) / pitch)) + "X" + new_row[
+        #     'diam_x'] + "WBX" + str(pitch) + \
+        #                          " H600X" + str(int((int(new_row['width']) - 10) / pitch + 1)) + "X" + new_row[
+        #                              'diam_y'] + "WBX" + str(pitch)
         new_row['weight'] = round(
             float(main.configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
         if 'הזמנת_ייצור' in new_row:
@@ -293,6 +293,8 @@ def get_order_data(order_id, job_id="", reverse=True):
     for key in order_data:
         if job_id == "" or order_data[key]['job_id'] == job_id:
             row_data = order_data[key]
+            if 'weight' in row_data:
+                row_data['weight'] = round(row_data['weight'])
             rows.append(row_data)
     info['order_id'] = order_id
     info['status'] = 'order_status_' + info['status']
@@ -417,7 +419,7 @@ def update_order_status(new_status, order_id, job_id=""):
             functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
         rows, info, additional = get_order_data(order_id)
         for row in rows:
-            if row['status'] != "Finished":
+            if row['status'] != "order_status_Finished":
                 return
         update_order_status('Finished', order_id)
     else:
@@ -514,6 +516,10 @@ def copy_order():
             order_data = list(main.mongo.read_collection_list('orders', {'order_id': order_id}))
             for doc in order_data:
                 doc['order_id'] = new_id
+                if 'info' in doc:
+                    doc['info']['status'] = 'NEW'
+                else:
+                    doc['status'] = 'NEW'
                 main.mongo.insert_collection_one('orders', doc)
         return '', 204
     return main.render_template('/copy_order.html')

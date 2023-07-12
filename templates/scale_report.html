@@ -44,6 +44,15 @@
             <td colspan="3"><button type="button" class="btn btn-primary btn-block" onclick="closeWindow();">סגור</button></td>
         </tr>
     </table>
-<script src="\static\js\shapes.js" ></script>
+<script src="\static\js\shapes.js" ></script><!--
+<script>
+function printSubmit() {
+  let text;
+  let copies = prompt("מספר העתקים:", "3");
+  if (copies != null || copies != "") {
+    location.href='/print_scale?printer=Page4'
+  }
+}
+</script>-->
 </body>
 </html>

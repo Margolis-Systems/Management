@@ -79,9 +79,23 @@ def update_orders_total_weight():
         mongo.update_one('orders', {'order_id': order}, {'info.total_weight': int(total_weight)}, '$set')
 
 
+def mesh_description():
+    cat = mongo.read_collection_one('data_lists',{'name': 'rebar_catalog'})
+    for item in cat['data']:
+        diam = cat["data"][item]["diam_x"]
+        len = cat["data"][item]["length"]
+        wid = cat["data"][item]["width"]
+        pit = cat["data"][item]["y_pitch"]
+        cat['data'][item]['description'] = f'רשת סטנדרט קוטר {diam} {len}*{wid} חור {pit}*{pit}'
+        print(cat['data'][item]['description'])
+        mongo.update_one('data_lists', {'name':'rebar_catalog'}, cat, '$set')
+
+
 if __name__ == '__main__':
-    mongo_backup()
+    # mongo_backup()
     # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
-    mongo.delete_many('orders')
+    # order_id = 10
+    # mongo.delete_many('orders', {'order_id': str(order_id)})
+    mesh_description()

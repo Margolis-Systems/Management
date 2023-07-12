@@ -36,8 +36,10 @@ def index():
         login_user = mongo.read_collection_one(configs.users_collection, {'name': session['username']})
         if login_user['group'] > 10:
             return render_template('main.html', user=user)
-        else:
+        elif login_user['group'] == 2:
             return redirect('/scale')
+        else:
+            return redirect('/scan')
     return render_template('login.html')
 
 
@@ -54,6 +56,11 @@ def logout():
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     return users.register()
+
+
+@app.route('/update_user', methods=['POST', 'GET'])
+def update_user():
+    return users.edit_user()
 
 
 @app.route('/orders', methods=['POST', 'GET'])
@@ -175,7 +182,7 @@ def tare_scale():
 def print_scale():
     scale.print_scale()
     users.clear()
-    return scale.main_page()
+    return '', 204
 
 
 @app.route('/new_scale', methods=['POST', 'GET'])
@@ -219,6 +226,11 @@ def user_config():
 @app.route('/reports', methods=['POST', 'GET'])
 def reports_page():
     return pages.reports_page()
+
+
+@app.route('/machines', methods=['POST', 'GET'])
+def machines():
+    return pages.machines_page()
 
 
 '''

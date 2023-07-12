@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block body %}
+{% if machine_list %}
+<table class="table table-condensed" align="center" dir="rtl">
+    <tr>
+        <td><b>שם מכונה</b></td>
+        <td><b>בחר מפעיל</b></td>
+    </tr>
+    {% for machine in machine_list %}
+    <tr>
+        <td>{{machine}}</td>
+        <td>
+            <form>
+                <input type="hidden" name="machine" value="{{machine}}">
+                <input list="users">
+                <datalist id="users">
+                    {% for user in users_list %}
+                    <option value="{{user}}">{{user}}</option>
+                    {% endfor %}
+                </datalist>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+Access denied
+{% endif %}
+{% endblock %}
