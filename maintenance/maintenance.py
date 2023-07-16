@@ -73,9 +73,7 @@ def update_orders_total_weight():
     order_data_df = mongo.read_collection_df('orders', query={'info': {'$exists': False}, 'job_id': {'$ne': "0"}})
     orders = orders_df['order_id'].to_list()
     for order in orders:
-        print(order)
         total_weight = sum(order_data_df[order_data_df['order_id'] == order]['weight'].to_list())
-        print(total_weight)
         mongo.update_one('orders', {'order_id': order}, {'info.total_weight': int(total_weight)}, '$set')
 
 
@@ -94,8 +92,8 @@ def mesh_description():
 if __name__ == '__main__':
     # mongo_backup()
     # add_ang()
-    # update_orders_total_weight()
+    update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
     # order_id = 10
     # mongo.delete_many('orders', {'order_id': str(order_id)})
-    mesh_description()
+    # mesh_description()

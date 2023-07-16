@@ -159,9 +159,7 @@ function focusNext(inputIndex) {
         var safety = 0;
         while (safety < 20){
             inputIndex += 1;
-            console.log(inputIndex)
             if (inputIndex >= inputNames.length){
-                //inputIndex = 0;
                 document.getElementById('submit').click();
                 return
             }

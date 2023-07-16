@@ -1,3 +1,5 @@
+import main
+
 import orders
 import functions
 import configs
@@ -111,12 +113,13 @@ class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type, disable_weight=False):
         # Format data
-        rows, info, additional = orders.get_order_data(order_id, reverse=False)
+        rows, info, additional = orders.get_order_data(order_id, disable_weight=disable_weight, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
         element_buf = []
         if 'rebar' in info['type'] and 'page' in print_type:
             info['temp_select'] = 1
+            print(info)
             print_data.append(info)
             total_weight = 0
             table_cells = 7
@@ -137,15 +140,25 @@ class Bartender:
                     template_row["tb" + str(5 + i)] = row['quantity']
                     if rows[n]['mkt'] != "2005020000":
                         template_row["tb" + str(3 + i)] = "רשת סטנדרט"
-                        template_row["tb" + str(6 + i)] = float(configs.rebar_catalog[row['mkt']]['unit_weight'])
+                        if disable_weight:
+                            template_row["tb" + str(6 + i)] = '---'
+                        else:
+                            template_row["tb" + str(6 + i)] = float(configs.rebar_catalog[row['mkt']]['unit_weight'])
                     else:
                         # template_row["tb" + str(3 + i)] = "רשת מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         if int(row['diam_x']) >= 14 or int(row['diam_y']) >= 14:
                             template_row["tb" + str(3 + i)] = template_row["tb" + str(3 + i)].replace('דקה', 'עבה')
-                        template_row["tb" + str(6 + i)] = int(row['weight'] / int(row['quantity']))
-                    template_row["tb" + str(7 + i)] = row['weight']
-                    total_weight += row['weight']
+                        if disable_weight:
+                            template_row["tb" + str(6 + i)] = '---'
+                        else:
+                            template_row["tb" + str(6 + i)] = int(row['weight'] / int(row['quantity']))
+                    if disable_weight:
+                        template_row["tb" + str(7 + i)] = '---'
+                        total_weight = '---'
+                    else:
+                        template_row["tb" + str(7 + i)] = row['weight']
+                        total_weight += row['weight']
                 print_data.append(template_row.copy())
             print_data.append({'temp_select': 3, 'tb1': total_weight})
         else:
@@ -188,6 +201,9 @@ class Bartender:
     @staticmethod
     def gen_summary_data(rows, info, disable_weight):
         info['temp_select'] = 1
+        if disable_weight:
+            if 'total_weight' in info:
+                info['total_weight'] = '---'
         summary_data = []
         if 'rebar' in info['type']:
             for row in rows:
@@ -231,7 +247,10 @@ class Bartender:
                     row['bar_type'] = "מצולע"
                 # Summary data
                 quantity = int(row['quantity'])
-                total_weight += row['weight']
+                if disable_weight:
+                    total_weight = '---'
+                else:
+                    total_weight += row['weight']
                 if row['diam'] in table_data.keys():
                     table_data[row['diam']]['weight'] += row['weight']
                     table_data[row['diam']]['length'] += int(row['length']) * quantity
@@ -305,8 +324,6 @@ class Bartender:
             table_rows = 3
             spec_sum_lines = math.ceil(len(special_sum) / table_rows)
             if spec_sum_lines:
-                if disable_weight:
-                    total_weight = '---'
                 template_row = {'temp_select': table_selector, 'tb30': total_weight}
                 # Add total weight to summary
                 summary_data.append(template_row.copy())
@@ -334,7 +351,8 @@ class Bartender:
                  + printer + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        # file_dir = file_dir.replace('.txt', '.tmp')
+        if main.session['username'] in ['baruch', 'Baruch']:
+            file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"

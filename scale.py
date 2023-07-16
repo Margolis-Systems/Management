@@ -18,6 +18,9 @@ def main_page():
         if main.session['scale']:
             # Current scaling info
             cur = main.session['scale']
+            if 'site' not in cur:
+                main.session['scale'] = {}
+                return main.redirect('/scale')
             cur_weight = get_weight(cur['site'])
             cur_scale = main.mongo.read_collection_one('documents', {'doc_id': cur['doc_id']}, 'Scaling')
             if not cur_scale:
@@ -58,6 +61,7 @@ def main_page():
         cur = form_request(req_form)
         if cur:
             main.session['scale'] = cur
+            main.session.modified = True
         return main.redirect('/scale')
     doc_list = []
     if permission > 50:

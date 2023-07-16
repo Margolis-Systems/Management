@@ -45,19 +45,21 @@ div {
     {% endfor %}
     </tr>
 </table>
-<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
+<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td>
             <button onclick='openNewWindow("\order_files")' type="button" class="btn btn-primary btn-block">קבצים מצורפים</button>
         </td>
         <td colspan="3">
-            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}">
+            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" onchange="this.form.submit()" value="{{ order_data.info['comment'] }}">
         </td>
         <td colspan="100">
-            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" value="{{ order_data.info['date_delivery'] }}">
+            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onchange="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
         </td>
     </tr>
+</form>
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
     <tr>
         <td><button type=submit id="submit" class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
         <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
