@@ -238,6 +238,11 @@ def machines():
     return pages.machines_page()
 
 
+@app.route('/file_listener', methods=['POST', 'GET'])
+def file_listener():
+    return pages.file_listener()
+
+
 '''
 @app.route('/mep', methods=['POST'])
 '''

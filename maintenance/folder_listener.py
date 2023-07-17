@@ -21,7 +21,7 @@ class Watcher:
                 time.sleep(5)
         except:
             self.observer.stop()
-            print ("Error")
+            print("Error")
 
         self.observer.join()
 
@@ -36,7 +36,7 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
             # Take any action here when a file is first created.
-            print ("Received created event - %s." % event.src_path)
+            print("Received created event - %s." % event.src_path)
 
         elif event.event_type == 'modified':
             # Taken any action here when a file is modified.
@@ -47,7 +47,7 @@ class Handler(FileSystemEventHandler):
                     shutil.copy(event.src_path, dist)
                 except Exception as e:
                     print(e)
-            print ("Received modified event - %s." % event.src_path)
+            print("Received modified event - %s." % event.src_path)
 
 
 if __name__ == '__main__':

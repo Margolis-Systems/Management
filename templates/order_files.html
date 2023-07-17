@@ -30,11 +30,16 @@
     {% endfor %}
     <form method=POST autocomplete="off" action="{{ url_for('order_file_upload') }}" enctype = "multipart/form-data">
     <tr>
-        <td colspan="5">
-            <input type="file" name="file" class="form-control" required/>
-            <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit">אישור</button>
-            <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
-        </td>
+        <td colspan="5"><input type="file" name="file" class="form-control" required/></td>
+    </tr>
+    <tr>
+        <td colspan="5"><button class="w-100 btn btn-lg btn-success" id="submit" type="submit">אישור</button></td>
+    </tr>
+    <tr>
+        <td colspan="5"><button type="button" class="w-100 btn btn-lg btn-warning" id="scanner" onclick="runScanner();">סריקה</button></td>
+    </tr>
+    <tr>
+        <td colspan="5"><button type="button" class="w-100 btn btn-lg btn-danger" onclick="closeWindow();">סגור</button></td>
     </tr>
     <tr>
         <td colspan="5"><textarea name="description" class="form-control" placeholder="תיאור"></textarea></td>

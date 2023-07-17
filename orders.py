@@ -104,19 +104,7 @@ def new_order(client="", order_type=""):
 def new_order_row():
     order_id = main.session['order_id']
     req_form_data = main.request.form
-    job_id = ''
     temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
-    if 'job_id' in main.session:
-        job_id = main.session['job_id']
-    if temp_order_data:
-        if 'job_id' in temp_order_data:
-            if temp_order_data['job_id'] == job_id:
-                job_id = ''
-    if job_id:
-        temp = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
-        temp_order_data = {'order_id': temp['order_id'], 'job_id': '0', 'shape_data': temp['shape']}
-        for el in range(len(temp['shape_data'])):
-            temp_order_data[str(el+1)] = temp['shape_data'][el]
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
     # Order comment
     if 'comment_hid' in req_form_data:
@@ -522,8 +510,8 @@ def reorder_job_id(job_id='x'):
                 main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
                                       {'job_id': str(index)}, '$set')
                 index += 1
-        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.rows': str(rows)}, '$set')
+    main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                          {'info.rows': str(rows)}, '$set')
 
 
 def calc_weight(diam, length, qnt):

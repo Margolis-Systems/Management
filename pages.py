@@ -226,27 +226,30 @@ def order_files():
     msg = ""
     if main.request.method == 'POST':
         try:
-            attach_dir = os.getcwd() + '\\attachments\\orders'
-            f = main.request.files['file']
-            # file_dir = os.path.join(main.app.instance_path, attach_dir, order_id)
-            file_dir = os.path.join(attach_dir, order_id)
-            if not os.path.exists(file_dir):
-                os.makedirs(file_dir)
-            # file_name = main.secure_filename(f.filename)
-            file_name = f.filename
-            file = os.path.join(file_dir, file_name)
-            if os.path.exists(file):
-                file = functions.uniquify(file)
-            f.save(file)
-            doc = {'name': file_name, 'timestamp': functions.ts(), 'user': main.session['username'], 'id': gen_file_id(),
-                   'description': main.request.form['description'], 'link': file, 'order_id': order_id}
-            main.mongo.insert_collection_one('attachments', doc)
+            save_file(order_id, main.request.files['file'], main.request.form['description'])
             return main.redirect('/order_files')
         except Exception as e:
             # print(e)
             msg = "Internal Error"
     files = main.mongo.read_collection_list('attachments', {'order_id': order_id})
     return main.render_template('/order_files.html', files=files, message=msg)
+
+
+def save_file(order_id, f, description):
+    attach_dir = os.getcwd() + '\\attachments\\orders'
+    # f = main.request.files['file']
+    file_dir = os.path.join(attach_dir, order_id)
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
+    # file_name = main.secure_filename(f.filename)
+    file_name = f.filename
+    file = os.path.join(file_dir, file_name)
+    if os.path.exists(file):
+        file = functions.uniquify(file)
+    f.save(file)
+    doc = {'name': file_name, 'timestamp': functions.ts(), 'user': main.session['username'], 'id': gen_file_id(),
+           'description': description, 'link': file, 'order_id': order_id}
+    main.mongo.insert_collection_one('attachments', doc)
 
 
 def download_attachment():
@@ -308,3 +311,10 @@ def reports_page():
 def machines_page():
     # todo: complete
     return main.render_template('machines.html', machine_list=[1,2,3,4], users_list=['a','b','c'])
+
+
+def file_listener():
+    main.mongo.upsert_collection_one('file_listener', {'username': main.session['username']},
+                                     {'username': main.session['username'], 'timestamp': functions.ts(),
+                                     'order_id': main.session['order_id']})
+    return '', 204

@@ -172,3 +172,20 @@ function focusNext(inputIndex) {
         document.getElementById(inputName).focus();
     }
 }
+
+function runScanner(){
+try{
+    fetch("/file_listener", {
+      method: "POST"
+    });
+    }catch (error){
+    window.alert("Server Error", error);
+}
+try{
+    fetch("http://localhost:5000/scanner", {
+      method: "POST"
+    }).catch(error => window.alert("Client Error", error))
+}catch (error){
+    window.alert("Client Error", error);
+}
+};
