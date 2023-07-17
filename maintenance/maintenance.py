@@ -111,6 +111,6 @@ if __name__ == '__main__':
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
     # order_id = 10
-    # mongo.delete_many('orders', {'order_id': str(order_id)})
+    mongo.delete_many('orders', {})
     # mesh_description()
-    reorder_job_id()
+    # reorder_job_id()

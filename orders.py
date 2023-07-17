@@ -217,14 +217,14 @@ def new_order_row():
                         new_row['shape_data'].append(temp_order_data[item])
                     elif 'ang_' in item:
                         new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
-                if new_row['shape'] == '332':
-                    new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
-                else:
-                    new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
+            if new_row['shape'] == '332':
+                new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
             else:
-                # Shape data not compatible with form data
-                print("Shape data not compatible with form data\n", main.session)
-                return
+                new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
+            # else:
+            #     # Shape data not compatible with form data
+            #     print("Shape data not compatible with form data\n", main.session)
+            #     return
         else:
             # No shape data
             print("No shape data\n", main.session)
@@ -332,7 +332,7 @@ def edit_order_data():
     # Read all data of this order
     rows, info, additional = get_order_data(order_id, job_id, reverse=False)
     if not info:
-        return {}, []
+        return {}, [], 0
     if info['type'] == 'R':
         keys_to_display = main.configs.data_to_display['new_row_regular']
     else:
@@ -355,13 +355,16 @@ def edit_order_data():
 def edit_row():
     if not users.validate_user():
         return users.logout()
+    req_vals = dict(main.request.values)
     if main.request.method == 'GET':
         # req_vals = list(main.request.values)
         # job_id = ''
         # if req_vals:
         #     job_id = req_vals[0]
         #     print(job_id)
-        main.session['order_id'], main.session['job_id'] = list(main.request.values)[0].split('job')
+        main.session['order_id'] = req_vals['order_id']
+        if 'job_id' in req_vals:
+            main.session['job_id'] = req_vals['job_id']
         order_data, page_data, total_weight = edit_order_data()
         if order_data:
             order_data['dtd_order'] = list(order_data['data_to_display'].keys())
@@ -373,12 +376,16 @@ def edit_row():
                             defaults[item + "_" + str(li - 1)] = order_data['order_rows'][0][item][li]
                         else:
                             defaults[item] = order_data['order_rows'][0][item][li]
-                else:
+                elif 'job_id' in req_vals:
                     defaults[item] = order_data['order_rows'][0][item]
                     defaults[item] = order_data['order_rows'][0][item]
+                elif 'addbefore' in req_vals:
+                    defaults['addbefore'] = req_vals['addbefore']
             return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
                                         lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
+    if 'addbefore' in req_vals:
+        reorder_job_id(req_vals['addbefore'])
     return main.redirect('/orders')
 
 
@@ -494,22 +501,26 @@ def fix_order_job_id():  # DO NOT USE - OLD FUNCTION WITH BUGS
                               {'info.rows': str(rows)}, '$set')
 
 
-def reorder_job_id(job_id='x'):
+def reorder_job_id(job_id=''):
     order_id = main.session['order_id']
     job_list = list(main.mongo.read_collection_list('orders', {'order_id': order_id, 'info': {'$exists': False},
                                                                'job_id': {'$ne': '0'}}))
     rows = len(job_list)
     index = 1
     if job_list:
+        if job_id:
+            main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[-1]['job_id']},
+                                  {'job_id': str(rows+1)}, '$set')
         for job in job_list:
-            if job['job_id'] != '0':
+            if job['job_id'] != '0' and index <= rows:
                 if job['job_id'] == job_id:
-                    main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[-1]['job_id']},
-                                          {'job_id': str(index)}, '$set')
                     index += 1
                 main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
-                                      {'job_id': str(index)}, '$set')
+                                        {'job_id': str(index)}, '$set')
                 index += 1
+        if job_id:
+            main.mongo.update_one('orders', {'order_id': order_id, 'job_id': str(rows+1)},
+                                  {'job_id': job_id}, '$set')
     main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                           {'info.rows': str(rows)}, '$set')
 
@@ -567,17 +578,4 @@ def copy_order():
                 main.mongo.insert_collection_one('orders', doc)
         return '', 204
     return main.render_template('/copy_order.html')
-
-
-def add_row_with_index():
-    if main.request.method == 'POST':
-        new_order_row()
-        job_id = main.request.form['job_id']
-        reorder_job_id(job_id)
-        return '', 204
-    req_vals = list(main.request.values)
-    job_id = ''
-    if req_vals:
-        job_id = req_vals[0]
-    return main.render_template('')
 

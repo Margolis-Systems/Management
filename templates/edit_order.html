@@ -105,11 +105,11 @@ div {
     {% for row in order_data.order_rows %}
     {% if row['job_id'] != "0" %}
     {% if order_data.info.status == "order_status_NEW" %}
-    <tr ondblclick="location.href='/edit_row?{{row['order_id']}}job{{row['job_id']}}'">
+    <tr ondblclick="location.href='/edit_row?order_id={{row['order_id']}}&job_id={{row['job_id']}}'">
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")'>
     {% endif %}
-        <td><button>הוסף</button></td>
+        <td>{% if order_data.info.status == "order_status_NEW" %}<button onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button>{% endif %}</td>
         {% for item in order_data.data_to_display %}
         <td>
             {{ row[item] }}

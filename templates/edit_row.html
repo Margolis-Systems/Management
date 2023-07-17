@@ -33,7 +33,7 @@ div {
     {% endfor %}
     </tr>
 </table>
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_row') }}">
+<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_row') }}?addbefore={{defaults['addbefore']}}">
 {% if order_data.include %}
     {% include order_data.include %}
 {% endif %}
