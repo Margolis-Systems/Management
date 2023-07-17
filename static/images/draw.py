@@ -51,10 +51,18 @@ def get_ang(shape_data):
     return ang
 
 
+def print_shapes_name():
+    with open('C:\\Server\\lists\\shapes.json', 'r', encoding='utf-8') as shapes_json:
+        shapes = json.load(shapes_json)
+    print(list(shapes.keys()))
+
+
 if __name__ == '__main__':
+    # print_shapes_name()
+
     # SIZE 200 X 60
     # INPUT
-    pos = [(160,5),(130,5),(130,50),(185,50),(185,15),(15,15),(15,50)]
+    pos = [(90,20),(50,10),(40,30),(100,55),(160,30),(150,10),(110,20)]
     # pos = [(110, 10), (15, 10), (15, 50), (185, 50)]
-    name = '139'
+    name = '24'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')

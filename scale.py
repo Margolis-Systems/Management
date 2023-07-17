@@ -14,49 +14,51 @@ def main_page():
     info = []
     perm = False
     req_form = dict(main.request.form)
+    scale = ''
     if 'scale' in main.session.keys():  # Info entered
-        if main.session['scale']:
-            # Current scaling info
-            cur = main.session['scale']
-            if 'site' not in cur:
-                main.session['scale'] = {}
+        scale = main.session['scale']
+    if scale:
+        # Current scaling info
+        cur = main.session['scale']
+        if 'site' not in cur:
+            main.session['scale'] = {}
+            return main.redirect('/scale')
+        cur_weight = get_weight(cur['site'])
+        cur_scale = main.mongo.read_collection_one('documents', {'doc_id': cur['doc_id']}, 'Scaling')
+        if not cur_scale:
+            cur_scale = []
+        else:
+            cur_scale = cur_scale['lines']
+        # Add new line to report
+        if 'product' in req_form:
+            weight = calc_weight(req_form)
+            if weight:
+                new_line = weight
+                new_line['description'] = ''
+                if req_form['length']:
+                    new_line['description'] += ' א:' + req_form['length']
+                if req_form['diam']:
+                    new_line['description'] += ' ק:' + req_form['diam']
+                if req_form['quantity']:
+                    new_line['description'] += ' כ:' + req_form['quantity']
+                if not new_line['description']:
+                    new_line['description'] = '---'
+                new_line['barcode'] = ''
+                doc = {'order_id': ''}
+                if req_form['barcode']:
+                    decoded = reports.Images.decode_qr(req_form['barcode'])
+                    if decoded:
+                        doc['order_id'] = decoded['order_id']
+                        new_line['barcode'] = 'Order: ' + decoded['order_id'] + '   Job: ' + decoded['job_id']
+                cur_scale.append(new_line)
+                for item in cur:
+                    if isinstance(cur[item], str):
+                        doc[item] = cur[item]
+                doc['lines'] = cur_scale
+                main.mongo.upsert_collection_one('documents', {'doc_id': cur['doc_id']}, doc, 'Scaling')
                 return main.redirect('/scale')
-            cur_weight = get_weight(cur['site'])
-            cur_scale = main.mongo.read_collection_one('documents', {'doc_id': cur['doc_id']}, 'Scaling')
-            if not cur_scale:
-                cur_scale = []
-            else:
-                cur_scale = cur_scale['lines']
-            # Add new line to report
-            if 'product' in req_form:
-                weight = calc_weight(req_form)
-                if weight:
-                    new_line = weight
-                    new_line['description'] = ''
-                    if req_form['length']:
-                        new_line['description'] += ' א:' + req_form['length']
-                    if req_form['diam']:
-                        new_line['description'] += ' ק:' + req_form['diam']
-                    if req_form['quantity']:
-                        new_line['description'] += ' כ:' + req_form['quantity']
-                    if not new_line['description']:
-                        new_line['description'] = '---'
-                    new_line['barcode'] = ''
-                    doc = {'order_id': ''}
-                    if req_form['barcode']:
-                        decoded = reports.Images.decode_qr(req_form['barcode'])
-                        if decoded:
-                            doc['order_id'] = decoded['order_id']
-                            new_line['barcode'] = 'Order: ' + decoded['order_id'] + '   Job: ' + decoded['job_id']
-                    cur_scale.append(new_line)
-                    for item in cur:
-                        if isinstance(cur[item], str):
-                            doc[item] = cur[item]
-                    doc['lines'] = cur_scale
-                    main.mongo.upsert_collection_one('documents', {'doc_id': cur['doc_id']}, doc, 'Scaling')
-                    return main.redirect('/scale')
-            product_types = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
-            info = [cur, product_types, cur_weight, cur_scale]
+        product_types = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
+        info = [cur, product_types, cur_weight, cur_scale]
     elif req_form:  # Enter info
         cur = form_request(req_form)
         if cur:
@@ -253,3 +255,18 @@ def scale_report():
         total_weight += float(line['weight'])
     return main.render_template('/scale_report.html', doc=doc['lines'], info=info, total=int(total_weight),
                                 dictionary=pages.get_dictionary(main.session['username']))
+
+
+def delete_report_row(index=-1):
+    permission = users.validate_user()
+    if not permission:
+        return users.logout()
+    if index == -1:
+        if len(list(main.request.values)) > 0:
+            index = int(list(main.request.values)[0])
+    doc_id = main.session['scale']['doc_id']
+    doc = main.mongo.read_collection_one('documents', {'doc_id': doc_id}, 'Scaling')
+    if doc:
+        del doc['lines'][index]
+        main.mongo.update_one('documents', {'doc_id': doc_id}, doc, '$set', db_name='Scaling')
+    return '', 204

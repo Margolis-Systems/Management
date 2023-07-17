@@ -47,14 +47,12 @@ div {
     <tr>
         <td><button type=submit id="submit" class="btn btn-primary btn-block" >עדכן</button></td>
         <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>
-        <td><button onclick="location.href='\close?delete_row'" type="button" class="btn btn-danger btn-block" >מחק שורה</button></td>
+        <td><button onclick="location.href='\close?delete_row';this.disabled=true;" type="button" class="btn btn-danger btn-block" >מחק שורה</button></td>
         <td></td>
         <td></td>
         <td></td>
-    </tr><!--
-</form>
-<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
-   --> <tr>
+    </tr>
+    <tr>
         {% for item in order_data.data_to_display %}
         {% if dictionary[item] %}
         {% set name = dictionary[item] %}

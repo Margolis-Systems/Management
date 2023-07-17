@@ -198,12 +198,17 @@ def scaling_pick_crane():
 
 @app.route('/scale_delete_last', methods=['POST', 'GET'])
 def scale_delete_last():
-    return scale.delete_last()
+    return scale.delete_report_row(-1)
 
 
 @app.route('/scale_report', methods=['POST', 'GET'])
 def scale_report():
     return scale.scale_report()
+
+
+@app.route('/delete_report_row', methods=['POST', 'GET'])
+def delete_report_row():
+    return scale.delete_report_row()
 
 
 @app.route('/dl_post', methods=['POST', 'GET'])

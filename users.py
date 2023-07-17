@@ -57,7 +57,7 @@ def edit_user():
     if 'lang' in req_form:
         if req_form['lang']:
             doc['lang'] = req_form['lang']
-    main.mongo.update_one('users', {'name': req_form['username']}, doc)
+    main.mongo.update_one('users', {'name': req_form['username']}, doc, '$set')
     return '', 204
 
 

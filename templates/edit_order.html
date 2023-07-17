@@ -84,6 +84,7 @@ div {
 <table class="table table-striped" dir="rtl" align="center">
 {% endif %}
     <tr>
+        <td></td>
         {% for item in order_data.data_to_display %}
         {% if dictionary[item] %}
         {% set name = dictionary[item] %}
@@ -97,6 +98,7 @@ div {
     </tr>
     {% if order_data.info.status == "order_status_NEW" %}
     <tr>
+        <td></td>
         {% include 'input_types.html'%}
     </tr>
     {% endif %}
@@ -107,6 +109,7 @@ div {
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")'>
     {% endif %}
+        <td><button>הוסף</button></td>
         {% for item in order_data.data_to_display %}
         <td>
             {{ row[item] }}

@@ -27,12 +27,14 @@
             {% for item in doc[0] %}
             <td><b>{{dictionary[item]}}</b></td>
             {% endfor %}
+            <td></td>
         </tr>
         {% for line in doc %}
         <tr>
             {% for item in line %}
             <td>{{line[item]}}</td>
             {% endfor %}
+            <td><button onclick="location.href='/delete_report_row?{{loop.index0}}';setTimeout('window.location.reload()',1000);">מחק שקילה</button></td>
         </tr>
         {% endfor %}
         <tr>

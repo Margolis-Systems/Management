@@ -125,8 +125,8 @@ def shape_editor():
                           'angels': ang}
             defaults['ang'] = ang
             dtd_order = list(map(str, shape_data['edges']))
-            for _ang in range(1, len(shape_data['angels']) + 1):
-                dtd_order.append('ang_'+str(_ang))
+            # for _ang in range(1, len(shape_data['angels']) + 1):
+            #     dtd_order.append('ang_'+str(_ang))
             for item in dtd_order:
                 datatodisp[item] = 1
         else:

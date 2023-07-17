@@ -89,11 +89,28 @@ def mesh_description():
         mongo.update_one('data_lists', {'name':'rebar_catalog'}, cat, '$set')
 
 
+def reorder_job_id():
+    order_id = '41'  # main.session['order_id']
+    job_list = list(mongo.read_collection_list('orders', {'order_id': order_id,
+                                                          'info': {'$exists': False}}))
+    rows = len(job_list)
+    index = 1
+    if job_list:
+        for job in job_list:
+            if job['job_id'] != '0':
+                mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
+                                      {'job_id': str(index)}, '$set')
+                index += 1
+        mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                              {'info.rows': str(rows)}, '$set')
+
+
 if __name__ == '__main__':
     # mongo_backup()
     # add_ang()
-    update_orders_total_weight()
+    # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
     # order_id = 10
     # mongo.delete_many('orders', {'order_id': str(order_id)})
     # mesh_description()
+    reorder_job_id()
