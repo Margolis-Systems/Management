@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 {% block body %}
 <table class="table table-striped" align="center" dir="rtl">
-    <tr>
-        <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
+    <tr class="d-print-none">
+        <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block" disabled>דוח ייצור</button></td>
         <td><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
         <td><button onclick="location.href='/reports?report=status'" type="button" class="btn btn-primary btn-block">דוח סטטוס הודפס</button></td>
         <td><button onclick="location.href='/reports?report=clear'" type="button" class="btn btn-danger btn-block">איפוס</button></td>
@@ -20,7 +20,7 @@
         </td>
         </form>
         <td>
-        {% if report_data %}<button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" >הדפס</button>
+        {% if report_data %}<button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" disabled>הדפס</button>
         {% endif %}
         </td>
     </tr>
@@ -29,13 +29,29 @@
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
         {% for item in report_data[0] %}
-        <td><b>{{item}}</b></td>
+        {% if dictionary[item] %}
+        {% set name = dictionary[item] %}
+        {% else %}
+        {% set name = item %}
+        {% endif %}
+        <td>
+            <b>{{ name }}</b>
+        </td>
         {% endfor %}
     </tr>
     {% for line in report_data %}
     <tr>
         {% for item in line %}
-        <td>{{line[item]}}</td>
+        <td>
+            {% if line['order_id'] == '' %}
+            <b>
+            {% endif %}
+            {% if dictionary[line[item]] %}
+                {{dictionary[line[item]]}}
+            {% else %}
+                {{ line[item] }}
+            {% endif %}
+        </td>
         {% endfor %}
     </tr>
     {% endfor %}

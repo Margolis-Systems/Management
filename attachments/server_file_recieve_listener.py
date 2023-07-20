@@ -5,11 +5,11 @@ import os
 import pymongo
 from datetime import datetime, timedelta
 
+db = pymongo.MongoClient('localhost')['ERP']
+coll = db['file_listener']
 
 class Watcher:
-    DIRECTORY_TO_WATCH = "H:\\NetCode"
-
-    # dist_dir = "C:\\listener"
+    DIRECTORY_TO_WATCH = "H:\\web_scan"
 
     def __init__(self):
         self.observer = Observer()
@@ -37,13 +37,25 @@ class Handler(FileSystemEventHandler):
             return None
         elif event.event_type == 'created':
             # Take any action here when a file is first created.
-            print("Received created event - %s." % event.src_path)
+            filename = os.path.basename(event.src_path)
+            if filename[-4:] == '.pdf':
+                username = filename.replace('.pdf', '')
+                Handler.save_file(username, event.src_path)
         # elif event.event_type == 'modified':
             # Taken any action here when a file is modified.
 
     @staticmethod
-    def save_file(username, order_id, f, description):
-        attach_dir = os.getcwd() + '\\attachments\\orders'
+    def save_file(username, f, description=''):
+        attach_dir = 'C:\\Server\\attachments\\orders'
+        temp = mongo.read_collection_one('file_listener', {'username': username})
+        if 'order_id' in temp:
+            if temp['timestamp'] < (datetime.now() - timedelta(minutes=2)):
+                print('outdated')
+                return
+            order_id = temp['order_id']
+        else:
+            print(username, ' :user not found')
+            return
         # f = main.request.files['file']
         file_dir = os.path.join(attach_dir, order_id)
         if not os.path.exists(file_dir):
@@ -54,13 +66,15 @@ class Handler(FileSystemEventHandler):
         if os.path.exists(file):
             file = Handler.uniquify(file)
         f.save(file)
-        doc = {'name': file_name, 'timestamp': Handler.ts(), 'user': username, 'id': gen_file_id(),
+        doc = {'name': file_name, 'timestamp': Handler.ts(), 'user': username, 'id': Handler.gen_file_id(),
                'description': description, 'link': file, 'order_id': order_id}
-        mongo.insert_collection_one('attachments', doc)
+        db['attachments'].insert_one(doc)
 
     @staticmethod
     def gen_file_id():
         new_id = 1
+        # query[sort_by] = {'$exists': True}
+        dic = db['attachments'].find_one({'id': {'$exists': True}}, {'_id': False}, sort=[(sort_by, -1)])
         last_attach = mongo.read_collection_last('attachments', 'id')
         if last_attach:
             new_id = int(last_attach['id']) + 1

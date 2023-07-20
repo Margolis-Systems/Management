@@ -106,11 +106,19 @@ def reorder_job_id():
 
 
 if __name__ == '__main__':
-    # mongo_backup()
+    mongo_backup()
     # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
     # order_id = 10
-    mongo.delete_many('orders', {})
+    # mongo.delete_many('orders', {})
     # mesh_description()
     # reorder_job_id()
+    jobs = mongo.read_collection_list('orders',{'info':{'$exists':False},'shape_data':{'$exists':True}, 'job_id':{'$ne':'0'}})
+    for job in jobs:
+        t = 0
+        for l in job['shape_data']:
+            t += int(l)
+        if job['length'] != str(t):
+            print(job['order_id'], job['job_id'])
+

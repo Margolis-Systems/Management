@@ -168,6 +168,8 @@ def scaling():
 
 @app.route('/scaling_weight', methods=['POST', 'GET'])
 def scaling_weight():
+    if 'scale' not in main.session:
+        return {}
     cur_weight = scale.get_weight(main.session['scale']['site'])
     return {'ts1': cur_weight[0], 'weight1': cur_weight[1], 'ts2': cur_weight[2], 'weight2': cur_weight[3]}
 

@@ -64,10 +64,20 @@
 </form>
 <script>
   var intervalID = setInterval(update_values,2000);
+  const isObjectEmpty = (objectName) => {
+  return (
+    objectName &&
+    Object.keys(objectName).length === 0 &&
+    objectName.constructor === Object
+  );
+};
   function update_values() {
   var data
         $.getJSON('/scaling_weight', function(data) {
         $('#result').text(data);
+        if (Object.keys(data).length === 0){
+        window.location.reload();
+        }
         ts1 = document.getElementById('timestamp1');
         ts2 = document.getElementById('timestamp2');
         weight1 = document.getElementById('weight1');

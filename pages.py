@@ -1,9 +1,13 @@
+import base64
+
 import functions
 import main
 import users
 import reports
 import orders
 import os
+import pandas as pd
+import pages
 
 
 def jobs_list(order_type='regular'):
@@ -138,7 +142,8 @@ def shape_editor():
         if main.session['job_id']:
             job_data = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
             if job_data:
-                defaults = {'edges': job_data['shape_data'], 'ang': job_data['shape_ang']}
+                if 'shape_data' in job_data:
+                    defaults = {'edges': job_data['shape_data'], 'ang': job_data['shape_ang']}
     return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data, defaults=defaults,
                                 datatodisp=datatodisp, dtd_order=dtd_order)
 
@@ -222,47 +227,65 @@ def get_defaults():
 
 
 def order_files():
-    order_id = main.session['order_id']
+    description = ""
+    if 'description' in main.request.form:
+        description = main.request.form['description']
+    if 'order_id' in main.session:
+        order_id = main.session['order_id']
+    else:
+        order_id = '0'
     msg = ""
     if main.request.method == 'POST':
         try:
-            save_file(order_id, main.request.files['file'], main.request.form['description'])
+            save_file(order_id, main.request.files['file'], description)
             return main.redirect('/order_files')
         except Exception as e:
-            # print(e)
+            print(e)
             msg = "Internal Error"
     files = main.mongo.read_collection_list('attachments', {'order_id': order_id})
-    return main.render_template('/order_files.html', files=files, message=msg)
+    return main.render_template('/order_files.html', files=files, message=msg, order_id=order_id)
 
 
 def save_file(order_id, f, description):
+    file_name = f.filename
+    if 'username' in main.session:
+        username = main.session['username']
+    else:
+        username = file_name.replace('.pdf','')
+    if order_id == '0':
+        scanner = file_name.replace('.pdf', '') + '_scanner'
+        temp = main.mongo.read_collection_one('attachments', {'name': scanner})
+        order_id = temp['order_id']
+        main.mongo.delete_many('attachments', {'name': scanner})
     attach_dir = os.getcwd() + '\\attachments\\orders'
     # f = main.request.files['file']
     file_dir = os.path.join(attach_dir, order_id)
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
     # file_name = main.secure_filename(f.filename)
-    file_name = f.filename
     file = os.path.join(file_dir, file_name)
     if os.path.exists(file):
         file = functions.uniquify(file)
     f.save(file)
-    doc = {'name': file_name, 'timestamp': functions.ts(), 'user': main.session['username'], 'id': gen_file_id(),
+    doc = {'name': file_name, 'timestamp': functions.ts(), 'user': username, 'id': gen_file_id(),
            'description': description, 'link': file, 'order_id': order_id}
+    # if order_id == '0':
+    #     scanner = file_name.replace('.pdf', '') + '_scanner'
+    #     temp = main.mongo.read_collection_one('attachments', {'name': scanner})
+    #     doc['order_id'] = temp['order_id']
+    #     main.mongo.update_one('attachments', {'name': scanner}, doc, '$set')
+    #     return
     main.mongo.insert_collection_one('attachments', doc)
 
 
 def download_attachment():
-    attach_dir = os.getcwd() + '\\attachments\\orders'
-    order_id = main.session['order_id']
-    file_name = main.mongo.read_collection_one('attachments', {'id': list(main.request.values)[0]})['name']
-    file = os.path.join(attach_dir, order_id, file_name)
+    file = main.mongo.read_collection_one('attachments', {'id': list(main.request.values)[0]})['link']
     return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=True)
 
 
 def gen_file_id():
     new_id = 1
-    last_attach = main.mongo.read_collection_last('attachments', 'id')
+    last_attach = main.mongo.read_collection_last('attachments', 'timestamp')
     if last_attach:
         new_id = int(last_attach['id']) + 1
     return str(new_id)
@@ -291,21 +314,94 @@ def reports_page():
                 query['username'] = req_vals['operator']
             report_data = list(main.mongo.read_collection_list('machines', query))
         elif report == 'orders':
-            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
+            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'},'info.status':{'$ne':'canceled'}}
+            query['info.costumer_name'] = {'$nin':['טסטים \ בדיקות','צומת ברזל']}
             if 'client_name' in req_vals.keys():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
-            _report_data = list(main.mongo.read_collection_list('orders', query))
-            if _report_data:
-                for item in _report_data:
-                    item['info']['total_weight'] = int(item['info']['total_weight'])
-                    report_data.append(item['info'])
+            # Read all orders data with Info, mean that it's not including order rows
+            orders_df = main.mongo.read_collection_df('orders', query=query)
+            if orders_df.empty:
+                print('report empty')
+            else:
+                # normalize json to df
+                info_df = pd.json_normalize(orders_df['info'])
+                info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
+                # add order id from main df
+                new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
+                new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
+                new_df['status'] = 'order_status_' + new_df['status'].astype(str)
+                new_df.sort_values('costumer_name',inplace=True)
+                _report_data = new_df.to_dict('records')
+                temp_total_weight = 0
+                global_total_weight = new_df['total_weight'].sum()
+                last_client = _report_data[0]['costumer_name']
+                template_row = {}
+                for item in _report_data[0]:
+                    template_row[item] = ''
+                template_row['costumer_name'] = 'סהכ ללקוח'
+                for row in _report_data:
+                    if row['costumer_name'] == last_client:
+                        temp_total_weight += row['total_weight']
+                    else:
+                        template_row['total_weight'] = str(temp_total_weight)
+                        report_data.append(template_row.copy())
+                        temp_total_weight = row['total_weight']
+                        last_client = row['costumer_name']
+                    report_data.append(row)
+                template_row['total_weight'] = temp_total_weight
+                report_data.append(template_row.copy())
+                template_row['costumer_name'] = 'סהכ כללי'
+                template_row['total_weight'] = global_total_weight
+                report_data.append(template_row.copy())
+        elif report == 'status':
+            query = {'info.status': 'Processed', 'info.type': 'regular'}
+            query['info.costumer_name'] = {'$nin': ['טסטים \ בדיקות','צומת ברזל']}
+            if 'client_name' in req_vals.keys():
+                query['client_name'] = req_vals['client_name']
+            if 'username' in req_vals.keys():
+                query['username'] = req_vals['username']
+            # Read all orders data with Info, mean that it's not including order rows
+            orders_df = main.mongo.read_collection_df('orders', query=query)
+            if orders_df.empty:
+                print('report empty')
+            else:
+                # normalize json to df
+                info_df = pd.json_normalize(orders_df['info'])
+                info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
+                # add order id from main df
+                new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
+                new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
+                new_df['status'] = 'order_status_' + new_df['status'].astype(str)
+                new_df.sort_values('costumer_name',inplace=True)
+                _report_data = new_df.to_dict('records')
+                temp_total_weight = 0
+                global_total_weight = new_df['total_weight'].sum()
+                last_client = _report_data[0]['costumer_name']
+                template_row = {}
+                for item in _report_data[0]:
+                    template_row[item] = ''
+                template_row['costumer_name'] = 'סהכ ללקוח'
+                for row in _report_data:
+                    if row['costumer_name'] == last_client:
+                        temp_total_weight += row['total_weight']
+                    else:
+                        template_row['total_weight'] = temp_total_weight
+                        report_data.append(template_row.copy())
+                        temp_total_weight = row['total_weight']
+                        last_client = row['costumer_name']
+                    report_data.append(row)
+                template_row['total_weight'] = temp_total_weight
+                report_data.append(template_row.copy())
+                template_row['costumer_name'] = 'סהכ כללי'
+                template_row['total_weight'] = global_total_weight
+                report_data.append(template_row.copy())
     # Print
     if 'print' in req_vals:
         title = req_vals['print']
         reports.Docs.print_doc(title, report_data)
-    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report)
+    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, dictionary=pages.get_dictionary(main.session['username']))
 
 
 def machines_page():
@@ -313,8 +409,7 @@ def machines_page():
     return main.render_template('machines.html', machine_list=[1,2,3,4], users_list=['a','b','c'])
 
 
-def file_listener():
-    main.mongo.upsert_collection_one('file_listener', {'username': main.session['username']},
-                                     {'username': main.session['username'], 'timestamp': functions.ts(),
-                                     'order_id': main.session['order_id']})
+def file_listener():  # NON RELEVANT
+    scanner = main.mongo.read_collection_one('users',{'name': main.session['username']})['default_scanner']
+    main.mongo.upsert_collection_one('attachments',{'name':scanner},{'name':scanner, 'order_id': main.session['order_id']})
     return '', 204

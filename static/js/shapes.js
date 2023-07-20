@@ -173,7 +173,7 @@ function focusNext(inputIndex) {
     }
 }
 
-function runScanner(){
+function runScanner(order_id){
 try{
     fetch("/file_listener", {
       method: "POST"
@@ -182,10 +182,11 @@ try{
     window.alert("Server Error", error);
 }
 try{
-    fetch("http://localhost:5000/scanner", {
+    fetch("http://localhost:5000/scanner?"+order_id, {
       method: "POST"
-    }).catch(error => window.alert("Client Error", error))
+    });
 }catch (error){
     window.alert("Client Error", error);
 }
+window.location.reload();
 };

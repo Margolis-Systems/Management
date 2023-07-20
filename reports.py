@@ -103,8 +103,8 @@ class Images:
                         decode['weight'] = item[1:]
                     elif item[0] == 'd':
                         decode['diam'] = item[1:]
-                    elif item[0] == 'g':
-                        print("Shape_data")
+                    # elif item[0] == 'g':
+                    #     print("Shape_data")
             return decode
         return {}
 
@@ -119,7 +119,6 @@ class Bartender:
         element_buf = []
         if 'rebar' in info['type'] and 'page' in print_type:
             info['temp_select'] = 1
-            print(info)
             print_data.append(info)
             total_weight = 0
             table_cells = 7
@@ -186,7 +185,7 @@ class Bartender:
                         kora['barcode_data'] = ''
                         element_buf.append(line['element'])
                         print_data.append(kora)
-                print_data.append(line)
+                print_data.append(line.copy())
         if disable_weight:
             for print_line in range(len(print_data)):
                 for print_item in print_data[print_line]:
@@ -284,7 +283,7 @@ class Bartender:
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
-                if int(row['length']) > 16000:
+                if int(row['length']) > 1600:
                     if 'ברזל_ארוך' not in special_sum.keys():
                         special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
                     special_sum['ברזל_ארוך']['qnt'] += quantity
