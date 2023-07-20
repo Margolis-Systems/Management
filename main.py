@@ -124,6 +124,11 @@ def download_attachment():
     return pages.download_attachment()
 
 
+@app.route('/delete_attachment', methods=['POST', 'GET'])
+def delete_attachment():
+    return pages.delete_attachment()
+
+
 @app.route('/clients', methods=['POST', 'GET'])
 def clients_page():
     users.clear()

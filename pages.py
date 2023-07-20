@@ -413,3 +413,10 @@ def file_listener():  # NON RELEVANT
     scanner = main.mongo.read_collection_one('users',{'name': main.session['username']})['default_scanner']
     main.mongo.upsert_collection_one('attachments',{'name':scanner},{'name':scanner, 'order_id': main.session['order_id']})
     return '', 204
+
+
+def delete_attachment():
+    if not users.validate_user():
+        return users.logout()
+    main.mongo.delete_many('attachments', {'id': list(main.request.values)[0]})
+    return order_files()

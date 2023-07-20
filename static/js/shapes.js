@@ -188,5 +188,4 @@ try{
 }catch (error){
     window.alert("Client Error", error);
 }
-window.location.reload();
 };

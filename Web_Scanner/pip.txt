@@ -1,0 +1,5 @@
+c:
+cd C:\Users\peerli\AppData\Local\Programs\Python\Python311\Scripts
+pip.exe install Flask
+pip.exe install wia_scan
+pip.exe install requests

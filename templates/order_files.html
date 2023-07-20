@@ -18,6 +18,7 @@
         <td>נשמר על ידי</td>
         <td>תיאור</td>
         <td></td>
+        <td></td>
     </tr>
     {% for file in files %}
     <tr>
@@ -26,23 +27,24 @@
         <td>{{ file.user }}</td>
         <td>{{ file.description }}</td>
         <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="location.href='\download_attachment?{{ file.id }}'" >הורד</button></td>
+        <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="location.href='\delete_attachment?{{ file.id }}'" >מחק</button></td>
     </tr>
     {% endfor %}
     <form method=POST autocomplete="off" action="{{ url_for('order_file_upload') }}" enctype = "multipart/form-data">
     <tr>
-        <td colspan="5"><input type="file" name="file" class="form-control" required/></td>
+        <td colspan="10"><input type="file" name="file" class="form-control" required/></td>
     </tr>
     <tr>
-        <td colspan="5"><button class="w-100 btn btn-lg btn-success" id="submit" type="submit">אישור</button></td>
+        <td colspan="10"><button class="w-100 btn btn-lg btn-success" id="submit" type="submit">אישור</button></td>
     </tr>
     <tr>
-        <td colspan="5"><button type="button" class="w-100 btn btn-lg btn-warning" id="scanner" onclick="runScanner({{order_id}});">סריקה</button></td>
+        <td colspan="10"><button type="button" class="w-100 btn btn-lg btn-warning" id="scanner" onclick="runScanner({{order_id}});">סריקה</button></td>
     </tr>
     <tr>
-        <td colspan="5"><button type="button" class="w-100 btn btn-lg btn-danger" onclick="closeWindow();">סגור</button></td>
+        <td colspan="10"><button type="button" class="w-100 btn btn-lg btn-danger" onclick="closeWindow();">סגור</button></td>
     </tr>
     <tr>
-        <td colspan="5"><textarea name="description" class="form-control" placeholder="תיאור"></textarea></td>
+        <td colspan="10"><textarea name="description" class="form-control" placeholder="תיאור"></textarea></td>
     </tr>
     </form>
 </table>
