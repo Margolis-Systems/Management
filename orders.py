@@ -453,6 +453,8 @@ def update_order_status(new_status, order_id, job_id=""):
                                   {'info.cancel_reason': ''}, '$unset')
         if resp.matched_count > 0:
             functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
+            if new_status == 'Processed':
+                functions.send_sms()
 
 
 def close_order():
@@ -500,13 +502,18 @@ def reorder_job_id(job_id=''):
     order_id = main.session['order_id']
     job_list = list(main.mongo.read_collection_list('orders', {'order_id': order_id, 'info': {'$exists': False},
                                                                'job_id': {'$ne': '0'}}))
+    job_list.sort(key=lambda k: int(k['job_id']))
+
     rows = len(job_list)
     index = 1
     if job_list:
+        if job_list[0]['job_id'] != '1':
+            job_list.sort(key=lambda k: int(k['job_id']), reverse=True)
         if job_id:
             main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[-1]['job_id']},
                                   {'job_id': str(rows+1)}, '$set')
         for job in job_list:
+            print(job)
             if job['job_id'] != '0' and index <= rows:
                 if job['job_id'] == job_id:
                     index += 1

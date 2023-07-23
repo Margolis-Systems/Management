@@ -39,7 +39,8 @@ class Images:
             for item in range(len(data['shape_data'])):
                 if item > 0:
                     formatted += '@l'
-                formatted += str(int(data['shape_data'][item])*10)
+                if isinstance(data['shape_data'][item], int):
+                    formatted += str(int(data['shape_data'][item])*10)
                 if 'shape_ang' in data.keys():
                     if item < len(data['shape_ang']):
                         formatted += '@w' + str(data['shape_ang'][item])
@@ -174,17 +175,18 @@ class Bartender:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
-                    if 'ק' in line['element'] and line['element'] not in element_buf and 'label' in print_type:
-                        kora.update(line)
-                        for _row in rows:
-                            if _row['element'] == line['element']:
-                                kora['z15'] += 1
-                                kora['z16'] += _row['weight']
-                        kora['z16'] = int(kora['z16'])
-                        # todo: barcode DATA
-                        kora['barcode_data'] = ''
-                        element_buf.append(line['element'])
-                        print_data.append(kora)
+                    if len(line['element']) > 0:
+                        if line['element'][0] == 'ק' and line['element'] not in element_buf and 'label' in print_type:
+                            kora.update(line)
+                            for _row in rows:
+                                if _row['element'] == line['element']:
+                                    kora['z15'] += 1
+                                    kora['z16'] += _row['weight']
+                            kora['z16'] = int(kora['z16'])
+                            # todo: barcode DATA
+                            kora['barcode_data'] = ''
+                            element_buf.append(line['element'])
+                            print_data.append(kora)
                 print_data.append(line.copy())
         if disable_weight:
             for print_line in range(len(print_data)):

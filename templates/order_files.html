@@ -21,14 +21,17 @@
         <td></td>
     </tr>
     {% for file in files %}
+    {% if file.timestamp %}
     <tr>
         <td>{{ file.name }}</td>
         <td>{{ file.timestamp }}</td>
         <td>{{ file.user }}</td>
         <td>{{ file.description }}</td>
-        <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="location.href='\download_attachment?{{ file.id }}'" >הורד</button></td>
+        <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="location.href='\download_attachment?doc_id={{ file.id }}'" >הורד</button></td>
+        <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="openNewWindow(location.href='\download_attachment?doc_id={{ file.id }}&show=True')" >הצג</button></td>
         <td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="location.href='\delete_attachment?{{ file.id }}'" >מחק</button></td>
     </tr>
+    {% endif %}
     {% endfor %}
     <form method=POST autocomplete="off" action="{{ url_for('order_file_upload') }}" enctype = "multipart/form-data">
     <tr>

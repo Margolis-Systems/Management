@@ -279,8 +279,12 @@ def save_file(order_id, f, description):
 
 
 def download_attachment():
-    file = main.mongo.read_collection_one('attachments', {'id': list(main.request.values)[0]})['link']
-    return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=True)
+    req_vals = dict(main.request.values)
+    file = main.mongo.read_collection_one('attachments', {'id': req_vals['doc_id']})['link']
+    as_atach = True
+    if 'show' in req_vals:
+        as_atach = False
+    return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=as_atach)
 
 
 def gen_file_id():
