@@ -114,10 +114,23 @@ class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type, disable_weight=False):
         # Format data
-        rows, info, additional = orders.get_order_data(order_id, disable_weight=disable_weight, reverse=False)
+        rows, info, additional = orders.get_order_data(order_id, reverse=False)
         bt_format = configs.bartender_formats[info['type']][print_type]
+        # todo: ----------------------------------
+        if 'split' in info:
+            split_rows = {}
+            for row in rows:
+                if row['split'] not in split_rows:
+                    split_rows[row['split']] = []
+                split_rows[row['split']].append(row)
+        # else:
+        #     print()
+        # for split in order_split
+        # -----------------------------------------
         print_data = []
         element_buf = []
+        if 'date_delivery' in info:
+            info['date_delivery'] = '/'.join(info['date_delivery'].split('-')[::-1])
         if 'rebar' in info['type'] and 'page' in print_type:
             info['temp_select'] = 1
             print_data.append(info)
@@ -157,42 +170,61 @@ class Bartender:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
                     else:
-                        template_row["tb" + str(7 + i)] = row['weight']
+                        template_row["tb" + str(7 + i)] = int(row['weight'])
                         total_weight += row['weight']
                 print_data.append(template_row.copy())
-            print_data.append({'temp_select': 3, 'tb1': total_weight})
+            print_data.append({'temp_select': 3, 'tb1': int(total_weight)})
         else:
+            el_buf = []
+            _rows = []
+            for row in rows:
+                row['weight'] = round(row['weight'])
+                if 'element' not in row:
+                    row['element'] = ''
+                if row['element']:
+                    if row['element'][0] == 'ק' and row['element'] not in el_buf:
+                        for r in rows:
+                            if 'element' in r:
+                                if r['element'] == row['element']:
+                                    _rows.append(r)
+                        el_buf.append(row['element'])
+                if row['element'] in el_buf:
+                    continue
+                _rows.append(row)
+            rows = _rows
             for row in rows:
                 if row['job_id'] == "0":
                     break
                 line = {}
-                kora = {'temp_select': 1, 'z15': 0, 'z16': 0}
+                kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora'}
                 for obj in row:
                     line[obj] = row[obj]
                 for obj in info:
                     line[obj] = info[obj]
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
+                    if (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                            or row['shape'] in ['925', '966', '215', '216', '78', '79']:
+                        line['circle'] = 'כן'
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
                     if len(line['element']) > 0:
-                        if line['element'][0] == 'ק' and line['element'] not in element_buf and 'label' in print_type:
-                            kora.update(line)
+                        if line['element'][0] == 'ק' and line['element'] not in element_buf:# and 'label' in print_type:
+                            item_to_copy = ['order_id', 'element', 'costumer_name', 'comment', 'costumer_site']
+                            for item in item_to_copy:
+                                kora[item] = line[item]
                             for _row in rows:
                                 if _row['element'] == line['element']:
                                     kora['z15'] += 1
                                     kora['z16'] += _row['weight']
                             kora['z16'] = int(kora['z16'])
+                            kora['weight'] = kora['z16']
+                            kora['quantity'] = kora['z15']
                             # todo: barcode DATA
                             kora['barcode_data'] = ''
                             element_buf.append(line['element'])
                             print_data.append(kora)
                 print_data.append(line.copy())
-        if disable_weight:
-            for print_line in range(len(print_data)):
-                for print_item in print_data[print_line]:
-                    if 'weight' in print_item:
-                        print_data[print_line][print_item] = ""
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:
@@ -241,17 +273,14 @@ class Bartender:
         else:
             table_data = {}
             special_sum = {}
-            total_weight = 0
+            total_weight = 0  # info['total_weight']
             summary_data.append(info)
             for row in rows:
+                total_weight += row['weight']
                 if 'bar_type' not in row:
                     row['bar_type'] = "מצולע"
                 # Summary data
                 quantity = int(row['quantity'])
-                if disable_weight:
-                    total_weight = '---'
-                else:
-                    total_weight += row['weight']
                 if row['diam'] in table_data.keys():
                     table_data[row['diam']]['weight'] += row['weight']
                     table_data[row['diam']]['length'] += int(row['length']) * quantity
@@ -275,7 +304,7 @@ class Bartender:
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק']['qnt'] += quantity
                     special_sum['חישוק']['weight'] += row['weight']
-                if row['shape'] in []:
+                if row['shape'] in ['332']:
                     if 'ספירלים' not in special_sum.keys():
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
@@ -324,11 +353,11 @@ class Bartender:
             table_cells = 3
             table_rows = 3
             spec_sum_lines = math.ceil(len(special_sum) / table_rows)
+            template_row = {'temp_select': table_selector, 'tb30': int(total_weight)}
+            # Add total weight to summary
+            table_selector = 4
+            summary_data.append(template_row.copy())
             if spec_sum_lines:
-                template_row = {'temp_select': table_selector, 'tb30': total_weight}
-                # Add total weight to summary
-                summary_data.append(template_row.copy())
-                table_selector = 4
                 for row in range(spec_sum_lines):
                     template_row = {'temp_select': table_selector}
                     for indx in range(table_rows):

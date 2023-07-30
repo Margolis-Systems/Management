@@ -214,12 +214,15 @@ def scan():
                 status = "Start"
             elif job['status'] == "Start":
                 status = "Finished"
+            elif job['status'] == "NEW":
+                orders.update_order_status('Production', order_id)
+                status = "Start"
             else:
                 msg = job['status']
                 order_id = ''
         else:
             msg = "Not found"
-    return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status)
+    return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, dictionary=get_dictionary(main.session['username']), user=main.session['username'])
 
 
 def get_defaults():
@@ -269,12 +272,6 @@ def save_file(order_id, f, description):
     f.save(file)
     doc = {'name': file_name, 'timestamp': functions.ts(), 'user': username, 'id': gen_file_id(),
            'description': description, 'link': file, 'order_id': order_id}
-    # if order_id == '0':
-    #     scanner = file_name.replace('.pdf', '') + '_scanner'
-    #     temp = main.mongo.read_collection_one('attachments', {'name': scanner})
-    #     doc['order_id'] = temp['order_id']
-    #     main.mongo.update_one('attachments', {'name': scanner}, doc, '$set')
-    #     return
     main.mongo.insert_collection_one('attachments', doc)
 
 
@@ -401,10 +398,10 @@ def reports_page():
                 template_row['costumer_name'] = 'סהכ כללי'
                 template_row['total_weight'] = global_total_weight
                 report_data.append(template_row.copy())
-    # Print
-    if 'print' in req_vals:
-        title = req_vals['print']
-        reports.Docs.print_doc(title, report_data)
+    # # Print
+    # if 'print' in req_vals:
+    #     title = req_vals['print']
+    #     reports.Docs.print_doc(title, report_data)
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, dictionary=pages.get_dictionary(main.session['username']))
 
 

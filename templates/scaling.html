@@ -20,7 +20,7 @@
             {% endfor %}
         </datalist>
         <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['barcode']}}</span><input type="text" name="barcode" class="form-control" placeholder="{{dictionary['barcode']}}" autofocus></td>
-        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['description']}}</span><input type="text" name="quantity" class="form-control" placeholder="{{dictionary['quantity']}}" autofocus><input type="text" name="length" class="form-control" placeholder="{{dictionary['length']}}" autofocus><input type="text" name="diam" class="form-control" placeholder="{{dictionary['diam']}}" autofocus></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">{{dictionary['description']}}</span><input type="number" name="quantity" class="form-control" placeholder="{{dictionary['quantity']}}" autofocus><input type="number" name="length" class="form-control" placeholder="{{dictionary['length']}}" autofocus><input type="number" name="diam" class="form-control" placeholder="{{dictionary['diam']}}" autofocus></td>
     </tr>
     <tr>
         <td><button id="submit" type="submit" class="btn btn-primary btn-lg">{{dictionary['add_scale']}}</button>

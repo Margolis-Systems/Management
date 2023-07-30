@@ -1,19 +1,22 @@
 {% extends "layout_mob.html" %}
 {% block body %}
+{{user}}
 <table class="table table-striped" dir="rtl" align="center">
     <form method=POST id="form" action="{{ url_for('scan') }}">
     <tr>
         <td class="d-grid gap-2">
             {% if order!="" %}
-            <label style="font-size:50px;">מספר הזמנה: {{order}}</label>
-            <label style="font-size:50px;">מספר שורה: {{job}}</label>
+            <label style="font-size:50px;">{{dictionary['order_id']}}: {{order}}</label>
+            <label style="font-size:50px;">{{dictionary['job_id']}}: {{job}}</label>
             <input type="hidden" name="order_id" value="{{order}}">
             <input type="hidden" name="job_id" value="{{job}}">
+            {% if status %}
             <button type="submit" class="btn btn-success btn-block btn-lg" name="status" value="{{status}}">{{status}}</button>
-            <button type="button" class="btn btn-danger btn-block btn-lg" onclick="location.href='/scan'">Cancel</button>
+            {% endif %}
+            <button type="button" class="btn btn-danger btn-block btn-lg" onclick="location.href='/scan'">{{dictionary['cancel']}}</button>
             {% else %}
-            <label>Scan barcode</label>
-            <input type="text" class="form-control" id="scan" name="scan" placeholder="Scan barcode" onfocusout="scanFocus();" onkeyup="scanSubmit();" autofocus>
+            <label>{{dictionary['scan_barcode']}}</label>
+            <input type="text" class="form-control" id="scan" name="scan" placeholder="{{dictionary['scan_barcode']}}" onfocusout="scanFocus();" onkeyup="scanSubmit();" autofocus>
             <!--
             <button type="reset" class="btn btn-primary btn-lg" onclick="autoFocus()">Reset</button>
             <button type="submit" class="btn btn-primary btn-lg">Scan</button>-->

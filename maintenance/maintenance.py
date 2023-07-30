@@ -2,6 +2,10 @@ import json
 import os
 import sys
 import shutil
+import requests
+
+import orders
+
 sys.path.insert(1, 'C:\\Server')
 import configs
 
@@ -90,7 +94,7 @@ def mesh_description():
 
 
 def reorder_job_id():
-    order_id = '41'  # main.session['order_id']
+    order_id = '64'  # main.session['order_id']
     job_list = list(mongo.read_collection_list('orders', {'order_id': order_id,
                                                           'info': {'$exists': False}}))
     rows = len(job_list)
@@ -105,20 +109,26 @@ def reorder_job_id():
                               {'info.rows': str(rows)}, '$set')
 
 
+def send_sms(msg, _dist_numbers=[]):
+    target_url = 'http://port2sms.com/Scripts/mgrqispi.dll'
+    dist_numbers = ''
+    if not _dist_numbers:
+        _dist_numbers = ['0502201747']
+    for num in _dist_numbers:
+        dist_numbers += num + ';'
+    post_data = {'Appname': 'Port2SMS', 'prgname': 'HTTP_SimpleSMS1', 'AccountID': '1008',
+                 'UserID': '10096', 'UserPass': 'Zo2486!', 'Phone': dist_numbers, 'Text': msg, 'Sender': 'ERP'}
+    resp = requests.post(target_url, data=post_data)
+    return resp
+
+
 if __name__ == '__main__':
-    mongo_backup()
+    # mongo_backup()
     # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\05-07-2023_13-59-27-825881")
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()
-    # reorder_job_id()
-    jobs = mongo.read_collection_list('orders',{'info':{'$exists':False},'shape_data':{'$exists':True}, 'job_id':{'$ne':'0'}})
-    for job in jobs:
-        t = 0
-        for l in job['shape_data']:
-            t += int(l)
-        if job['length'] != str(t):
-            print(job['order_id'], job['job_id'])
+    send_sms('בדיקה', ['0509595953','0502201747'])
 

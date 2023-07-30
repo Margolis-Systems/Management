@@ -52,18 +52,18 @@ div {
             <button onclick='openNewWindow("\order_files")' type="button" class="btn btn-primary btn-block">קבצים מצורפים</button>
         </td>
         <td colspan="3">
+            הערות
             <input type="text" class="form-control" name="comment_hid" placeholder="הערות" onchange="this.form.submit()" value="{{ order_data.info['comment'] }}">
         </td>
         <td colspan="100">
+            תאריך אספקה
             <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onchange="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
         </td>
     </tr>
 </form>
 <form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
     <tr>
-        <td><button type=submit id="submit" class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
-        <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
-        <td><button onclick="location.href='\close'" type="button" class="btn btn-primary btn-block" >שמור וסגור</button></td>
+        <td><button onclick="location.href='\close'" type="button" class="btn btn-success btn-block" >שמור וסגור</button></td>
         <td><button onclick='openNewWindow("\choose_printer?test_page")' type="button" class="btn btn-primary btn-block">הדפס דוגמה</button></td>
         <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
         {% if order_data.info.status == "order_status_NEW" %}
@@ -71,7 +71,13 @@ div {
         {% else %}
         <td><button onclick='openNewWindow("\change_order_status")' type="button" class="btn btn-primary btn-block">שנה סטטוס</button></td>
         {% endif %}
+    </tr>
+    <tr>
+        <td><button type=submit id="submit" class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
+        <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
+
         <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
+        <td> <button ondblclick='openNewWindow("\split_order")' type="button" class="btn btn-danger btn-block" disabled>פיצול הזמנה</button></td>
         <td><label>סה"כ משקל</label><input type="number" value="{{ total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
     </tr>
 </table>
@@ -109,10 +115,14 @@ div {
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")'>
     {% endif %}
-        <td>{% if order_data.info.status == "order_status_NEW" %}<button onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button>{% endif %}</td>
+        <td>{% if order_data.info.status == "order_status_NEW" %}<button type="button" onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button>{% endif %}</td>
         {% for item in order_data.data_to_display %}
         <td>
+            {% if item in row %}
             {{ row[item] }}
+            {% else %}
+            ---
+            {% endif %}
         </td>
         {% endfor %}
     </tr>
