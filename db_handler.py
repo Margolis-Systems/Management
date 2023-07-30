@@ -43,6 +43,26 @@ class DBHandle:
         return df
 
     @staticmethod
+    def read_collection_one_sort(collect, sort_by, db_name="", query=dict({}), limit=0):
+        db = DBHandle.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        if limit:
+            cur = db[collect].find(query, {'_id': False}).sort([(sort_by, -1)]).limit(limit)
+        else:
+            cur = db[collect].find(query, {'_id': False}).sort([(sort_by, -1)])
+        ret = list(cur)
+        if cur:
+            if len(ret) == 1:
+                return ret[0]
+            return ret
+        return {}
+
+    @staticmethod
+    def read_uniq(collection, fields, query={}, db_name=''):
+        db = DBHandle.con_to_mongo_default(db_name)
+        return db[collection].distinct(fields, query)
+
+    @staticmethod
     def read_collection_one_var(collect, var_name, query=dict({}), db_name=""):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)

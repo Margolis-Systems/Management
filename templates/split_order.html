@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tzomet ERP</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<table class="table table-striped" dir="rtl" align="center">
+    <form name="choose_printer" id="choose_printer" method=POST autocomplete="off">
+      <tr>
+        <td>מספר שורה</td>
+          <td>משקל</td>
+          <td>אורך</td>
+          <td>צורה</td>
+        <td>פיצול</Td>
+      </tr>
+      {% for job in order %}
+      <tr>
+        <td>{{job.job_id}}</td>
+        <td>{{job.weight}}</td>
+        <td>{{job.length}}</td>
+        <td>{{job.shape}}</td>
+        <td><input list="list" type="number" name="{{job.job_id}}" placeholder="1" min="1"></td>
+          <datalist id="list">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+          </datalist>
+      </tr>
+      {% endfor %}
+      <tr><td><button type="submit" onclick="refreshWindow();">פצל</button> </td></tr>
+    </form>
+</table>
+<script src="\static\js\shapes.js" ></script>
+</body>
+</html>

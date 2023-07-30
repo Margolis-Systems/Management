@@ -4,24 +4,47 @@
 <table class="table table-condensed" align="center" dir="rtl">
     <tr>
         <td><b>שם מכונה</b></td>
-        <td><b>בחר מפעיל</b></td>
+        <td><b>שם משתמש מסופון</b></td>
+        <td><b>שם מפעיל</b></td>
     </tr>
     {% for machine in machine_list %}
-    <tr>
-        <td>{{machine}}</td>
-        <td>
-            <form>
-                <input type="hidden" name="machine" value="{{machine}}">
-                <input list="users">
-                <datalist id="users">
-                    {% for user in users_list %}
-                    <option value="{{user}}">{{user}}</option>
-                    {% endfor %}
-                </datalist>
-            </form>
-        </td>
-    </tr>
+    <form id="form_{{machine.machine_id}}" method=POST action="{{ url_for('machines') }}">
+        <tr>
+            <td>{{machine.machine_name}} {{machine.machine_id}}</td>
+            <td>
+                <input type="hidden" name="machine" value="{{machine.machine_id}}">
+                <input list="users" name="username" onchange="form_{{machine.machine_id}}.submit()" value="{{machine.username}}">
+            </td>
+            <td>
+                <input type="text" name="operator_name" onchange="form_{{machine.machine_id}}.submit()" value="{{machine.operator}}">
+            </td>
+        </tr>
+    </form>
     {% endfor %}
+    <form id="form" method=POST action="{{ url_for('machines') }}">
+        <tr>
+            <td><input type="text" name="machine_name"></td>
+            <td>
+                <input list="users" name="username">
+            </td>
+            <td>
+                <input type="text" name="operator">
+            </td>
+        </tr>
+        <tr>
+            <td><button type="submit">הוסף</button> </td>
+        </tr>
+    </form>
+    <datalist id="users">
+        {% for user in users_list %}
+        <option value="{{user}}">{{user}}</option>
+        {% endfor %}
+    </datalist>
+    {% if msg %}
+    <tr>
+        <td colspan="100">{{msg}}</td>
+    </tr>
+    {% endif %}
 </table>
 {% else %}
 Access denied

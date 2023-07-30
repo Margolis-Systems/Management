@@ -77,7 +77,7 @@ div {
         <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
 
         <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
-        <td> <button ondblclick='openNewWindow("\split_order")' type="button" class="btn btn-danger btn-block" disabled>פיצול הזמנה</button></td>
+        <td> <button ondblclick='openNewWindow("\split_order")' type="button" class="btn btn-warning btn-block">פיצול הזמנה</button></td>
         <td><label>סה"כ משקל</label><input type="number" value="{{ total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
     </tr>
 </table>
@@ -111,7 +111,7 @@ div {
     {% for row in order_data.order_rows %}
     {% if row['job_id'] != "0" %}
     {% if order_data.info.status == "order_status_NEW" %}
-    <tr ondblclick="location.href='/edit_row?order_id={{row['order_id']}}&job_id={{row['job_id']}}'">
+    <tr ondblclick="location.href='/edit_row?order_id={{row['order_id']}}&job_id={{row['job_id']}}'" title="אורכים: {{row.shape_data}}">
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")'>
     {% endif %}

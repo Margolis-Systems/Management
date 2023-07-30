@@ -276,10 +276,12 @@ def edit_order():
                                 msg=msg,)
 
 
-def get_order_data(order_id, job_id="", reverse=True):
+def get_order_data(order_id, job_id="", split="", reverse=True):
     query = {'order_id': order_id, 'job_id': {'$ne': "0"}, 'info': {'$exists': False}}
     if job_id:
         query['job_id'] = job_id
+    if split:
+        query['order_split'] = split
     order_data = list(main.mongo.read_collection_list('orders', query))
     additional = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})['info']
@@ -557,7 +559,21 @@ def copy_order():
 
 
 def split_order():
-    rows, info, additional = get_order_data(main.session['order_id'])
+    # jobs = main.mongo.read_uniq('orders', 'job_id', {'order_id': main.session['order_id'], 'job_id': {'$ne': '0'}})
+    # jobs = sorted(jobs, key=int)
+    rows, info, adit = get_order_data(main.session['order_id'], reverse=False)
     if main.request.form:
+        req_form = dict(main.request.form)
+        # _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
+        # split = 1
+        # if _split:
+        #     split += max(_split)
+        for item in req_form:
+            if req_form[item]:
+                split = int(req_form[item])
+            else:
+                split = 1
+            main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'job_id': item}, {'order_split': split}, '$set')
+        # main.mongo.update_many('orders', {'order_id': main.session['order_id'], 'order_split': {'$exists': False}}, {'order_split': split})
         return '', 204
-    return main.render_template('/split_order.html', order_rows=rows)
+    return main.render_template('/split_order.html', order=rows)

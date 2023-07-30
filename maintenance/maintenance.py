@@ -4,8 +4,6 @@ import sys
 import shutil
 import requests
 
-import orders
-
 sys.path.insert(1, 'C:\\Server')
 import configs
 
@@ -130,5 +128,5 @@ if __name__ == '__main__':
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()
-    send_sms('בדיקה', ['0509595953','0502201747'])
-
+    resp = mongo.read_uniq('machines', 'machine_id', {'machine_name': 'MS'})
+    print(resp)

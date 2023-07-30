@@ -112,9 +112,9 @@ class Images:
 
 class Bartender:
     @staticmethod
-    def net_print(order_id, printer, print_type, disable_weight=False):
+    def net_print(order_id, printer, print_type, disable_weight=False, split=''):
         # Format data
-        rows, info, additional = orders.get_order_data(order_id, reverse=False)
+        rows, info, additional = orders.get_order_data(order_id, reverse=False, split=split)
         bt_format = configs.bartender_formats[info['type']][print_type]
         # todo: ----------------------------------
         if 'split' in info:
@@ -173,7 +173,9 @@ class Bartender:
                         template_row["tb" + str(7 + i)] = int(row['weight'])
                         total_weight += row['weight']
                 print_data.append(template_row.copy())
-            print_data.append({'temp_select': 3, 'tb1': int(total_weight)})
+            if isinstance(total_weight, float):
+                total_weight = int(total_weight)
+            print_data.append({'temp_select': 3, 'tb1': total_weight})
         else:
             el_buf = []
             _rows = []
@@ -203,8 +205,8 @@ class Bartender:
                     line[obj] = info[obj]
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
-                    if (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                            or row['shape'] in ['925', '966', '215', '216', '78', '79']:
+                    if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in ['925', '966', '215', '216', '78', '79', '119']:
                         line['circle'] = 'כן'
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
@@ -298,22 +300,22 @@ class Bartender:
                         special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
                     special_sum['כיפוף']['qnt'] += quantity
                     special_sum['כיפוף']['weight'] += row['weight']
-                if (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                        or row['shape'] in ['925', '966', '215', '216', '78', '79']:
-                    if 'חישוק' not in special_sum.keys():
-                        special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
-                    special_sum['חישוק']['qnt'] += quantity
-                    special_sum['חישוק']['weight'] += row['weight']
                 if row['shape'] in ['332']:
                     if 'ספירלים' not in special_sum.keys():
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
                     special_sum['ספירלים']['weight'] += row['weight']
-                if row['shape'] in ['49','59']:
+                elif row['shape'] in ['49','59']:
                     if 'ספסלים' not in special_sum.keys():
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
+                elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                        or row['shape'] in ['925', '966', '215', '216', '78', '79', '119']:
+                    if 'חישוק' not in special_sum.keys():
+                        special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
+                    special_sum['חישוק']['qnt'] += quantity
+                    special_sum['חישוק']['weight'] += row['weight']
                 if int(row['length']) > 1600:
                     if 'ברזל_ארוך' not in special_sum.keys():
                         special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
@@ -324,6 +326,17 @@ class Bartender:
                         special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
                     special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
                     special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
+                if row['bar_type'] == 'חלק':
+                    if int(row['diam']) <= 12:
+                        if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
+                            special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
+                        special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
+                        special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
+                    elif int(row['diam']) >= 14:
+                        if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
+                            special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
+                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
+                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
             table_data = OrderedDict(sorted(table_data.items(), key=lambda t: t[0]))
             # Bartender Table filler
             # Summary
@@ -353,7 +366,9 @@ class Bartender:
             table_cells = 3
             table_rows = 3
             spec_sum_lines = math.ceil(len(special_sum) / table_rows)
-            template_row = {'temp_select': table_selector, 'tb30': int(total_weight)}
+            if isinstance(total_weight, float):
+                total_weight = int(total_weight)
+            template_row = {'temp_select': table_selector, 'tb30': total_weight}
             # Add total weight to summary
             table_selector = 4
             summary_data.append(template_row.copy())

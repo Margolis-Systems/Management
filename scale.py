@@ -191,7 +191,13 @@ def print_scale():
 def calc_weight(req):
     if not req['product']:
         req['product'] = 'ברזל'
-    cur_weight = [req['timestamp1'], int(req['weight1']), req['timestamp2'], int(req['weight2'])]
+    # print(req)
+    # if not isinstance(req['weight1'], int) or not isinstance(req['weight2']):
+    #     return {}
+    try:
+        cur_weight = [req['timestamp1'], int(req['weight1']), req['timestamp2'], int(req['weight2'])]
+    except:
+        return {}
     error_msg = ['Not stable', 'COMMUNICATION ERROR']
     if cur_weight[0] in error_msg or cur_weight[2] in error_msg:
         return {}

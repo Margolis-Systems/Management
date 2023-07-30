@@ -10,24 +10,40 @@
     <link href="/static/css/bootstrap.css" rel="stylesheet">
 </head>
 <body>
-<div class="form-floating">
-    <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}">
-        בחר מדפסת<br>
-        <input list="printer" type="text" class="form-control" name="printer" value="{{ defaults.printer }}" placeholder="Choose printer" autofocus="autofocus" required>
-            <datalist id="printer">
-            {% for printer in printer_list %}
-                <option value="{{ printer }}">{{ printer_list[printer] }}</option>
-            {% endfor %}
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td></td>
+    </tr>
+    <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}" autocomplete="off" onsubmit="refreshWindow();">
+    <tr><td>בחר מדפסת</td></tr>
+        <td>
+            <input list="printer" type="text" class="form-control" name="printer" value="{{ defaults.printer }}" placeholder="Choose printer" autofocus="autofocus" required>
+                <datalist id="printer">
+                {% for printer in printer_list %}
+                    <option value="{{ printer }}">{{ printer_list[printer] }}</option>
+                {% endfor %}
+                </datalist>
+        </td>
+        <tr><td>כמות העתקים</td></tr>
+        <tr><td><input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים"></td></tr>
+        <tr><td><input type="hidden" name="print_type" value="{{print_type}}"></td></tr>
+        {% if split|length > 1 %}
+        <tr><td>
+            <datalist id="split">
+                {% for i in split %}=
+                    <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
             </datalist>
-        כמות העתקים<br>
-        <input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים">
-        <input type="hidden" name="print_type" value="{{print_type}}">
+            <input list="split" type="text" pattern="{{pat}}" class="form-control" name="printer" placeholder="פיצול: מאוחד" autofocus="autofocus" >
+
+        </td></tr>
+        {% endif %}
         <input type="hidden" name="sub_type" value="{{sub_type}}">
-        <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="refreshWindow();">אישור</button>
-        <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
-        <input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label>
+        <tr><td><button class="w-100 btn btn-lg btn-primary" id="submit" type="submit">אישור</button></td></tr>
+        <tr><td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button></td></tr>
+        <tr><td><input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label></td></tr>
     </form>
-</div>
+</table>
 <script src="\static\js\shapes.js" ></script>
 </body>
 </html>

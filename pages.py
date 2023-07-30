@@ -151,23 +151,29 @@ def shape_editor():
 def choose_printer():
     copies = 1
     if main.request.form:
+        req_form = dict(main.request.form)
+        split = ''
+        if 'split' in req_form:
+            split = req_form['split']
         disable_weight = False
-        if 'disable_weight' in main.request.form:
+        if 'disable_weight' in req_form:
             disable_weight = True
-        printer = main.request.form['printer']
-        print_type = main.request.form['print_type']
-        if 'sub_type' in main.request.form.keys():
-            if main.request.form['sub_type']:
-                print_type = main.request.form['sub_type']
-        if 'copies' in main.request.form.keys():
-            if main.request.form['copies']:
-                copies = int(main.request.form['copies'])
+        printer = req_form['printer']
+        print_type = req_form['print_type']
+        if 'sub_type' in req_form:
+            if req_form['sub_type']:
+                print_type = req_form['sub_type']
+        if 'copies' in req_form:
+            if req_form['copies']:
+                copies = int(req_form['copies'])
         for r in range(copies):
-            reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight)
+            reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, split=split)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
     else:
+        split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
+        split = [str(s) for s in split]
         req_vals = list(main.request.values)
         sub_type = ''
         print_type = req_vals[0]
@@ -185,7 +191,8 @@ def choose_printer():
             default_printer = ''
         printer_list = main.configs.printers[print_type.replace('test_', '')]
     return main.render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type,
-                                defaults={'printer': default_printer, 'copies': copies}, sub_type=sub_type)
+                                defaults={'printer': default_printer, 'copies': copies}, sub_type=sub_type, split=split
+                                , pat='|'.join(split))
 
 
 def scan():
@@ -406,8 +413,32 @@ def reports_page():
 
 
 def machines_page():
-    # todo: complete
-    return main.render_template('machines.html', machine_list=[1,2,3,4], users_list=['a','b','c'])
+    req_form = dict(main.request.form)
+    if 'machine' in req_form:
+        main.mongo.update_one('machines', {'machine_id': int(req_form['machine'])},
+                              {'username': req_form['username'], 'operator': req_form['operator_name']}, '$set', upsert=True)
+        return main.redirect('/machines')
+    elif 'machine_name' in req_form:
+        machine_id = 1
+        last_id = main.mongo.read_collection_one_sort('machines', 'machine_id',
+                                                         query={'machine_id': {'$exists': True}}, limit=1)
+        print(last_id)
+        if machine_id:
+            machine_id += last_id['machine_id']
+        doc = {'machine_id': machine_id}
+        doc.update(req_form)
+        main.mongo.insert_collection_one('machines', doc)
+        return main.redirect('/machines')
+    machine_list = []
+    users_list = []
+    _users = main.mongo.read_collection_list('users', {'group': {'$lt': 5}})
+    # _machines = main.mongo.read_collection_list('machines', {'machine_id': {'$exists':True}})
+    machine_list = main.mongo.read_collection_list('machines', {'machine_id': {'$exists':True}})
+    for user in _users:
+        users_list.append(user['name'])
+    # for machine in _machines:
+    #     machine_list.append(machine['machine_name']+' '+str(machine['machine_id']))
+    return main.render_template('machines.html', machine_list=machine_list, users_list=users_list, msg='')
 
 
 def file_listener():  # NON RELEVANT
