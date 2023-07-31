@@ -26,6 +26,7 @@
             <input type="text" name="order_id" placeholder="מספר הזמנה">
             <input type="text" name="info.costumer_name" placeholder="שם לקוח">
             <button type="submit">חפש</button>
+            <button type="button" onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
         </td>
         </form>
         <td>סינון לפי:</td>
@@ -51,6 +52,7 @@
         </td>
         {% endfor %}
         <td width="5%"  style="outline: thin solid;text-align: center"></td>
+        <td width="5%"  style="outline: thin solid;text-align: center"></td>
     </tr>
     {% for order in orders %}
     <tr bgcolor="{{dictionary.html_colors[orders[order].status]}}">
@@ -63,7 +65,10 @@
         {% endif %}
         </td>
         {% endfor %}
-        <td height="50" style="outline: thin solid;text-align: center"><button type="button" onclick='openNewWindow("\change_order_status?order_id={{orders[order]["order_id"]}}")'>שנה סטטוס</button></td>
+        <td height="50" style="outline: thin solid;text-align: center">
+            <button type="button" onclick='openNewWindow("\change_order_status?order_id={{orders[order]["order_id"]}}")'>שנה סטטוס</button></td>
+        <td height="50" style="outline: thin solid;text-align: center">
+            <button type=button" onclick="openNewWindow('\order_files?order_id={{orders[order].order_id}}')" type="button">צפיה בקבצים</button></td>
     </tr>
     {% endfor %}
 </table >

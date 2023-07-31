@@ -19,6 +19,10 @@ def orders():
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
     query = {'info': {'$exists': True}}
+    if 'user_config' in main.session:
+        if 'search' in main.session['user_config']:
+            if main.session['user_config']['search']:
+                query = main.session['user_config']['search']
     if 'filter' in main.session['user_config']:
         if main.session['user_config']['filter']:
             query['info.type'] = {'$regex': main.session['user_config']['filter']}
@@ -33,6 +37,8 @@ def orders():
             else:
                 if req_form[item]:
                     query[item] = {'$regex': req_form[item]}
+        main.session['user_config']['search'] = query
+        main.session.modified = True
     # Read all orders data with Info, mean that it's not including order rows
     orders_df = main.mongo.read_collection_df('orders', query=query)
     if orders_df.empty:
@@ -48,11 +54,11 @@ def orders():
         if item not in new_df.columns:
             new_df[item] = ""
     orders_info = new_df[main.configs.data_to_display['orders']].copy()
-    # sorter = {'NEW': 0, 'Processed': 1, 'Production': 2}
-    # orders_info['sorter'] = orders_info['status'].map(sorter)
     orders_info['status'] = 'order_status_' + orders_info['status'].astype(str)
     if orders_info['total_weight'].any():
         orders_info['total_weight'] = orders_info['total_weight'].astype(int)
+    if orders_info['split'].any():
+        orders_info['split'] = orders_info['split'].astype(int)
     orders_info.sort_values(by=['date_created'], ascending=[False], inplace=True)
     dictionary = pages.get_dictionary(main.session['username'])
     return main.render_template('orders.html', orders=orders_info.to_dict('index'),
@@ -281,7 +287,7 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
     if job_id:
         query['job_id'] = job_id
     if split:
-        query['order_split'] = split
+        query['order_split'] = int(split)
     order_data = list(main.mongo.read_collection_list('orders', query))
     additional = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})['info']
@@ -559,21 +565,20 @@ def copy_order():
 
 
 def split_order():
-    # jobs = main.mongo.read_uniq('orders', 'job_id', {'order_id': main.session['order_id'], 'job_id': {'$ne': '0'}})
-    # jobs = sorted(jobs, key=int)
     rows, info, adit = get_order_data(main.session['order_id'], reverse=False)
     if main.request.form:
         req_form = dict(main.request.form)
-        # _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
-        # split = 1
-        # if _split:
-        #     split += max(_split)
         for item in req_form:
             if req_form[item]:
                 split = int(req_form[item])
             else:
                 split = 1
             main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'job_id': item}, {'order_split': split}, '$set')
-        # main.mongo.update_many('orders', {'order_id': main.session['order_id'], 'order_split': {'$exists': False}}, {'order_split': split})
+        _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
+        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists':True}}, {'info.split': len(_split)}, '$set')
+        if len(_split) == 1:
+            main.mongo.update_many('orders', {'order_id': main.session['order_id'], 'job_id': {'$exists': True}},
+                                   {'order_split': split}, '$unset')
+            main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists':True}}, {'info.split': len(_split)}, '$unset')
         return '', 204
     return main.render_template('/split_order.html', order=rows)

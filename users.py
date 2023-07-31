@@ -13,7 +13,7 @@ def login():
             if bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
                 main.session['username'] = username_input
                 main.session['user_config'] = {}
-                resp = main.flask.make_response()
+                resp = main.make_response()
                 resp.headers['location'] = main.url_for('index')
                 resp.set_cookie('userhash', username_input)
                 return resp, 302
@@ -89,5 +89,6 @@ def user_configs():
     if req_vals:
         if 'filter' in req_vals:
             main.session['user_config']['filter'] = req_vals['filter']
+            main.session['user_config']['search'] = {}
             main.session.modified = True
     return '', 204

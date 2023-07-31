@@ -1,13 +1,11 @@
 # Server
 import flask
-
-import data_logger
-import main
-from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory
+from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory, make_response
 from waitress import serve
 from werkzeug.utils import secure_filename
 import os
 # ERP libs
+import data_logger
 import configs
 import db_handler
 import pages
@@ -31,7 +29,7 @@ def index():
     if 'username' in session:
         user = session['username']
         session.clear()
-        main.session['user_config'] = {}
+        session['user_config'] = {}
         session['username'] = user
         login_user = mongo.read_collection_one(configs.users_collection, {'name': session['username']})
         if login_user['group'] > 10:
@@ -178,15 +176,15 @@ def scaling():
 
 @app.route('/scaling_weight', methods=['POST', 'GET'])
 def scaling_weight():
-    if 'scale' not in main.session:
+    if 'scale' not in session:
         return {}
-    cur_weight = scale.get_weight(main.session['scale']['site'])
+    cur_weight = scale.get_weight(session['scale']['site'])
     return {'ts1': cur_weight[0], 'weight1': cur_weight[1], 'ts2': cur_weight[2], 'weight2': cur_weight[3]}
 
 
 @app.route('/tare_scale', methods=['POST', 'GET'])
 def tare_scale():
-    scale.tare_scale(main.session['scale']['site'])
+    scale.tare_scale(session['scale']['site'])
     return scale.main_page()
 
 

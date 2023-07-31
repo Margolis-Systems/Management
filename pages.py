@@ -167,7 +167,14 @@ def choose_printer():
             if req_form['copies']:
                 copies = int(req_form['copies'])
         for r in range(copies):
-            reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, split=split)
+            if not split:
+                _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
+                if not _split:
+                    _split.append('')
+                for i in range(len(_split)):
+                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, split=_split[i])
+            else:
+                reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, split=split)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
@@ -238,10 +245,14 @@ def get_defaults():
 
 def order_files():
     description = ""
+    no_upload = True
     if 'description' in main.request.form:
         description = main.request.form['description']
-    if 'order_id' in main.session:
+    if 'order_id' in dict(main.request.values):
+        order_id = main.request.values['order_id']
+    elif 'order_id' in main.session:
         order_id = main.session['order_id']
+        no_upload = False
     else:
         order_id = '0'
     msg = ""
@@ -253,7 +264,7 @@ def order_files():
             print(e)
             msg = "Internal Error"
     files = main.mongo.read_collection_list('attachments', {'order_id': order_id})
-    return main.render_template('/order_files.html', files=files, message=msg, order_id=order_id)
+    return main.render_template('/order_files.html', files=files, message=msg, order_id=order_id, no_upload=no_upload)
 
 
 def save_file(order_id, f, description):
@@ -322,8 +333,9 @@ def reports_page():
                 query['username'] = req_vals['operator']
             report_data = list(main.mongo.read_collection_list('machines', query))
         elif report == 'orders':
-            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'},'info.status':{'$ne':'canceled'}}
-            query['info.costumer_name'] = {'$nin':['טסטים \ בדיקות','צומת ברזל']}
+            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'},
+                     'info.status': {'$ne': 'canceled'},
+                     'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל']}}
             if 'client_name' in req_vals.keys():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
@@ -441,9 +453,13 @@ def machines_page():
     return main.render_template('machines.html', machine_list=machine_list, users_list=users_list, msg='')
 
 
-def file_listener():  # NON RELEVANT
+def file_listener():
+    if 'order_id' in dict(main.request.values):
+        order_id = main.request.values['order_id']
+    else:
+        order_id = main.session['order_id']
     scanner = main.mongo.read_collection_one('users',{'name': main.session['username']})['default_scanner']
-    main.mongo.upsert_collection_one('attachments',{'name':scanner},{'name':scanner, 'order_id': main.session['order_id']})
+    main.mongo.upsert_collection_one('attachments',{'name':scanner},{'name':scanner, 'order_id': order_id})
     return '', 204
 
 

@@ -12,6 +12,7 @@
 <body>
 {{ message }}
 <table class="table table-striped" dir="rtl" align="center">
+    <tr><td colspan="100"><b>הזמנה מספר: {{order_id}}</b></td></tr>
     <tr>
         <td>שם קובץ</td>
         <td>נשמר בתאריך</td>
@@ -33,6 +34,7 @@
     </tr>
     {% endif %}
     {% endfor %}
+    {% if not no_upload %}
     <form method=POST autocomplete="off" action="{{ url_for('order_file_upload') }}" enctype = "multipart/form-data">
     <tr>
         <td colspan="10"><input type="file" name="file" class="form-control" required/></td>
@@ -50,6 +52,7 @@
         <td colspan="10"><textarea name="description" class="form-control" placeholder="תיאור"></textarea></td>
     </tr>
     </form>
+    {% endif %}
 </table>
 <script src="\static\js\shapes.js" ></script>
 </body>

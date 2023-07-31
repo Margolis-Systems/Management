@@ -115,18 +115,8 @@ class Bartender:
     def net_print(order_id, printer, print_type, disable_weight=False, split=''):
         # Format data
         rows, info, additional = orders.get_order_data(order_id, reverse=False, split=split)
+        # todo: split in row
         bt_format = configs.bartender_formats[info['type']][print_type]
-        # todo: ----------------------------------
-        if 'split' in info:
-            split_rows = {}
-            for row in rows:
-                if row['split'] not in split_rows:
-                    split_rows[row['split']] = []
-                split_rows[row['split']].append(row)
-        # else:
-        #     print()
-        # for split in order_split
-        # -----------------------------------------
         print_data = []
         element_buf = []
         if 'date_delivery' in info:
@@ -194,10 +184,16 @@ class Bartender:
                     continue
                 _rows.append(row)
             rows = _rows
+            index = 0
             for row in rows:
                 if row['job_id'] == "0":
                     break
                 line = {}
+                # Header indicator
+                if info['type'] == 'regular':
+                    if index % 8 == 0:
+                        line['z19'] = 1
+                index += 1
                 kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora'}
                 for obj in row:
                     line[obj] = row[obj]
