@@ -113,7 +113,7 @@ div {
     {% if order_data.info.status == "order_status_NEW" %}
     <tr ondblclick="location.href='/edit_row?order_id={{row['order_id']}}&job_id={{row['job_id']}}'" title="אורכים: {{row.shape_data}}">
     {% else %}
-    <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")'>
+    <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")' title="אורכים: {{row.shape_data}}">
     {% endif %}
         <td>{% if order_data.info.status == "order_status_NEW" %}<button type="button" onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button>{% endif %}</td>
         {% for item in order_data.data_to_display %}

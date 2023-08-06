@@ -5,33 +5,33 @@
                 {% set focus_index = order_data.data_to_display|length %}
                 <tr>
                     <td>
-                        <input type="number" name="trim_x_start" id="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" value="{{defaults['trim_x_start']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="trim_x_start" id="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" value="{{defaults['trim_x_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                     </td>
                     <td>
-                        <input type="number" name="trim_x_end" id="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="trim_x_end" id="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                     </td>
                 </tr>
                 <tr>
                     <td id="x_length_container">
                         רוחב
-                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                         {% for item in defaults %}
                         {% if "x_length_" in item %}
-                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                         {% endif %}
                         {% endfor %}
                         </td>
                     <td id="x_pitch_container">
                         פסיעה
-                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                         {% for item in defaults %}
                         {% if "x_pitch_" in item %}
-                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                         {% endif %}
                         {% endfor %}
@@ -60,33 +60,33 @@
             <table class="table table-striped" dir="rtl" align="center">
                 <tr>
                     <td>
-                        <input type="number" name="trim_y_start" id="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" value="{{defaults['trim_y_start']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="trim_y_start" id="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" value="{{defaults['trim_y_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                     </td>
                     <td>
-                        <input type="number" name="trim_y_end" id="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" value="{{defaults['trim_y_end']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="trim_y_end" id="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" value="{{defaults['trim_y_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                     </td>
                 </tr>
                 <tr>
                     <td id="y_length_container">
                         אורך
-                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                         {% for item in defaults %}
                         {% if "y_length_" in item %}
-                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                         {% endif %}
                         {% endfor %}
                     </td>
                     <td id="y_pitch_container">
                         פסיעה
-                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch']}}" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         {% set focus_index = focus_index + 1 %}
                         {% for item in defaults %}
                         {% if "y_pitch_" in item %}
-                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                         {% endif %}
                         {% endfor %}

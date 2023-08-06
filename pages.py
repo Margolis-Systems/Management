@@ -220,6 +220,7 @@ def scan():
         order_id = main.request.form['order_id']
         job_id = main.request.form['job_id']
         orders.update_order_status(main.request.form['status'], order_id, job_id)
+        # functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': main.request.form['status']})
         return main.redirect('/scan')
     if order_id:
         job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})

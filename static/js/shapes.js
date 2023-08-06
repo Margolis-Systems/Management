@@ -85,6 +85,8 @@ function addInput(div_id, val){
     input.name = div_id.replace('_container', temp);
     temp += 1
     input.setAttribute('class', 'form-control');
+    input.setAttribute('onkeydown', "return event.key != 'Enter';");
+    input.setAttribute('onkeyup', "");
     if(val){
         input.setAttribute('value', val);
     }

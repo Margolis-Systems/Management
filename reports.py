@@ -189,11 +189,6 @@ class Bartender:
                 if row['job_id'] == "0":
                     break
                 line = {}
-                # Header indicator
-                if info['type'] == 'regular':
-                    if index % 8 == 0:
-                        line['z19'] = 1
-                index += 1
                 kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora'}
                 for obj in row:
                     line[obj] = row[obj]
@@ -202,7 +197,7 @@ class Bartender:
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                     if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in ['925', '966', '215', '216', '78', '79', '119']:
+                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68']:
                         line['circle'] = 'כן'
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
@@ -210,7 +205,8 @@ class Bartender:
                         if line['element'][0] == 'ק' and line['element'] not in element_buf:# and 'label' in print_type:
                             item_to_copy = ['order_id', 'element', 'costumer_name', 'comment', 'costumer_site']
                             for item in item_to_copy:
-                                kora[item] = line[item]
+                                if item in line:
+                                    kora[item] = line[item]
                             for _row in rows:
                                 if _row['element'] == line['element']:
                                     kora['z15'] += 1
@@ -221,7 +217,17 @@ class Bartender:
                             # todo: barcode DATA
                             kora['barcode_data'] = ''
                             element_buf.append(line['element'])
+                            # # Header indicator
+                            if info['type'] == 'regular':
+                                if index % 8 == 0:
+                                    kora['z19'] = 1
+                            index += 1
                             print_data.append(kora)
+                # Header indicator
+                if info['type'] == 'regular':
+                    if index % 8 == 0:
+                        line['z19'] = 1
+                index += 1
                 print_data.append(line.copy())
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
@@ -291,6 +297,7 @@ class Bartender:
                         special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
                     special_sum['חיתוך']['qnt'] += quantity
                     special_sum['חיתוך']['weight'] += row['weight']
+                    # print(special_sum['חיתוך']['weight'])
                 if row['shape'] not in ["1", "905"]:
                     if 'כיפוף' not in special_sum.keys():
                         special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
@@ -307,7 +314,7 @@ class Bartender:
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
                 elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                        or row['shape'] in ['925', '966', '215', '216', '78', '79', '119']:
+                        or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68']:
                     if 'חישוק' not in special_sum.keys():
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק']['qnt'] += quantity
@@ -333,7 +340,15 @@ class Bartender:
                             special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
                         special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
                         special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
-            table_data = OrderedDict(sorted(table_data.items(), key=lambda t: t[0]))
+            # Reorder diam summary list
+            # table_data = OrderedDict(table_data.items(), key=lambda t: t[0])
+            li = list(table_data.keys())
+            sort_keys = list(map(int, li))
+            sort_keys.sort()
+            temp = {}
+            for key in sort_keys:
+                temp[key] = table_data[str(key)]
+            table_data = temp
             # Bartender Table filler
             # Summary
             table_cells = 5
@@ -389,7 +404,7 @@ class Bartender:
     def bt_create_print_file(printer, btw_file, print_data):
         # Bar tender btw
         header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
-                 + printer + ' /R=3 /P /DD\n%END%\n'
+                 + printer.upper() + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
         if main.session['username'] in ['baruch', 'Baruch']:
