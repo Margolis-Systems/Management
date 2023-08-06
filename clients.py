@@ -82,7 +82,7 @@ def remove_site():
     user_group = users.validate_user()
     if not user_group:
         return users.logout()
-    elif user_group > 80:
+    elif user_group > 70:
         client_id = main.request.values['client_id']
         site = main.request.values['site']
         main.mongo.update_one('costumers', {'id': client_id}, {'sites': site}, '$pull')

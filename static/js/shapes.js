@@ -106,6 +106,7 @@ function copyLastRow(dict, dataToDisplay){
     dataToDisplay['shape_data'] = 1;
     dataToDisplay['length'] = 1;
     dataToDisplay['quantity'] = 2;
+    dataToDisplay['weight'] = 2;
     if("shape" in dict){
         dict['shape_data'] = dict['shape']
     }
@@ -161,7 +162,7 @@ function focusNext(inputIndex) {
         var safety = 0;
         while (safety < 20){
             inputIndex += 1;
-            if (inputIndex >= inputNames.length){
+            if (inputIndex >= inputNames.length|| inputNames[inputIndex]=='weight'){
                 document.getElementById('submit').click();
                 return
             }

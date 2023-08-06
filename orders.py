@@ -155,8 +155,8 @@ def new_order_row():
         bars_y = 1
         for i in range(len(new_row['x_length'])):
             if new_row['x_pitch'][i] != "0":
-                new_row['trim_x_end'] = str(int(new_row['trim_x_end']) +
-                                            int(new_row['x_length'][i]) % int(new_row['x_pitch'][i]))
+                new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
+                                            int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])).replace('.0','')
                 new_row['x_length'][i] = str(
                     int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])))
                 bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['x_pitch'][i]))
@@ -164,8 +164,8 @@ def new_order_row():
                 bars_y += 1
         new_row['length'] = sum(list(map(int, new_row['y_length'])))
         new_row['width'] = sum(list(map(int, new_row['x_length'])))
-        new_row['length'] += int(new_row['trim_y_start']) + int(new_row['trim_y_end'])
-        new_row['width'] += int(new_row['trim_x_start']) + int(new_row['trim_x_end'])
+        new_row['length'] += int(float(new_row['trim_y_start']) + float(new_row['trim_y_end']))
+        new_row['width'] += int(float(new_row['trim_x_start']) + float(new_row['trim_x_end']))
         for i in range(len(new_row['y_length'])):
             if new_row['y_pitch'][i] != "0":
                 new_row['trim_y_end'] = str(int(new_row['trim_y_end']) +
