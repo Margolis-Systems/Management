@@ -45,7 +45,7 @@ div {
     {% endfor %}
     </tr>
 </table>
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}">
+<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <td>

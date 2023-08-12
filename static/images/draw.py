@@ -57,11 +57,20 @@ def print_shapes_name():
     print(list(shapes.keys()))
 
 
+def print_keys():
+    with open('C:\\Server\\lists\\shapes.json', 'r', encoding='utf-8') as shapes_json:
+        shapes = json.load(shapes_json)
+    keys = list(shapes.keys())
+    keys = sorted(keys, key=int)
+    print(keys)
+
+
 if __name__ == '__main__':
     # print_shapes_name()
     # SIZE 200 X 60
     # INPUT
-    pos = [(60,5),(15,5),(60,50),(140,50),(185,5),(140,5)]
-    # pos = [(110, 10), (15, 10), (15, 50), (185, 50)]
-    name = '26'
+    #[  185, 20  ],  [ 60,  20 ], [60, 55 ],[ 140, 55 ], [ 140, 5 ],[15, 5]]
+    # print_keys()
+    pos = [(15,50),(185,50),(185,5),(90,5),(60,30),(140,30)]
+    name = '20'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')

@@ -216,10 +216,13 @@ def scan():
     if 'scan' in main.request.form.keys():
         decode = reports.Images.decode_qr(main.request.form['scan'])
         order_id, job_id = decode['order_id'], decode['job_id']
+        # print(decode)
+        # {'order_id': '22071206', 'job_id': '1', 'length': '4000', 'quantity': '200', 'weight': '710', 'diam': '12'}
     elif 'order_id' in main.request.form.keys() and 'close' not in main.request.form.keys():
         order_id = main.request.form['order_id']
         job_id = main.request.form['job_id']
         orders.update_order_status(main.request.form['status'], order_id, job_id)
+        # TODO: report
         # functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': main.request.form['status']})
         return main.redirect('/scan')
     if order_id:
@@ -343,9 +346,7 @@ def reports_page():
                 query['username'] = req_vals['username']
             # Read all orders data with Info, mean that it's not including order rows
             orders_df = main.mongo.read_collection_df('orders', query=query)
-            if orders_df.empty:
-                print('report empty')
-            else:
+            if not orders_df.empty:
                 # normalize json to df
                 info_df = pd.json_normalize(orders_df['info'])
                 info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
@@ -385,9 +386,7 @@ def reports_page():
                 query['username'] = req_vals['username']
             # Read all orders data with Info, mean that it's not including order rows
             orders_df = main.mongo.read_collection_df('orders', query=query)
-            if orders_df.empty:
-                print('report empty')
-            else:
+            if not orders_df.empty:
                 # normalize json to df
                 info_df = pd.json_normalize(orders_df['info'])
                 info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
@@ -418,10 +417,6 @@ def reports_page():
                 template_row['costumer_name'] = 'סהכ כללי'
                 template_row['total_weight'] = global_total_weight
                 report_data.append(template_row.copy())
-    # # Print
-    # if 'print' in req_vals:
-    #     title = req_vals['print']
-    #     reports.Docs.print_doc(title, report_data)
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, dictionary=pages.get_dictionary(main.session['username']))
 
 
@@ -435,7 +430,6 @@ def machines_page():
         machine_id = 1
         last_id = main.mongo.read_collection_one_sort('machines', 'machine_id',
                                                          query={'machine_id': {'$exists': True}}, limit=1)
-        print(last_id)
         if machine_id:
             machine_id += last_id['machine_id']
         doc = {'machine_id': machine_id}
@@ -460,7 +454,7 @@ def file_listener():
     else:
         order_id = main.session['order_id']
     scanner = main.mongo.read_collection_one('users',{'name': main.session['username']})['default_scanner']
-    main.mongo.upsert_collection_one('attachments',{'name':scanner},{'name':scanner, 'order_id': order_id})
+    main.mongo.upsert_collection_one('attachments', {'name': scanner}, {'name': scanner, 'order_id': order_id})
     return '', 204
 
 

@@ -26,6 +26,7 @@ with open('pid.txt', 'w') as pid:  # C:\\Server\\
 def index():
     if not users.validate_user():
         return logout()
+
     if 'username' in session:
         user = session['username']
         session.clear()

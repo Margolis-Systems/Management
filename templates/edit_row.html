@@ -34,9 +34,9 @@ div {
     </tr>
 </table>
 {% if defaults.addbefore %}
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}?addbefore={{defaults.addbefore}}">
+<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}?addbefore={{defaults.addbefore}}" onsubmit="input_form.disabled = true; return true;">
 {% else %}
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_row') }}">
+<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_row') }}" onsubmit="input_form.disabled = true; return true;">
 {% endif %}
 {% if order_data.include %}
     {% include order_data.include %}

@@ -380,6 +380,8 @@ class Bartender:
             if isinstance(total_weight, float):
                 total_weight = int(total_weight)
             template_row = {'temp_select': table_selector, 'tb30': total_weight}
+            if disable_weight:
+                template_row['tb30'] = ''
             # Add total weight to summary
             table_selector = 4
             summary_data.append(template_row.copy())

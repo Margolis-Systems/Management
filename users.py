@@ -1,10 +1,12 @@
 import functions
 import main
 import bcrypt
+import datetime
 
 
 def login():
     msg = ""
+    coockie = main.request.cookies.get('userhash')
     if main.request.method == 'POST':
         msg = "סיסמה שגויה"  # todo: web dictionary
         username_input = main.request.form['username'].lower()
@@ -15,17 +17,24 @@ def login():
                 main.session['user_config'] = {}
                 resp = main.make_response()
                 resp.headers['location'] = main.url_for('index')
-                resp.set_cookie('userhash', username_input)
+                expire_date = datetime.datetime.now() + datetime.timedelta(days=1000)
+                resp.set_cookie('userhash', username_input, expires=expire_date)
                 return resp, 302
             else:
                 functions.log('login_fail', {'ip': main.request.remote_addr})
                 print('Failed to login from IP:', main.request.remote_addr)
+    elif coockie:
+        main.session['username'] = coockie
+        return main.redirect('/')
     return main.render_template('login.html', msg=msg)
 
 
 def logout():
     main.session.clear()
-    return main.redirect('/login')
+    resp = main.make_response()
+    resp.headers['location'] = main.url_for('login')
+    resp.set_cookie('userhash', '', max_age=0)
+    return resp, 302
 
 
 def register():

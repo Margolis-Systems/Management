@@ -151,8 +151,9 @@ weights_list = {
     }
 }
 
-
+var do_once = 0
 function focusNext(inputIndex) {
+console.log(do_once)
     //if (event.keyCode === 13 && event.shiftKey){
     //    document.getElementById('submit').click();
     //    return
@@ -162,8 +163,9 @@ function focusNext(inputIndex) {
         var safety = 0;
         while (safety < 20){
             inputIndex += 1;
-            if (inputIndex >= inputNames.length|| inputNames[inputIndex]=='weight'){
+            if (inputIndex >= inputNames.length && do_once == 0 ){
                 document.getElementById('submit').click();
+                do_once = 1;
                 return
             }
             if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){

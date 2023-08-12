@@ -486,28 +486,22 @@ def update_orders_total_weight():
 def reorder_job_id(job_id=''):
     order_id = main.session['order_id']
     job_list, info, additional = get_order_data(main.session['order_id'], reverse=False)
-
     rows = len(job_list)
     index = 1
     if job_list:
-        if job_list[0]['job_id'] != '1':
-            job_list.sort(key=lambda k: int(k['job_id']), reverse=True)
         if job_id:
             main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[-1]['job_id']},
                                   {'job_id': str(rows+1)}, '$set')
-            # print(job_list[-1]['job_id'],'--->',str(rows+1),'1st')
         for job in job_list:
             if job['job_id'] != '0' and index <= rows:
                 if job['job_id'] == job_id:
                     index += 1
                 main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
                                         {'job_id': str(index)}, '$set')
-                # print(job['job_id'],'--->',str(index))
                 index += 1
         if job_id:
             main.mongo.update_one('orders', {'order_id': order_id, 'job_id': str(rows+1)},
                                   {'job_id': job_id}, '$set')
-            # print(str(rows+1), '--->', job_id, 'last')
     main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                           {'info.rows': str(rows)}, '$set')
 
@@ -521,7 +515,6 @@ def peripheral_orders(add_orders, order_id, orig_job_id):
     order_id += "R"
     for order in range(len(add_orders)):
         job_id = str(order+1) + '_' + orig_job_id
-        # job_id = gen_job_id(order_id)
         order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
         info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'],
                 'date_created': ts(), 'type': 'R', 'status': 'NEW'}
