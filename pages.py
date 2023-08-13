@@ -352,7 +352,7 @@ def reports_page():
                 query['username'] = req_vals['username']
             report_data = list(main.mongo.read_collection_list('production_log', query))
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
-                               'diam', 'Start_ts', '	Finished_ts']
+                               'diam', 'Start_ts', 'Finished_ts']
             # todo: complete report
         elif report == 'orders':
             query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to'] + ' 00:00:00'},
@@ -371,7 +371,6 @@ def reports_page():
                 query['username'] = req_vals['username']
         # Read all orders data with Info, mean that it's not including order rows
         orders_df = main.mongo.read_collection_df('orders', query=query)
-        print(query)
         if not orders_df.empty:
             # normalize json to df
             info_df = pd.json_normalize(orders_df['info'])
