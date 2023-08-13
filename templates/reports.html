@@ -2,7 +2,7 @@
 {% block body %}
 <table class="table table-striped" align="center" dir="rtl">
     <tr class="d-print-none">
-        <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block" disabled>דוח ייצור</button></td>
+        <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
         <td><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
         <td><button onclick="location.href='/reports?report=status'" type="button" class="btn btn-primary btn-block">דוח סטטוס הודפס</button></td>
         <td><button onclick="location.href='/reports?report=clear'" type="button" class="btn btn-danger btn-block">איפוס</button></td>
@@ -28,7 +28,10 @@
 {% if report_data %}
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
-        {% for item in report_data[0] %}
+        {% if not data_to_display %}
+        {% set data_to_display=report_data[0] %}
+        {% endif %}
+        {% for item in data_to_display %}
         {% if dictionary[item] %}
         {% set name = dictionary[item] %}
         {% else %}
@@ -41,7 +44,7 @@
     </tr>
     {% for line in report_data %}
     <tr>
-        {% for item in line %}
+        {% for item in data_to_display %}
         <td>
             {% if line['order_id'] == '' %}
             <b>
@@ -51,6 +54,7 @@
             {% else %}
                 {{ line[item] }}
             {% endif %}
+            </b>
         </td>
         {% endfor %}
     </tr>

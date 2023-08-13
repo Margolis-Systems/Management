@@ -210,24 +210,24 @@ def scan():
     msg = ""
     status = ""
     decode = {}
-    order = main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': main.session['username']})
+    user = main.session['username']
+    order = main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': user})
+    machine = main.mongo.read_collection_one('machines', {'username': user})
+    if not machine:
+        msg = 'לא הוקצתה מכונה למפעיל'
     if order:
         order_id = order['order_id']
         job_id = order['job_id']
-    if 'scan' in main.request.form.keys():
-        decode = reports.Images.decode_qr(main.request.form['scan'])
+    req_form = dict(main.request.form)
+    if 'scan' in req_form.keys():
+        decode = reports.Images.decode_qr(req_form['scan'])
         decode['weight'] = int(decode['weight'])
         order_id, job_id = decode['order_id'], decode['job_id']
-        # TODO: if username in machines collection
-        # print(decode)
-        # {'order_id': '22071206', 'job_id': '1', 'length': '4000', 'quantity': '200', 'weight': '710', 'diam': '12'}
-    elif 'order_id' in main.request.form.keys() and 'close' not in main.request.form.keys():
-        req_form = dict(main.request.form)
+    elif 'order_id' in req_form.keys() and 'close' not in req_form.keys():
         order_id = req_form['order_id']
         job_id = req_form['job_id']
-        status = main.request.form['status']
+        status = req_form['status']
         orders.update_order_status(status, order_id, job_id)
-        # TODO: report
         production_log(req_form)
         return main.redirect('/scan')
     if order_id:
@@ -253,9 +253,8 @@ def scan():
         else:
             msg = job['status']
             order_id = ''
-        # else:
-        #     msg = "Not found"
-    return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, dictionary=get_dictionary(main.session['username']), user=main.session['username'])
+    return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
+                                dictionary=get_dictionary(main.session['username']), user=user)
 
 
 def get_defaults():
@@ -332,6 +331,7 @@ def gen_file_id():
 def reports_page():
     report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
     report_data = []
+    data_to_display = []
     report = ''
     req_vals = dict(main.request.values)
     # Report date handle
@@ -345,53 +345,23 @@ def reports_page():
     if 'report' in req_vals.keys():
         report = req_vals['report']
         if report == 'production':
-            query = {'timestamp': {'$gte': report_date['from'], '$lte': report_date['to']}}
-            if 'machine' in req_vals.keys():
-                query['macine'] = req_vals['machine']
+            query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'}}
+            if 'machine_id' in req_vals.keys():
+                query['macine_id'] = int(req_vals['machine_id'])
             if 'operator' in req_vals.keys():
-                query['username'] = req_vals['operator']
-            report_data = list(main.mongo.read_collection_list('machines', query))
+                query['username'] = req_vals['username']
+            report_data = list(main.mongo.read_collection_list('production_log', query))
+            data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
+                               'diam', 'Start_ts', '	Finished_ts']
+            # todo: complete report
         elif report == 'orders':
-            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'},
+            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to'] + ' 00:00:00'},
                      'info.status': {'$ne': 'canceled'},
                      'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל']}}
             if 'client_name' in req_vals.keys():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
-            # Read all orders data with Info, mean that it's not including order rows
-            orders_df = main.mongo.read_collection_df('orders', query=query)
-            if not orders_df.empty:
-                # normalize json to df
-                info_df = pd.json_normalize(orders_df['info'])
-                info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
-                # add order id from main df
-                new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
-                new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
-                new_df['status'] = 'order_status_' + new_df['status'].astype(str)
-                new_df.sort_values('costumer_name',inplace=True)
-                _report_data = new_df.to_dict('records')
-                temp_total_weight = 0
-                global_total_weight = new_df['total_weight'].sum()
-                last_client = _report_data[0]['costumer_name']
-                template_row = {}
-                for item in _report_data[0]:
-                    template_row[item] = ''
-                template_row['costumer_name'] = 'סהכ ללקוח'
-                for row in _report_data:
-                    if row['costumer_name'] == last_client:
-                        temp_total_weight += row['total_weight']
-                    else:
-                        template_row['total_weight'] = str(temp_total_weight)
-                        report_data.append(template_row.copy())
-                        temp_total_weight = row['total_weight']
-                        last_client = row['costumer_name']
-                    report_data.append(row)
-                template_row['total_weight'] = temp_total_weight
-                report_data.append(template_row.copy())
-                template_row['costumer_name'] = 'סהכ כללי'
-                template_row['total_weight'] = global_total_weight
-                report_data.append(template_row.copy())
         elif report == 'status':
             query = {'info.status': 'Processed', 'info.type': 'regular',
                      'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל']}}
@@ -399,40 +369,43 @@ def reports_page():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
-            # Read all orders data with Info, mean that it's not including order rows
-            orders_df = main.mongo.read_collection_df('orders', query=query)
-            if not orders_df.empty:
-                # normalize json to df
-                info_df = pd.json_normalize(orders_df['info'])
-                info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
-                # add order id from main df
-                new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
-                new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
-                new_df['status'] = 'order_status_' + new_df['status'].astype(str)
-                new_df.sort_values('costumer_name',inplace=True)
-                _report_data = new_df.to_dict('records')
-                temp_total_weight = 0
-                global_total_weight = new_df['total_weight'].sum()
-                last_client = _report_data[0]['costumer_name']
-                template_row = {}
-                for item in _report_data[0]:
-                    template_row[item] = ''
-                template_row['costumer_name'] = 'סהכ ללקוח'
-                for row in _report_data:
-                    if row['costumer_name'] == last_client:
-                        temp_total_weight += row['total_weight']
-                    else:
-                        template_row['total_weight'] = temp_total_weight
-                        report_data.append(template_row.copy())
-                        temp_total_weight = row['total_weight']
-                        last_client = row['costumer_name']
-                    report_data.append(row)
-                template_row['total_weight'] = temp_total_weight
-                report_data.append(template_row.copy())
-                template_row['costumer_name'] = 'סהכ כללי'
-                template_row['total_weight'] = global_total_weight
-                report_data.append(template_row.copy())
-    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, dictionary=pages.get_dictionary(main.session['username']))
+        # Read all orders data with Info, mean that it's not including order rows
+        orders_df = main.mongo.read_collection_df('orders', query=query)
+        print(query)
+        if not orders_df.empty:
+            # normalize json to df
+            info_df = pd.json_normalize(orders_df['info'])
+            info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
+            # add order id from main df
+            new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
+            new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
+            new_df.drop(new_df[new_df['type'] == 'integration'].index, inplace=True)
+            new_df['status'] = 'order_status_' + new_df['status'].astype(str)
+            new_df.sort_values('costumer_name',inplace=True)
+            _report_data = new_df.to_dict('records')
+            temp_total_weight = 0
+            global_total_weight = new_df['total_weight'].sum()
+            last_client = _report_data[0]['costumer_name']
+            template_row = {}
+            for item in _report_data[0]:
+                template_row[item] = ''
+            template_row['costumer_name'] = 'סהכ ללקוח'
+            for row in _report_data:
+                if row['costumer_name'] == last_client:
+                    temp_total_weight += row['total_weight']
+                else:
+                    template_row['total_weight'] = str(temp_total_weight)
+                    report_data.append(template_row.copy())
+                    temp_total_weight = row['total_weight']
+                    last_client = row['costumer_name']
+                report_data.append(row)
+            template_row['total_weight'] = temp_total_weight
+            report_data.append(template_row.copy())
+            template_row['costumer_name'] = 'סהכ כללי'
+            template_row['total_weight'] = global_total_weight
+            report_data.append(template_row.copy())
+    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report,
+                                dictionary=pages.get_dictionary(main.session['username']), data_to_display=data_to_display)
 
 
 def machines_page():
@@ -478,14 +451,14 @@ def delete_attachment():
 
 def production_log(form_data):
     log = form_data.copy()
-    log[form_data['status']+'_ts'] = functions.ts()
     job_data = main.mongo.read_collection_one('orders', {'order_id': log['order_id'], 'job_id': log['job_id']})
     keys_to_log = ['weight', 'length', 'quantity', 'diam']
-    machine_data = {}
+    machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
     for item in keys_to_log:
         if item in job_data:
-            machine_data[item] = job_data[item]
+            log[item] = job_data[item]
         else:
             print('production log \nitem not found: ', item)
     log.update(machine_data)
-    main.mongo.insert_collection_one('production_log', log)
+    log[form_data['status']+'_ts'] = functions.ts()
+    main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id']}, log, '$set', upsert=True)

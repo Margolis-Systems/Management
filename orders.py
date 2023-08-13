@@ -429,6 +429,8 @@ def update_order_status(new_status, order_id, job_id=""):
             if new_status == 'Production':
                 if main.mongo.read_collection_one('orders', {'order_id': order_id+'R'}):
                     update_order_status(new_status, order_id+'R')
+        if not rows:
+            return
         for row in rows:
             if row['status'] != "order_status_Finished":
                 return

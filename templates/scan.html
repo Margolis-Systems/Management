@@ -1,7 +1,9 @@
 {% extends "layout_mob.html" %}
 {% block body %}
-{{user}}
 <table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td colspan="10"><b>User:</b> {{user}}, <b>Machine:</b> {{machine.machine_name}} / {{machine.machine_id}}</td>
+    </tr>
     <form method=POST id="form" action="{{ url_for('scan') }}">
     <tr>
         <td class="d-grid gap-2">
@@ -17,9 +19,6 @@
             {% else %}
             <label>{{dictionary['scan_barcode']}}</label>
             <input type="text" class="form-control" id="scan" name="scan" placeholder="{{dictionary['scan_barcode']}}" onfocusout="scanFocus();" onkeyup="scanSubmit();" autofocus>
-            <!--
-            <button type="reset" class="btn btn-primary btn-lg" onclick="autoFocus()">Reset</button>
-            <button type="submit" class="btn btn-primary btn-lg">Scan</button>-->
         </td>
     </tr>
     {% endif %}

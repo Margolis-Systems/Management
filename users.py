@@ -7,6 +7,7 @@ import datetime
 def login():
     msg = ""
     coockie = main.request.cookies.get('userhash')
+    print(coockie)
     if main.request.method == 'POST':
         msg = "סיסמה שגויה"  # todo: web dictionary
         username_input = main.request.form['username'].lower()
@@ -18,6 +19,7 @@ def login():
                 resp = main.make_response()
                 resp.headers['location'] = main.url_for('index')
                 expire_date = datetime.datetime.now() + datetime.timedelta(days=1000)
+                print(expire_date)
                 resp.set_cookie('userhash', username_input, expires=expire_date)
                 return resp, 302
             else:

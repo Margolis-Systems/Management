@@ -26,12 +26,12 @@
     <form id="form" method=POST action="{{ url_for('machines') }}">
         <tr>
             <td></td>
-            <td><input type="text" name="machine_name"></td>
+            <td><input type="text" name="machine_name" required></td>
             <td>
-                <input list="users" name="username">
+                <input list="users" name="username" required>
             </td>
             <td>
-                <input type="text" name="operator">
+                <input type="text" name="operator" required>
             </td>
         </tr>
         <tr>
