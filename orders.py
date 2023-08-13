@@ -18,7 +18,7 @@ def orders():
     if 'order_id' in main.session.keys():
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
-    query = {'info': {'$exists': True}}
+    query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
     if 'user_config' in main.session:
         if 'search' in main.session['user_config']:
             if main.session['user_config']['search']:
@@ -284,12 +284,14 @@ def edit_order():
 
 
 def get_order_data(order_id, job_id="", split="", reverse=True):
-    query = {'order_id': order_id, 'job_id': {'$ne': "0"}, 'info': {'$exists': False}}
+    query = {'order_id': order_id, 'job_id': {'$ne': "0"}, 'info': {'$exists': False}, 'type': {'$ne': 'integration'}}
     if job_id:
         query['job_id'] = job_id
     if split:
         query['order_split'] = int(split)
     order_data = list(main.mongo.read_collection_list('orders', query))
+    # if not order_data:
+    #     return None, None, None
     additional = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})['info']
     if info['type'] == 'R':
@@ -308,7 +310,7 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
 
 def new_order_id():
     new_id = "1"
-    orders_df = main.mongo.read_collection_df('orders', query={'info': {'$exists': True}})
+    orders_df = main.mongo.read_collection_df('orders', query={'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}})
     if orders_df.empty:
         return new_id
     order_ids_list = orders_df['order_id'].unique().tolist()
@@ -471,8 +473,9 @@ def close_order():
     return main.redirect('/orders')
 
 
-def update_orders_total_weight():
-    order_id = main.session['order_id']
+def update_orders_total_weight(order_id=''):
+    if not order_id:
+        order_id = main.session['order_id']
     order_data_df = main.mongo.read_collection_df('orders', query={'info': {'$exists': False}, 'order_id': order_id, 'job_id': {'$ne': "0"}})
     rows_count = len(order_data_df.index)
     if rows_count == 0:
@@ -480,7 +483,7 @@ def update_orders_total_weight():
     else:
         total_weight = sum(order_data_df[order_data_df['order_id'] == order_id]['weight'].to_list())
     if not math.isnan(total_weight):
-        main.mongo.update_one('orders', {'order_id': order_id}, {'info.total_weight': int(total_weight), 'info.rows': rows_count}, '$set')
+        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}}, {'info.total_weight': int(total_weight), 'info.rows': rows_count}, '$set')
 
 
 def reorder_job_id(job_id=''):

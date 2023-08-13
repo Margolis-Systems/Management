@@ -207,39 +207,54 @@ def scan():
         return users.logout()
     order_id = ""
     job_id = ""
+    msg = ""
+    status = ""
+    decode = {}
     order = main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': main.session['username']})
     if order:
         order_id = order['order_id']
         job_id = order['job_id']
-    msg = ""
-    status = ""
     if 'scan' in main.request.form.keys():
         decode = reports.Images.decode_qr(main.request.form['scan'])
+        decode['weight'] = int(decode['weight'])
         order_id, job_id = decode['order_id'], decode['job_id']
+        # TODO: if username in machines collection
         # print(decode)
         # {'order_id': '22071206', 'job_id': '1', 'length': '4000', 'quantity': '200', 'weight': '710', 'diam': '12'}
     elif 'order_id' in main.request.form.keys() and 'close' not in main.request.form.keys():
-        order_id = main.request.form['order_id']
-        job_id = main.request.form['job_id']
-        orders.update_order_status(main.request.form['status'], order_id, job_id)
+        req_form = dict(main.request.form)
+        order_id = req_form['order_id']
+        job_id = req_form['job_id']
+        status = main.request.form['status']
+        orders.update_order_status(status, order_id, job_id)
         # TODO: report
-        # functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': main.request.form['status']})
+        production_log(req_form)
         return main.redirect('/scan')
     if order_id:
         job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
-        if job:
-            if job['status'] == 'Production':
-                status = "Start"
-            elif job['status'] == "Start":
-                status = "Finished"
-            elif job['status'] == "NEW":
-                orders.update_order_status('Production', order_id)
-                status = "Start"
-            else:
-                msg = job['status']
-                order_id = ''
+        if not job and decode:
+            integration_order = decode.copy()
+            add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(), 'status_updated_by': main.session['username']}
+            integration_order.update(add_info)
+            main.mongo.insert_collection_one('orders', integration_order)
+            info = {'costumer_name': '', 'costumer_id': '', 'created_by': main.session['username'], 'costumer_site': '',
+                    'date_created': functions.ts(), 'type': 'integration', 'status': 'Production'}
+            main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
+                                             {'order_id': order_id, 'info': info})
+            orders.update_orders_total_weight(order_id)
+        job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
+        if job['status'] == 'Production':
+            status = "Start"
+        elif job['status'] == "Start":
+            status = "Finished"
+        elif job['status'] == "NEW":
+            orders.update_order_status('Production', order_id)
+            status = "Start"
         else:
-            msg = "Not found"
+            msg = job['status']
+            order_id = ''
+        # else:
+        #     msg = "Not found"
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, dictionary=get_dictionary(main.session['username']), user=main.session['username'])
 
 
@@ -378,8 +393,8 @@ def reports_page():
                 template_row['total_weight'] = global_total_weight
                 report_data.append(template_row.copy())
         elif report == 'status':
-            query = {'info.status': 'Processed', 'info.type': 'regular'}
-            query['info.costumer_name'] = {'$nin': ['טסטים \ בדיקות','צומת ברזל']}
+            query = {'info.status': 'Processed', 'info.type': 'regular',
+                     'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל']}}
             if 'client_name' in req_vals.keys():
                 query['client_name'] = req_vals['client_name']
             if 'username' in req_vals.keys():
@@ -436,15 +451,11 @@ def machines_page():
         doc.update(req_form)
         main.mongo.insert_collection_one('machines', doc)
         return main.redirect('/machines')
-    machine_list = []
     users_list = []
     _users = main.mongo.read_collection_list('users', {'group': {'$lt': 5}})
-    # _machines = main.mongo.read_collection_list('machines', {'machine_id': {'$exists':True}})
-    machine_list = main.mongo.read_collection_list('machines', {'machine_id': {'$exists':True}})
+    machine_list = main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}})
     for user in _users:
         users_list.append(user['name'])
-    # for machine in _machines:
-    #     machine_list.append(machine['machine_name']+' '+str(machine['machine_id']))
     return main.render_template('machines.html', machine_list=machine_list, users_list=users_list, msg='')
 
 
@@ -463,3 +474,18 @@ def delete_attachment():
         return users.logout()
     main.mongo.delete_many('attachments', {'id': list(main.request.values)[0]})
     return order_files()
+
+
+def production_log(form_data):
+    log = form_data.copy()
+    log[form_data['status']+'_ts'] = functions.ts()
+    job_data = main.mongo.read_collection_one('orders', {'order_id': log['order_id'], 'job_id': log['job_id']})
+    keys_to_log = ['weight', 'length', 'quantity', 'diam']
+    machine_data = {}
+    for item in keys_to_log:
+        if item in job_data:
+            machine_data[item] = job_data[item]
+        else:
+            print('production log \nitem not found: ', item)
+    log.update(machine_data)
+    main.mongo.insert_collection_one('production_log', log)
