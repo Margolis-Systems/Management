@@ -355,7 +355,7 @@ def reports_page():
                                'diam', 'Start_ts', 'Finished_ts']
             # todo: complete report
         elif report == 'orders':
-            query = {'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to'] + ' 00:00:00'},
+            query = {'info.date_created': {'$gte': report_date['from'] + ' 00:00:00', '$lte': report_date['to'] + ' 23:59:59'},
                      'info.status': {'$ne': 'canceled'},
                      'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל']}}
             if 'client_name' in req_vals.keys():
