@@ -8,6 +8,7 @@ import orders
 import os
 import pandas as pd
 import pages
+from operator import itemgetter
 
 
 def jobs_list(order_type='regular'):
@@ -350,9 +351,24 @@ def reports_page():
                 query['macine_id'] = int(req_vals['machine_id'])
             if 'operator' in req_vals.keys():
                 query['username'] = req_vals['username']
-            report_data = list(main.mongo.read_collection_list('production_log', query))
+            temp_report_data = list(main.mongo.read_collection_list('production_log', query))
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
-                               'diam', 'Start_ts', 'Finished_ts']
+                               'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id']
+            temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id'))
+            if temp_report_data:
+                machine_id = temp_report_data[0]['machine_id']
+                total = {'weight': 0, 'quantity': 0, 'order_id': '', 'operator': 'סה"כ:'}
+                for line in temp_report_data:
+                    if line['machine_id'] != machine_id:
+                        report_data.append(total)
+                        machine_id = line['machine_id']
+                        total = {'weight': 0, 'quantity': 0, 'order_id': '', 'operator': 'סה"כ:'}
+                    report_data.append(line)
+                    total['weight'] += int(line['weight'])
+                    total['quantity'] += int(line['quantity'])
+                report_data.append(total)
+
+            # report_data = temp_report_data
             # todo: complete report
         elif report == 'orders':
             query = {'info.date_created': {'$gte': report_date['from'] + ' 00:00:00', '$lte': report_date['to'] + ' 23:59:59'},
