@@ -66,7 +66,11 @@
         </td>
         {% endfor %}
         <td height="50" style="outline: thin solid;text-align: center">
+            {% if orders[order]['in_use'] and orders[order]['in_use'] != 0 %}
+            בשימוש על ידי: {{orders[order]['in_use']}}
+            {% else %}
             <button type="button" onclick='openNewWindow("\change_order_status?order_id={{orders[order]["order_id"]}}")'>שנה סטטוס</button></td>
+            {% endif %}
         <td height="50" style="outline: thin solid;text-align: center">
             <button type=button" onclick="openNewWindow('\order_files?order_id={{orders[order].order_id}}')" type="button">צפיה בקבצים</button></td>
     </tr>

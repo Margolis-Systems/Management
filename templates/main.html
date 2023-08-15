@@ -3,4 +3,7 @@
 <div class="text-center">
 Welcome {{ user }}
 </div>
+<script>
+    document.cookie = "userhash={{user}}; SameSite=None; Secure";
+</script>
 {% endblock %}

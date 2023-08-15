@@ -25,8 +25,7 @@ with open('pid.txt', 'w') as pid:  # C:\\Server\\
 @app.route('/')
 def index():
     if not users.validate_user():
-        return logout()
-
+        return redirect('/login')
     if 'username' in session:
         user = session['username']
         session.clear()

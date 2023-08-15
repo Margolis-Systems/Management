@@ -59,6 +59,8 @@ def orders():
         orders_info['total_weight'] = orders_info['total_weight'].astype(int)
     if orders_info['split'].any():
         orders_info['split'] = orders_info['split'].astype(int)
+    if 'in_use' in new_df:
+        orders_info['in_use'] = new_df['in_use']
     orders_info.sort_values(by=['date_created'], ascending=[False], inplace=True)
     dictionary = pages.get_dictionary(main.session['username'])
     return main.render_template('orders.html', orders=orders_info.to_dict('index'),
@@ -143,7 +145,6 @@ def new_order_row():
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
             else:
                 new_row[item] = req_form_data[item]
-    print(new_row)
     # Order comment
     if 'comment_hid' in req_form_data:
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
@@ -231,22 +232,11 @@ def new_order_row():
                         new_row['shape_data'].append(temp_order_data[item])
                     elif 'ang_' in item:
                         new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
-            # else:
-            #     main.mongo.update_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']},
-            #                           new_row, '$set')
-            #     return
-            if new_row['shape'] == '332':
-                new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
-            else:
-                new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
-            # else:
-            #     # Shape data not compatible with form data
-            #     print("Shape data not compatible with form data\n", main.session)
-            #     return
-        # else:
-        #     # No shape data
-        #     print("No shape data\n", main.session)
-        #     return
+        # calc weight
+        if new_row['shape'] == '332':
+            new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
+        else:
+            new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
     else:
         return
     # Takes to manual input for weight
@@ -278,6 +268,12 @@ def edit_order():
     order_data, page_data, total_weight = edit_order_data()
     if not order_data:
         return close_order()
+    elif 'in_use' in order_data['info']:
+        if order_data['info']['in_use'] != main.session['username']:
+            return close_order()
+    else:
+        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.status': 'NEW'},
+                              {'info.in_use': main.session['username']}, '$set')
     defaults = {'bar_type': 'מצולע'}
     msg = ''
     # Copy last element fix
@@ -466,7 +462,7 @@ def update_order_status(new_status, order_id, job_id=""):
                     .format(order_id=order_id, date_created=info['date_created'], date_delivery=info['date_delivery'],
                             costumer_name=info['costumer_name'], costumer_site=info['costumer_site'],
                             total_weight=info['total_weight'], rows=info['rows'], username=main.session['username'])
-                phone_book = ['0509595953', '0509393938', '0528008018', '0502201747']
+                phone_book = ['0509595953', '0509393938', '0528008018']
                 functions.send_sms(msg, phone_book)
 
 
@@ -476,15 +472,19 @@ def close_order():
     if len(list(main.request.values)) > 0:
         req_vals = list(main.request.values)
         additional_func = req_vals[0]
-        if additional_func == 'delete_order':
-            main.mongo.delete_many('orders', {'order_id': main.session['order_id']})
-        elif additional_func == 'delete_row':
+        # if additional_func == 'delete_order':
+        #     main.mongo.delete_many('orders', {'order_id': main.session['order_id']})
+        # el
+        if additional_func == 'delete_row':
             main.mongo.delete_many('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
             update_orders_total_weight()
             reorder_job_id()
             return main.redirect('/orders')
         elif additional_func == 'scan':
             return main.redirect('/scan')
+    if 'order_id' in main.session:
+        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.in_use': main.session['username']},
+                              {'info.in_use': ''}, '$unset')
     users.clear()
     return main.redirect('/orders')
 

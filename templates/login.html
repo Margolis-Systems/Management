@@ -17,7 +17,7 @@ input { font-size: 24px; }
       <form method=POST action="{{ url_for('login') }}">
         <img class="mb-4" src="\static\images\logo.jpg" alt="" width="150" height="auto">
         <h1 class="h3 mb-3 fw-normal">כניסה למערכת</h1>
-    
+        <input type="hidden" name="userhash" id="userhash">
         <div class="form-floating">
           <input type="text" placeholder="שם משתמש" name="username">
         </div>
@@ -38,7 +38,6 @@ input { font-size: 24px; }
 
 <script src="/static/js/jquery.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
-
 </body>
 
 </html>
