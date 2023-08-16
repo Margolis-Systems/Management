@@ -222,8 +222,10 @@ def scan():
     req_form = dict(main.request.form)
     if 'scan' in req_form.keys():
         decode = reports.Images.decode_qr(req_form['scan'])
-        decode['weight'] = int(decode['weight'])
-        order_id, job_id = decode['order_id'], decode['job_id']
+        if 'weight' in decode:
+            decode['weight'] = int(decode['weight'])
+        if 'order_id' in decode:
+            order_id, job_id = decode['order_id'], decode['job_id']
     elif 'order_id' in req_form.keys() and 'close' not in req_form.keys():
         order_id = req_form['order_id']
         job_id = req_form['job_id']
@@ -234,6 +236,7 @@ def scan():
     if order_id:
         job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
         if not job and decode:
+            # Create integration order
             integration_order = decode.copy()
             add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(), 'status_updated_by': main.session['username']}
             integration_order.update(add_info)
@@ -243,17 +246,21 @@ def scan():
             main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                                              {'order_id': order_id, 'info': info})
             orders.update_orders_total_weight(order_id)
-        job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
-        if job['status'] == 'Production':
-            status = "Start"
-        elif job['status'] == "Start":
-            status = "Finished"
-        elif job['status'] == "NEW":
-            orders.update_order_status('Production', order_id)
-            status = "Start"
-        else:
-            msg = job['status']
-            order_id = ''
+            job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
+        if 'status' in job:
+            if job['status'] == 'Production':
+                status = "Start"
+            elif job['status'] == "Start":
+                status = "Finished"
+            elif job['status'] == "NEW":
+                orders.update_order_status('Production', order_id)
+                status = "Start"
+            else:
+                if main.session['username'] == 'operator34' and job['status'] == "Finished":
+                    status = "Start"
+                else:
+                    msg = job['status']
+                    order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
                                 dictionary=get_dictionary(main.session['username']), user=user)
 
@@ -333,7 +340,9 @@ def reports_page():
     report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
     report_data = []
     data_to_display = []
+    machine_list = []
     report = ''
+    machine_id = ''
     req_vals = dict(main.request.values)
     # Report date handle
     if main.request.form:
@@ -342,15 +351,16 @@ def reports_page():
             if 'date' in item:
                 report_date['from'] = req_form['date_from']
                 report_date['to'] = req_form['date_to']
+                if req_form['date_to'] > req_form['date_from']:
+                    print('tr')
     # Report type handle
     if 'report' in req_vals.keys():
         report = req_vals['report']
+        query = {}
         if report == 'production':
             query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'}}
-            if 'machine_id' in req_vals.keys():
-                query['macine_id'] = int(req_vals['machine_id'])
-            if 'operator' in req_vals.keys():
-                query['username'] = req_vals['username']
+            if 'machine_id' in req_vals:
+                query['machine_id'] = int(req_vals['machine_id'])
             temp_report_data = list(main.mongo.read_collection_list('production_log', query))
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
                                'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id']
@@ -396,7 +406,8 @@ def reports_page():
             new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
             new_df.drop(new_df[new_df['type'] == 'integration'].index, inplace=True)
             new_df['status'] = 'order_status_' + new_df['status'].astype(str)
-            new_df.sort_values('costumer_name',inplace=True)
+            new_df['costumer_name'] = new_df['costumer_name'].astype(str)
+            new_df.sort_values('costumer_name', inplace=True)
             _report_data = new_df.to_dict('records')
             temp_total_weight = 0
             global_total_weight = new_df['total_weight'].sum()
@@ -419,7 +430,7 @@ def reports_page():
             template_row['costumer_name'] = 'סהכ כללי'
             template_row['total_weight'] = global_total_weight
             report_data.append(template_row.copy())
-    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report,
+    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_list=machine_list,
                                 dictionary=pages.get_dictionary(main.session['username']), data_to_display=data_to_display)
 
 

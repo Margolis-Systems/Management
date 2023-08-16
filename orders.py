@@ -116,8 +116,14 @@ def new_order(client="", order_type=""):
 
 def new_order_row():
     order_id = main.session['order_id']
+    if 'R' in order_id:
+        return
     req_form_data = main.request.form
-    # info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
+    info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
+    if info:
+        if 'in_use' in info['info']:
+            if info['info']['in_use'] != main.session['username']:
+                return
     # if info['info']['status'] != "NEW":
     #     return
     # Order peripheral data handling
@@ -219,6 +225,8 @@ def new_order_row():
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'shape' in req_form_data:
         temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
+        if not temp_order_data:
+            temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
@@ -246,6 +254,11 @@ def new_order_row():
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
+    prev = main.mongo.read_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']})
+    if prev:
+        for item in prev:
+            if item not in new_row:
+                new_row[item] = prev[item]
     main.mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']},
                                      new_row)  # , upsert=True
     update_orders_total_weight()
@@ -268,9 +281,10 @@ def edit_order():
     order_data, page_data, total_weight = edit_order_data()
     if not order_data:
         return close_order()
-    elif 'in_use' in order_data['info']:
-        if order_data['info']['in_use'] != main.session['username']:
-            return close_order()
+    # Dual use protection
+    # elif 'in_use' in order_data['info']:
+    #     if order_data['info']['in_use'] != main.session['username']:
+    #         return close_order()
     else:
         main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.status': 'NEW'},
                               {'info.in_use': main.session['username']}, '$set')

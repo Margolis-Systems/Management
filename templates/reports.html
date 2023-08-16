@@ -19,7 +19,7 @@
             <input type="date" name="date_to" value="{{date.to}}" onchange="formSubmit('date_form');"></label>
         </td>
         </form>
-        <td>
+        <td colspan="2">
         {% if report_data %}<button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" disabled>הדפס</button>
         {% endif %}
         </td>
@@ -43,7 +43,11 @@
         {% endfor %}
     </tr>
     {% for line in report_data %}
+    {% if report == 'production' %}
+    <tr ondblclick="location.href='/reports?report=production&machine_id={{line.machine_id}}'">
+    {% else %}
     <tr>
+    {% endif %}
         {% for item in data_to_display %}
         <td>
             {% if line['order_id'] == '' %}

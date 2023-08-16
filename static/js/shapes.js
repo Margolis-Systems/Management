@@ -164,6 +164,8 @@ console.log(do_once)
         while (safety < 20){
             inputIndex += 1;
             if (inputIndex >= inputNames.length && do_once == 0 ){
+                //document.getElementById('input_form').submit();
+                //return
                 document.getElementById('submit').click();
                 do_once = 1;
                 return
