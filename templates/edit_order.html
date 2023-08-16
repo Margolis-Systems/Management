@@ -73,8 +73,8 @@ div {
         {% endif %}
     </tr>
     <tr>
-        <td><button type=submit id="submit" class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>
-        <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
+        <!--<td><button type=submit id="submit" class="btn btn-primary btn-block" name="input_form">שורה חדשה</button></td>-->
+        <td colspan="2"><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
 
         <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
         <td> <button onclick='openNewWindow("\split_order")' type="button" class="btn btn-warning btn-block">פיצול הזמנה</button></td>

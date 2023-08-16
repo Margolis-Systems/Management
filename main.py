@@ -14,6 +14,7 @@ import users
 import orders
 import scale
 import plot_edit
+from operator import itemgetter
 
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
@@ -251,6 +252,13 @@ def machines():
 @app.route('/file_listener', methods=['POST', 'GET'])
 def file_listener():
     return pages.file_listener()
+
+
+@app.route('/integration_orders', methods=['POST', 'GET'])
+def integration_orders():
+    intg_orders = mongo.read_collection_list('production_log', {'order_id': {'$regex': '2207'}})
+    intg_orders = sorted(intg_orders, key=itemgetter('order_id'))
+    return render_template('integration_orders.html', orders=intg_orders, dictionary=pages.get_dictionary(session['username']))
 
 
 '''

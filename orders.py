@@ -281,13 +281,13 @@ def edit_order():
     order_data, page_data, total_weight = edit_order_data()
     if not order_data:
         return close_order()
-    # Dual use protection
+    # TODO: Dual use protection
     # elif 'in_use' in order_data['info']:
     #     if order_data['info']['in_use'] != main.session['username']:
     #         return close_order()
-    else:
-        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.status': 'NEW'},
-                              {'info.in_use': main.session['username']}, '$set')
+    # else:
+    #     main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.status': 'NEW'},
+    #                           {'info.in_use': main.session['username']}, '$set')
     defaults = {'bar_type': 'מצולע'}
     msg = ''
     # Copy last element fix
@@ -520,20 +520,26 @@ def update_orders_total_weight(order_id=''):
 
 def reorder_job_id(job_id=''):
     order_id = main.session['order_id']
-    job_list, info, additional = get_order_data(main.session['order_id'], reverse=False)
+    job_list, info, additional = get_order_data(order_id, reverse=True)
     rows = len(job_list)
-    index = 1
+    index = len(job_list)
     if job_list:
         if job_id:
-            main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[-1]['job_id']},
+            main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[0]['job_id']},
                                   {'job_id': str(rows + 1)}, '$set')
         for job in job_list:
+            if job_id:
+                if job == job_list[0]:
+                    continue
             if job['job_id'] != '0' and index <= rows:
                 if job['job_id'] == job_id:
-                    index += 1
+                    index -= 1
                 main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
                                       {'job_id': str(index)}, '$set')
-                index += 1
+                index -= 1
+                if job_id:
+                    if int(job['job_id']) == int(job_id):
+                        break
         if job_id:
             main.mongo.update_one('orders', {'order_id': order_id, 'job_id': str(rows + 1)},
                                   {'job_id': job_id}, '$set')

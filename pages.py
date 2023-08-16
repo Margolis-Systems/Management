@@ -154,8 +154,21 @@ def choose_printer():
     if main.request.form:
         req_form = dict(main.request.form)
         split = ''
+        select_jobs = []
         if 'split' in req_form:
             split = req_form['split']
+        if 'print_select' in req_form:
+            try:
+                if '-' in req_form['print_select']:
+                    temp = req_form['print_select'].split('-')
+                    select_jobs = list(range(int(temp[0]), int(temp[1])+1))
+                    select_jobs = [str(x) for x in select_jobs]
+                elif ',' in req_form['print_select']:
+                    temp = req_form['print_select'].split(',')
+                    for t in temp:
+                        select_jobs.append(t)
+            except:
+                select_jobs = []
         disable_weight = False
         if 'disable_weight' in req_form:
             disable_weight = True
@@ -168,14 +181,15 @@ def choose_printer():
             if req_form['copies']:
                 copies = int(req_form['copies'])
         for r in range(copies):
+            # If not asked for specific split, print all parts
             if not split:
                 _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
                 if not _split:
                     _split.append('')
                 for i in range(len(_split)):
-                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, split=_split[i])
+                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=_split[i])
             else:
-                reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, split=split)
+                reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=split)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204

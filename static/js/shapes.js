@@ -164,11 +164,13 @@ console.log(do_once)
         while (safety < 20){
             inputIndex += 1;
             if (inputIndex >= inputNames.length && do_once == 0 ){
-                //document.getElementById('input_form').submit();
-                //return
-                document.getElementById('submit').click();
-                do_once = 1;
-                return
+                form = document.getElementById("input_form");
+                if (form.checkValidity()){
+                    form.submit();
+                }
+                else{
+                    inputIndex = 0;
+                }
             }
             if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){
                 inputName = inputNames[inputIndex];

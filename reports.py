@@ -112,10 +112,15 @@ class Images:
 
 class Bartender:
     @staticmethod
-    def net_print(order_id, printer, print_type, disable_weight=False, split=''):
+    def net_print(order_id, printer, print_type, disable_weight=False, select_jobs=[], split=''):
         # Format data
         rows, info, additional = orders.get_order_data(order_id, reverse=False, split=split)
-        # todo: split in row
+        if select_jobs:
+            rlen = len(rows)
+            for i in range(rlen):
+                index = rlen - 1 - i
+                if rows[index]['job_id'] not in select_jobs:
+                    rows.pop(index)
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
         element_buf = []
@@ -173,7 +178,7 @@ class Bartender:
                 row['weight'] = round(row['weight'])
                 if 'element' not in row:
                     row['element'] = ''
-                if row['element']:
+                if row['element'] and print_type != 'test_page':
                     if row['element'][0] == 'ק' and row['element'] not in el_buf:
                         for r in rows:
                             if 'element' in r:
@@ -197,7 +202,7 @@ class Bartender:
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                     if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68']:
+                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68', '36', '44']:
                         line['circle'] = 'כן'
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
@@ -314,7 +319,7 @@ class Bartender:
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
                 elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                        or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68']:
+                        or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68', '36', '44']:
                     if 'חישוק' not in special_sum.keys():
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק']['qnt'] += quantity

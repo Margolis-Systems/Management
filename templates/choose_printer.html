@@ -26,7 +26,9 @@
         </td>
         <tr><td>כמות העתקים</td></tr>
         <tr><td><input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים"></td></tr>
-        <tr><td><input type="hidden" name="print_type" value="{{print_type}}"></td></tr>
+        <tr><td>בחר שורות (הפרדה בפסיק או מקף)</td></tr>
+        <tr><td><input type="text" class="form-control" name="print_select" placeholder="דוגמה (1-4 או 1,2,7)"></td></tr>
+        <input type="hidden" name="print_type" value="{{print_type}}">
         {% if split|length > 1 %}
         <tr><td>
             <datalist id="split">
