@@ -10,7 +10,7 @@ def login():
     if main.request.method == 'POST':
         msg = "סיסמה שגויה"  # todo: web dictionary
         username_input = main.request.form['username'].lower()
-        login_user = main.mongo.read_collection_one(main.configs.users_collection, {'name': username_input})
+        login_user = get_user_data(username_input)
         if login_user:
             if bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
                 main.session.permanent = True
@@ -46,7 +46,7 @@ def register():
         return main.index()
     message = ""
     if main.request.method == 'POST':
-        existing_user = main.mongo.read_collection_one(main.configs.users_collection, {'name': main.request.form['username'].lower()})
+        existing_user = get_user_data(main.request.form['username'].lower())
         if existing_user is None:
             main.mongo.insert_collection_one(main.configs.users_collection, {'name': main.request.form['username'].lower(), 'password':
                                             bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), bcrypt.gensalt()),
@@ -80,7 +80,7 @@ def validate_user():
     #         session['username'] = username
     #         print(username)
     if 'username' in main.session.keys():
-        user_data = main.mongo.read_collection_one(main.configs.users_collection, {'name': main.session['username']})
+        user_data = get_user_data()
         if user_data:
             return user_data['group']
     return False
@@ -102,3 +102,9 @@ def user_configs():
             main.session['user_config']['search'] = {}
             main.session.modified = True
     return '', 204
+
+
+def get_user_data(username=''):
+    if not username:
+        username = main.session['username']
+    return main.mongo.read_collection_one(main.configs.users_collection, {'name': username})

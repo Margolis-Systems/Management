@@ -107,9 +107,6 @@ function copyLastRow(dict, dataToDisplay){
     dataToDisplay['length'] = 1;
     dataToDisplay['quantity'] = 2;
     dataToDisplay['weight'] = 2;
-    if("shape" in dict){
-        dict['shape_data'] = dict['shape']
-    }
     for(item in dataToDisplay){
         if(dataToDisplay[item] != 2 && dataToDisplay[item] != 4){
             try {
@@ -150,14 +147,15 @@ weights_list = {
         weight.value = (leng * qnt.value * weights_list[diam.value] / 100).toFixed(1);
     }
 }
+function formSubmit(){
+    form = document.getElementById("input_form");
+        if (form.checkValidity()){
+            form.submit();
+        }
+}
 
 var do_once = 0
 function focusNext(inputIndex) {
-console.log(do_once)
-    //if (event.keyCode === 13 && event.shiftKey){
-    //    document.getElementById('submit').click();
-    //    return
-    //}
     inputNames = dtd_order;
     if (event.keyCode === 13){
         var safety = 0;
@@ -165,11 +163,15 @@ console.log(do_once)
             inputIndex += 1;
             if (inputIndex >= inputNames.length && do_once == 0 ){
                 form = document.getElementById("input_form");
-                if (form.checkValidity()){
+                if (form.checkValidity() && do_once==0){
                     form.submit();
+                    do_once = 1;
                 }
                 else{
                     inputIndex = 0;
+                    if (shapeData.value == "") {
+                        alert("נדרשים פרטי צורה");
+                    }
                 }
             }
             if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){

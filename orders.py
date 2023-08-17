@@ -17,6 +17,7 @@ def orders():
         return users.logout()
     if 'order_id' in main.session.keys():
         main.session['job_id'] = ""
+
         return main.redirect('/edit_order')
     query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
     if 'user_config' in main.session:
@@ -119,6 +120,7 @@ def new_order_row():
     if 'R' in order_id:
         return
     req_form_data = main.request.form
+    print(req_form_data)
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
     if info:
         if 'in_use' in info['info']:
@@ -227,19 +229,24 @@ def new_order_row():
         temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
         if not temp_order_data:
             temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
+        if not temp_order_data:
+            temp_order_data = main.mongo.read_collection_last('orders', 'job_id', {'order_id': order_id})
+            new_row['shape_data'] = temp_order_data['shape_data']
+        print(new_row)
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
-        if temp_order_data:
-            if temp_order_data['shape_data'] == new_row['shape']:
-                main.mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
-                new_row['shape_data'] = []
-                new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
-                for item in temp_order_data:
-                    if item.isdigit():
-                        new_row['shape_data'].append(temp_order_data[item])
-                    elif 'ang_' in item:
-                        new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
+        if temp_order_data['shape_data'] == new_row['shape']:
+            main.mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
+            new_row['shape_data'] = []
+            new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
+            for item in temp_order_data:
+                if item.isdigit():
+                    new_row['shape_data'].append(temp_order_data[item])
+                elif 'ang_' in item:
+                    new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
+        # else:
+        #     return
         # calc weight
         if new_row['shape'] == '332':
             new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
@@ -257,7 +264,7 @@ def new_order_row():
     prev = main.mongo.read_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']})
     if prev:
         for item in prev:
-            if item not in new_row:
+            if item not in new_row and item in ['shape_data', 'shape_ang']:
                 new_row[item] = prev[item]
     main.mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']},
                                      new_row)  # , upsert=True
@@ -532,14 +539,12 @@ def reorder_job_id(job_id=''):
                 if job == job_list[0]:
                     continue
             if job['job_id'] != '0' and index <= rows:
-                if job['job_id'] == job_id:
-                    index -= 1
                 main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
                                       {'job_id': str(index)}, '$set')
-                index -= 1
-                if job_id:
-                    if int(job['job_id']) == int(job_id):
-                        break
+                if job['job_id'] == job_id:
+                    break
+            index -= 1
+
         if job_id:
             main.mongo.update_one('orders', {'order_id': order_id, 'job_id': str(rows + 1)},
                                   {'job_id': job_id}, '$set')

@@ -1,5 +1,6 @@
 # Server
 import flask
+import main
 from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory, make_response
 from waitress import serve
 from werkzeug.utils import secure_filename
@@ -247,6 +248,16 @@ def reports_page():
 @app.route('/machines', methods=['POST', 'GET'])
 def machines():
     return pages.machines_page()
+
+
+@app.route('/setconf', methods=['POST', 'GET'])
+def setconf():
+    req_vals = request.values.to_dict()
+    username = session['username']
+    new_conf = {'lang': req_vals['lang']}
+    mongo.update_one('users', {'name': username}, new_conf, '$set')
+    print(username, new_conf)
+    return '', 204
 
 
 @app.route('/file_listener', methods=['POST', 'GET'])

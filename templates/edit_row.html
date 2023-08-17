@@ -34,9 +34,9 @@ div {
     </tr>
 </table>
 {% if defaults.addbefore %}
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}?addbefore={{defaults.addbefore}}" onsubmit="input_form.disabled = true; return true;">
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}?addbefore={{defaults.addbefore}}" onsubmit="input_form.disabled = true; return true;">
 {% else %}
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_row') }}" onsubmit="input_form.disabled = true; return true;">
+<form name="input_form" id="input_form" method=POST action="{{ url_for('edit_row') }}" onsubmit="input_form.disabled = true; return true;">
 {% endif %}
 {% if order_data.include %}
     {% include order_data.include %}
@@ -49,7 +49,7 @@ div {
             <input type="date" class="form-control" name="date_delivery_hid" placeholder="תאריך אספקה" onchange="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
         </td>
     <tr>
-        <td><button type=submit id="submit" class="btn btn-primary btn-block" >עדכן</button></td>
+        <td><button type=button class="btn btn-primary btn-block" onclick="formSubmit()">עדכן</button></td>
         <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>
         <td><button onclick="location.href='\close?delete_row';this.disabled=true;" type="button" class="btn btn-danger btn-block" >מחק שורה</button></td>
         <td></td>

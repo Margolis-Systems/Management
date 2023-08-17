@@ -26,6 +26,17 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ user.lang }}
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <li><a class="dropdown-item" href="\setconf?lang=he" onclick="setTimeout(function(){window.location.reload();}, 400);">עברית</a></li>
+            <li><a class="dropdown-item" href="\setconf?lang=ru" onclick="setTimeout(function(){window.location.reload();}, 400);">Russian</a></li>
+            <li><a class="dropdown-item" href="\setconf?lang=ar" onclick="setTimeout(function(){window.location.reload();}, 400);">AR</a></li>
+            <li aria-disabled="true"><a class="dropdown-item" href="\setconf?lang=en" onclick="setTimeout(function(){window.location.reload();}, 400);">English</a></li>
+          </ul>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="\scale">שקילה</a>
         </li>

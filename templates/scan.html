@@ -2,7 +2,7 @@
 {% block body %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <td colspan="10"><b>User:</b> {{user}}, <b>Machine:</b> {{machine.machine_name}} / {{machine.machine_id}}</td>
+        <td colspan="10"><b>User:</b> {{user.name}}, <b>Machine:</b> {{machine.machine_name}} / {{machine.machine_id}}</td>
     </tr>
     <form method=POST id="form" action="{{ url_for('scan') }}">
     <tr>
@@ -18,7 +18,7 @@
             <button type="button" class="btn btn-danger btn-block btn-lg" onclick="location.href='/scan'">{{dictionary['cancel']}}</button>
             {% else %}
             <label>{{dictionary['scan_barcode']}}</label>
-            <input type="text" class="form-control" id="scan" name="scan" placeholder="{{dictionary['scan_barcode']}}" onfocusout="scanFocus();" onkeyup="scanSubmit();" autofocus>
+            <input type="text" class="form-control" id="scan" name="scan" placeholder="{{dictionary['scan_barcode']}}" onfocusout="scanFocus();" onkeyup="scanSubmit();" autocomplete="off" autofocus>
         </td>
     </tr>
     {% endif %}

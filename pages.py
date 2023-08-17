@@ -41,6 +41,7 @@ def get_dictionary(username):
     all_dicts = main.mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
     lang = main.mongo.read_collection_one('users', {'name': username})['lang']
     dictionary = all_dicts[lang]
+    dictionary.update(all_dicts['default'])
     return dictionary
 
 
@@ -226,6 +227,7 @@ def scan():
     status = ""
     decode = {}
     user = main.session['username']
+    user_data = users.get_user_data()
     order = main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': user})
     machine = main.mongo.read_collection_one('machines', {'username': user})
     if not machine:
@@ -276,7 +278,7 @@ def scan():
                     msg = job['status']
                     order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
-                                dictionary=get_dictionary(main.session['username']), user=user)
+                                dictionary=get_dictionary(main.session['username']), user={'name': user, 'lang': user_data['lang']})
 
 
 def get_defaults():
@@ -365,8 +367,8 @@ def reports_page():
             if 'date' in item:
                 report_date['from'] = req_form['date_from']
                 report_date['to'] = req_form['date_to']
-                if req_form['date_to'] > req_form['date_from']:
-                    print('tr')
+                if req_form['date_to'] < req_form['date_from']:  # todo: fix, save in session or cookie
+                    report_date['to'] = req_form['date_from']
     # Report type handle
     if 'report' in req_vals.keys():
         report = req_vals['report']
@@ -445,7 +447,7 @@ def reports_page():
             template_row['total_weight'] = global_total_weight
             report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_list=machine_list,
-                                dictionary=pages.get_dictionary(main.session['username']), data_to_display=data_to_display)
+                                dictionary=get_dictionary(main.session['username']), data_to_display=data_to_display)
 
 
 def machines_page():
