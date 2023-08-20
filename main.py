@@ -268,7 +268,9 @@ def file_listener():
 @app.route('/integration_orders', methods=['POST', 'GET'])
 def integration_orders():
     intg_orders = mongo.read_collection_list('production_log', {'order_id': {'$regex': '2207'}})
-    intg_orders = sorted(intg_orders, key=itemgetter('order_id'))
+    intg_orders = sorted(intg_orders, key=lambda x: int(x['job_id']))
+    intg_orders = sorted(intg_orders, key=lambda x: int(x['order_id']))
+    # intg_orders = sorted(intg_orders, key=itemgetter('order_id', 'job_id'))
     return render_template('integration_orders.html', orders=intg_orders, dictionary=pages.get_dictionary(session['username']))
 
 

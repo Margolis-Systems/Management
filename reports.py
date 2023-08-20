@@ -39,7 +39,7 @@ class Images:
             for item in range(len(data['shape_data'])):
                 if item > 0:
                     formatted += '@l'
-                if isinstance(data['shape_data'][item], int):
+                if data['shape_data'][item].isdigit():
                     formatted += str(int(data['shape_data'][item])*10)
                 if 'shape_ang' in data.keys():
                     if item < len(data['shape_ang']):
@@ -52,6 +52,8 @@ class Images:
             chksm += ord(char)
         chksm = 96 - (chksm % 32)
         formatted += str(chksm) + '@'
+        if main.session['username'] == 'baruch':
+            print(formatted)
         return formatted
 
     @staticmethod
