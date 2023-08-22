@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 
 import configs
 import functions
@@ -116,27 +116,30 @@ def new_order(client="", order_type=""):
 
 
 def new_order_row():
+    if 'last_row' in main.session:
+        last_edit = datetime.strptime(main.session['last_row'], '%Y-%m-%d %H:%M:%S')
+        dif = (datetime.now() - last_edit).total_seconds()
+        if dif < 1:
+            return
     order_id = main.session['order_id']
     if 'R' in order_id:
         return
     req_form_data = main.request.form
-    print(req_form_data)
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
     if info:
         if 'in_use' in info['info']:
             if info['info']['in_use'] != main.session['username']:
                 return
-    # if info['info']['status'] != "NEW":
-    #     return
-    # Order peripheral data handling
     if 'shape_data' in req_form_data.keys():
         new_row = {'order_id': order_id, 'job_id': "0"}
         for item in req_form_data:
             if item.isdigit() or item == 'shape_data' or 'ang' in item:
                 new_row[item] = " ".join(req_form_data[item].split())
-        main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': "0"}, new_row)
+        main.mongo.insert_collection_one('orders', new_row)
+        # main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': "0"}, new_row)
         return
-
+    main.session['last_row'] = ts()
+    main.session.modified = True
     job_id = gen_job_id(order_id)
     if 'job_id' in main.session.keys():
         if main.session['job_id'] != "":
@@ -161,11 +164,24 @@ def new_order_row():
         date_delivery = req_form_data['date_delivery_hid']
         main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
                               {'info.date_delivery': date_delivery}, '$set')
+    # ---------------------------------------------------------------------------------------- #
     # Order data handling
-    if 'diam_x' in new_row:  # or 'diam_y'
+    if 'diam_x' in new_row:
         new_row['mkt'] = "2005020000"
         bars_x = 1
         bars_y = 1
+        if 'trim_y_start' not in new_row:
+            new_row['trim_y_start'] = 5
+            new_row['y_length'][0] = int(new_row['y_length'][0]) - 5
+        if 'trim_y_end' not in new_row:
+            new_row['trim_y_end'] = 5
+            new_row['y_length'][-1] = int(new_row['y_length'][-1]) - 5
+        if 'trim_x_start' not in new_row:
+            new_row['trim_x_start'] = 5
+            new_row['x_length'][0] = int(new_row['x_length'][0]) - 5
+        if 'trim_x_end' not in new_row:
+            new_row['trim_x_end'] = 5
+            new_row['x_length'][0] = int(new_row['x_length'][0]) - 5
         for i in range(len(new_row['x_length'])):
             if new_row['x_pitch'][i] != "0":
                 new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
@@ -190,8 +206,6 @@ def new_order_row():
                 bars_x += 1
         x_pitch = '(' + ')('.join(new_row['x_pitch']) + ')'
         y_pitch = '(' + ')('.join(new_row['y_pitch']) + ')'
-        # x_length = '('+')('.join(new_row['x_length'])+')'
-        # y_length = '('+')('.join(new_row['y_length'])+')'
         new_row['x_bars'] = int(bars_x)
         new_row['y_bars'] = int(bars_y)
         new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
@@ -217,22 +231,15 @@ def new_order_row():
         y_bars = {'length': new_row['length'],
                   'qnt': int(((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity'])),
                   'diam': new_row['diam_y']}
-        # new_row['description'] = "V250X" + str(int(int(new_row['length']) / pitch)) + "X" + new_row[
-        #     'diam_x'] + "WBX" + str(pitch) + \
-        #                          " H600X" + str(int((int(new_row['width']) - 10) / pitch + 1)) + "X" + new_row[
-        #                              'diam_y'] + "WBX" + str(pitch)
         new_row['weight'] = round(
             float(main.configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
         if 'הזמנת_ייצור' in new_row:
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'shape' in req_form_data:
         temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
-        if not temp_order_data:
-            temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
-        if not temp_order_data:
-            temp_order_data = main.mongo.read_collection_last('orders', 'job_id', {'order_id': order_id})
-            new_row['shape_data'] = temp_order_data['shape_data']
-        print(new_row)
+        # if not temp_order_data:
+        #     temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
+        #     new_row['shape_data'] = temp_order_data['shape_data']
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
@@ -245,9 +252,11 @@ def new_order_row():
                     new_row['shape_data'].append(temp_order_data[item])
                 elif 'ang_' in item:
                     new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
-        # else:
-        #     return
-        # calc weight
+        else:
+            functions.log('shape_data_error', {'new_row': new_row, 'form': req_form_data, 'temp': temp_order_data,
+                                               'user': main.session['username']})
+            print("NO SHAPE data !!!!!")
+            return
         if new_row['shape'] == '332':
             new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
         else:
@@ -313,8 +322,6 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
     if split:
         query['order_split'] = int(split)
     order_data = list(main.mongo.read_collection_list('orders', query))
-    # if not order_data:
-    #     return None, None, None
     additional = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
     info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})['info']
     if info['type'] == 'R':
@@ -361,8 +368,8 @@ def edit_order_data():
         keys_to_display = main.configs.data_to_display['new_row_' + info['type']]
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows,
                   'dtd_order': list(keys_to_display.keys())}
-    if additional:
-        order_data['include_data'] = additional
+    # if additional:
+    #     order_data['include_data'] = additional
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
         order_data['dtd_order'].extend(
@@ -478,7 +485,7 @@ def update_order_status(new_status, order_id, job_id=""):
                                   {'info.cancel_reason': ''}, '$unset')
         if resp.matched_count > 0:
             functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
-            if new_status == 'Processed' and main.session['username'] not in ['Baruch', 'baruch']:
+            if new_status == 'Processed' and info['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
                 msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} \n{username} ' \
                     .format(order_id=order_id, date_created=info['date_created'], date_delivery=info['date_delivery'],
                             costumer_name=info['costumer_name'], costumer_site=info['costumer_site'],
@@ -493,9 +500,6 @@ def close_order():
     if len(list(main.request.values)) > 0:
         req_vals = list(main.request.values)
         additional_func = req_vals[0]
-        # if additional_func == 'delete_order':
-        #     main.mongo.delete_many('orders', {'order_id': main.session['order_id']})
-        # el
         if additional_func == 'delete_row':
             main.mongo.delete_many('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
             update_orders_total_weight()

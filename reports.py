@@ -39,7 +39,9 @@ class Images:
             for item in range(len(data['shape_data'])):
                 if item > 0:
                     formatted += '@l'
-                if data['shape_data'][item].isdigit():
+                if isinstance(data['shape_data'][item], int):
+                    formatted += str(int(data['shape_data'][item]) * 10)
+                elif data['shape_data'][item].isdigit():
                     formatted += str(int(data['shape_data'][item])*10)
                 if 'shape_ang' in data.keys():
                     if item < len(data['shape_ang']):

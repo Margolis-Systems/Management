@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import pages
 from operator import itemgetter
+from datetime import datetime
 
 
 def jobs_list(order_type='regular'):
@@ -39,6 +40,13 @@ def jobs_list(order_type='regular'):
 
 def get_dictionary(username):
     all_dicts = main.mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
+    import json
+    main_dir = "C:\\Server\\"
+    if not os.path.exists(main_dir):
+        main_dir = "C:\\projects\\Tzomet\\Management\\"
+
+    with open(main_dir+'lists\\dictionary.json', encoding='utf-8') as shapes_file:
+        all_dicts = json.load(shapes_file)
     lang = main.mongo.read_collection_one('users', {'name': username})['lang']
     dictionary = all_dicts[lang]
     dictionary.update(all_dicts['default'])
@@ -268,7 +276,7 @@ def scan():
                 status = "Start"
             elif job['status'] == "Start":
                 status = "Finished"
-            elif job['status'] == "NEW":
+            elif job['status'] == "Processed":
                 orders.update_order_status('Production', order_id)
                 status = "Start"
             else:
@@ -356,18 +364,17 @@ def reports_page():
     report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
     report_data = []
     data_to_display = []
-    machine_list = []
     report = ''
-    machine_id = ''
+    mid = ''
     req_vals = dict(main.request.values)
+    req_form = dict(main.request.form)
     # Report date handle
-    if main.request.form:
-        req_form = dict(main.request.form)
+    if req_form:
         for item in req_form:
             if 'date' in item:
                 report_date['from'] = req_form['date_from']
                 report_date['to'] = req_form['date_to']
-                if req_form['date_to'] < req_form['date_from']:  # todo: fix, save in session or cookie
+                if req_form['date_to'] < req_form['date_from']:
                     report_date['to'] = req_form['date_from']
     # Report type handle
     if 'report' in req_vals.keys():
@@ -375,27 +382,55 @@ def reports_page():
         query = {}
         if report == 'production':
             query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'}}
+            detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
+                               'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id','work_time', 'ht_avg']
+            data_to_display = ['machine_id', 'machine_name', 'username', 'operator','lines', 'quantity', 'weight', 'work_time', 'ht_avg']
             if 'machine_id' in req_vals:
-                query['machine_id'] = int(req_vals['machine_id'])
+                mid = req_vals['machine_id']
+                query['machine_id'] = int(mid)
+                data_to_display = detailed
+            elif 'machine_id' in req_form:
+                query['machine_id'] = int(req_form['machine_id'])
             temp_report_data = list(main.mongo.read_collection_list('production_log', query))
-            data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
-                               'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id']
             temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id'))
             if temp_report_data:
                 machine_id = temp_report_data[0]['machine_id']
-                total = {'weight': 0, 'quantity': 0, 'order_id': '', 'operator': 'סה"כ:'}
+                time0 = datetime.now() - datetime.now()
+                total = {'weight': 0, 'quantity': 0, 'work_time': time0, 'lines': 0, 'ht_avg': 0}
+                machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
+                         'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
                 for line in temp_report_data:
                     if line['machine_id'] != machine_id:
-                        report_data.append(total)
+                        machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
+                        for key in total:
+                            total[key] += machine_total[key]
+                        report_data.append(machine_total)
                         machine_id = line['machine_id']
-                        total = {'weight': 0, 'quantity': 0, 'order_id': '', 'operator': 'סה"כ:'}
-                    report_data.append(line)
-                    total['weight'] += int(line['weight'])
-                    total['quantity'] += int(line['quantity'])
-                report_data.append(total)
-
-            # report_data = temp_report_data
-            # todo: complete report
+                        machine_total = {'weight': 0, 'quantity': 0, 'machine_id': line['machine_id'], 'machine_name': line['machine_name'],
+                                 'username': line['username'], 'operator': line['operator'], 'work_time': time0, 'lines': 0}
+                    if 'machine_id' in req_vals:
+                        if 'Finished_ts' in line:
+                            if line['Finished_ts'] > line['Start_ts']:
+                                line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                            else:
+                                line['work_time'] = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S')
+                        # line['ht_avg'] = round(line['weight'] / (line['work_time'].total_seconds() / 3600 * 1000))
+                        report_data.append(line)
+                    machine_total['weight'] += int(line['weight'])
+                    machine_total['quantity'] += int(line['quantity'])
+                    machine_total['lines'] += 1
+                    if 'Finished_ts' in line:
+                        if line['Finished_ts'] > line['Start_ts']:
+                            machine_total['work_time'] += datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
+                for key in total:
+                    total[key] += machine_total[key]
+                report_data.append(machine_total)
+                if 'machine_id' not in req_vals:
+                    total['operator'] = 'סה"כ לדו"ח:'
+                    report_data.append(total)
+                    report_data.append({'operator': 'סה"כ שורות משותפות'})
+                    report_data.append({'operator': 'סה"כ משקל בפועל'})
         elif report == 'orders':
             query = {'info.date_created': {'$gte': report_date['from'] + ' 00:00:00', '$lte': report_date['to'] + ' 23:59:59'},
                      'info.status': {'$ne': 'canceled'},
@@ -446,7 +481,7 @@ def reports_page():
             template_row['costumer_name'] = 'סהכ כללי'
             template_row['total_weight'] = global_total_weight
             report_data.append(template_row.copy())
-    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_list=machine_list,
+    return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
                                 dictionary=get_dictionary(main.session['username']), data_to_display=data_to_display)
 
 
@@ -503,4 +538,4 @@ def production_log(form_data):
             print('production log \nitem not found: ', item)
     log.update(machine_data)
     log[form_data['status']+'_ts'] = functions.ts()
-    main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id']}, log, '$set', upsert=True)
+    main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id']}, log, '$set', upsert=True)

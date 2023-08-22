@@ -161,17 +161,21 @@ function focusNext(inputIndex) {
         var safety = 0;
         while (safety < 20){
             inputIndex += 1;
-            if (inputIndex >= inputNames.length && do_once == 0 ){
+            if (inputIndex >= inputNames.length && do_once == 0 ||inputNames[inputIndex] == 'weight' && do_once == 0){
                 form = document.getElementById("input_form");
                 if (form.checkValidity() && do_once==0){
-                    form.submit();
                     do_once = 1;
+                    form.submit();
                 }
                 else{
-                    inputIndex = 0;
-                    if (shapeData.value == "") {
-                        alert("נדרשים פרטי צורה");
+                    if (inputIndex >= inputNames.length){
+                        inputIndex = 0;
                     }
+                    //if (shapeData){
+                    //    if (shapeData.value == "") {
+                    //        alert("נדרשים פרטי צורה");
+                    //    }
+                    //}
                 }
             }
             if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){

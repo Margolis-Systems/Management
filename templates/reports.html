@@ -9,6 +9,9 @@
     </tr>
     <tr>
         <form method=POST id="date_form" autocomplete="off" action="{{ url_for('reports_page') }}">
+            {% if machine_id %}
+            <input type="hidden" name="machine_id" value="{{machine_id}}">
+            {% endif %}
             <input type="hidden" name="report" value="{{report}}">
         <td>
             <label>מיום
@@ -20,13 +23,13 @@
         </td>
         </form>
         <td colspan="2">
-        {% if report_data %}<button onclick="location.href='/reports?print={{report}}'" type="button" class="btn btn-success btn-block" disabled>הדפס</button>
+        {% if report_data %}<button onclick="window.print();" type="button" class="btn btn-success btn-block d-print-none">הדפס</button>
         {% endif %}
         </td>
     </tr>
 </table>
 {% if report_data %}
-<table class="table table-striped" align="center" dir="rtl">
+<table class="table table-striped" align="center" dir="rtl" style="font-size: 12px;">
     <tr>
         {% if not data_to_display %}
         {% set data_to_display=report_data[0] %}
@@ -50,8 +53,11 @@
     {% endif %}
         {% for item in data_to_display %}
         <td>
-            {% if line['order_id'] == '' %}
+            {% if not line['order_id'] %}
             <b>
+            {% if item == 'weight' %}
+            סה"כ:
+            {% endif %}
             {% endif %}
             {% if dictionary[line[item]] %}
                 {{dictionary[line[item]]}}
