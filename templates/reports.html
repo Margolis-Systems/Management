@@ -1,5 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
+<style>
+@media print {
+  table {
+    font-size: 10px;
+  }
+}
+</style>
 <table class="table table-striped" align="center" dir="rtl">
     <tr class="d-print-none">
         <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
@@ -29,7 +36,7 @@
     </tr>
 </table>
 {% if report_data %}
-<table class="table table-striped" align="center" dir="rtl" style="font-size: 12px;">
+<table class="table" align="center" dir="rtl">
     <tr>
         {% if not data_to_display %}
         {% set data_to_display=report_data[0] %}
@@ -46,11 +53,15 @@
         {% endfor %}
     </tr>
     {% for line in report_data %}
-    {% if report == 'production' %}
-    <tr ondblclick="location.href='/reports?report=production&machine_id={{line.machine_id}}'">
-    {% else %}
-    <tr>
-    {% endif %}
+        {% if report == 'production' %}
+            {% if line['order_id'] and not machine_id %}
+            <tr ondblclick="location.href='/reports?report=production&machine_id={{line.machine_id}}'" class="d-print-none">
+            {% else %}
+            <tr ondblclick="location.href='/reports?report=production&machine_id={{line.machine_id}}'">
+            {% endif %}
+        {% else %}
+        <tr>
+        {% endif %}
         {% for item in data_to_display %}
         <td>
             {% if not line['order_id'] %}

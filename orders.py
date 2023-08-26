@@ -243,20 +243,26 @@ def new_order_row():
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
-        if temp_order_data['shape_data'] == new_row['shape']:
-            main.mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
-            new_row['shape_data'] = []
-            new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
-            for item in temp_order_data:
-                if item.isdigit():
-                    new_row['shape_data'].append(temp_order_data[item])
-                elif 'ang_' in item:
-                    new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
+        if temp_order_data:
+            if temp_order_data['shape_data'] == new_row['shape']:
+                main.mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
+                new_row['shape_data'] = []
+                new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
+                for item in temp_order_data:
+                    if item.isdigit():
+                        new_row['shape_data'].append(temp_order_data[item])
+                    elif 'ang_' in item:
+                        new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
+            else:
+                functions.log('shape_data_error', {'new_row': new_row, 'form': req_form_data, 'temp': temp_order_data,
+                                                   'user': main.session['username']})
+                print("NO SHAPE data !!!!!")
+                return
         else:
-            functions.log('shape_data_error', {'new_row': new_row, 'form': req_form_data, 'temp': temp_order_data,
-                                               'user': main.session['username']})
-            print("NO SHAPE data !!!!!")
-            return
+            temp_order_data = main.mongo.read_collection_one('orders',
+                                                  {'order_id': new_row['order_id'], 'job_id': new_row['job_id']})
+            new_row['shape_data'] = temp_order_data['shape_data']
+            new_row['shape_ang'] = temp_order_data['shape_ang']
         if new_row['shape'] == '332':
             new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
         else:
@@ -270,11 +276,11 @@ def new_order_row():
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
-    prev = main.mongo.read_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']})
-    if prev:
-        for item in prev:
-            if item not in new_row and item in ['shape_data', 'shape_ang']:
-                new_row[item] = prev[item]
+
+    # if prev:
+    #     for item in prev:
+    #         if item not in new_row and item in ['shape_data', 'shape_ang']:
+    #             new_row[item] = prev[item]
     main.mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']},
                                      new_row)  # , upsert=True
     update_orders_total_weight()

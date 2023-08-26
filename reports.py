@@ -54,8 +54,8 @@ class Images:
             chksm += ord(char)
         chksm = 96 - (chksm % 32)
         formatted += str(chksm) + '@'
-        if main.session['username'] == 'baruch':
-            print(formatted)
+        # if main.session['username'] == 'baruch':
+        #     print(formatted)
         return formatted
 
     @staticmethod
@@ -285,6 +285,7 @@ class Bartender:
                 summary_data.append(line)
         else:
             table_data = {}
+            # todo: ordered_spec sum
             special_sum = {}
             total_weight = 0  # info['total_weight']
             summary_data.append(info)
@@ -358,6 +359,9 @@ class Bartender:
             for key in sort_keys:
                 temp[key] = table_data[str(key)]
             table_data = temp
+            # todo: delete empty keys
+            for key in special_sum:
+                print(len(special_sum[key]))
             # Bartender Table filler
             # Summary
             table_cells = 5

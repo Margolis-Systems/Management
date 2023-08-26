@@ -383,7 +383,7 @@ def reports_page():
         if report == 'production':
             query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'}}
             detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
-                               'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id','work_time', 'ht_avg']
+                               'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id','work_time']
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator','lines', 'quantity', 'weight', 'work_time', 'ht_avg']
             if 'machine_id' in req_vals:
                 mid = req_vals['machine_id']
@@ -392,7 +392,7 @@ def reports_page():
             elif 'machine_id' in req_form:
                 query['machine_id'] = int(req_form['machine_id'])
             temp_report_data = list(main.mongo.read_collection_list('production_log', query))
-            temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id'))
+            temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id','Start_ts'))
             if temp_report_data:
                 machine_id = temp_report_data[0]['machine_id']
                 time0 = datetime.now() - datetime.now()
@@ -401,7 +401,10 @@ def reports_page():
                          'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
                 for line in temp_report_data:
                     if line['machine_id'] != machine_id:
-                        machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
+                        if machine_total['work_time'].total_seconds() > 0:
+                            machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
+                        else:
+                            machine_total['ht_avg'] = 0
                         for key in total:
                             total[key] += machine_total[key]
                         report_data.append(machine_total)
@@ -414,15 +417,21 @@ def reports_page():
                                 line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
                             else:
                                 line['work_time'] = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S')
-                        # line['ht_avg'] = round(line['weight'] / (line['work_time'].total_seconds() / 3600 * 1000))
-                        report_data.append(line)
+                        # if line['work_time'].total_seconds() < 0:
+                        #     line['ht_avg'] = round(line['weight'] / (line['work_time'].total_seconds() / 3600 * 1000))
+                        # else:
+                        #     line['ht_avg'] = 0
+                    report_data.append(line)
                     machine_total['weight'] += int(line['weight'])
                     machine_total['quantity'] += int(line['quantity'])
                     machine_total['lines'] += 1
                     if 'Finished_ts' in line:
                         if line['Finished_ts'] > line['Start_ts']:
                             machine_total['work_time'] += datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
-                machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
+                if machine_total['work_time'].total_seconds() > 0:
+                    machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
+                else:
+                    machine_total['ht_avg'] = 0
                 for key in total:
                     total[key] += machine_total[key]
                 report_data.append(machine_total)
