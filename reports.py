@@ -285,9 +285,12 @@ class Bartender:
                 summary_data.append(line)
         else:
             table_data = {}
-            # todo: ordered_spec sum
+            spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
+                   'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
             special_sum = {}
-            total_weight = 0  # info['total_weight']
+            for i in spec_keys:
+                special_sum[i] = {'qnt': 0, 'weight': 0}
+            total_weight = 0
             summary_data.append(info)
             for row in rows:
                 total_weight += row['weight']
@@ -359,9 +362,9 @@ class Bartender:
             for key in sort_keys:
                 temp[key] = table_data[str(key)]
             table_data = temp
-            # todo: delete empty keys
             for key in special_sum:
-                print(len(special_sum[key]))
+                if special_sum[key]['quantity'] == 0:
+                    del special_sum[key]
             # Bartender Table filler
             # Summary
             table_cells = 5
