@@ -362,9 +362,12 @@ class Bartender:
             for key in sort_keys:
                 temp[key] = table_data[str(key)]
             table_data = temp
+            to_del = []
             for key in special_sum:
-                if special_sum[key]['quantity'] == 0:
-                    del special_sum[key]
+                if special_sum[key]['qnt'] == 0:
+                    to_del.append(key)
+            for key in to_del:
+                del special_sum[key]
             # Bartender Table filler
             # Summary
             table_cells = 5
