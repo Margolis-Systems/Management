@@ -206,7 +206,7 @@ class Bartender:
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                     if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68', '36', '44']:
+                            and row['shape'] not in ['332', '49', '59']) or row['shape'] in configs.circle:
                         line['circle'] = 'כן'
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
@@ -327,7 +327,7 @@ class Bartender:
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
                 elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
-                        or row['shape'] in ['925', '966', '215', '216', '78', '79', '119','68', '36', '44']:
+                        or row['shape'] in configs.circle:
                     if 'חישוק' not in special_sum.keys():
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק']['qnt'] += quantity

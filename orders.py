@@ -372,6 +372,8 @@ def edit_order_data():
         keys_to_display = main.configs.data_to_display['new_row_regular']
     else:
         keys_to_display = main.configs.data_to_display['new_row_' + info['type']]
+    if info['status'] != 'NEW':
+        keys_to_display['status_updated_by'] = 2
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows,
                   'dtd_order': list(keys_to_display.keys())}
     # if additional:
