@@ -12,32 +12,6 @@ from operator import itemgetter
 from datetime import datetime
 
 
-def jobs_list(order_type='regular'):
-    type_list = main.mongo.read_collection_df('orders', query={'info.type': order_type})
-    type_list = type_list['order_id'].to_list()
-    all_orders = main.mongo.read_collection_df('orders', query={'order_id': {'$in': type_list},
-                                                                'job_id': {'$ne': "0", '$exists': True},
-                                                                'status': {'$nin': ['NEW', 'Processed']}})
-    info_list = list(main.mongo.read_collection_list('orders', {'order_id': {'$in': type_list}, 'info': {'$exists': True}}))
-    cost_n = {}
-    ord_type = {}
-    for i in info_list:
-        if i['order_id'] not in cost_n.keys():
-            cost_n[i['order_id']] = i['info']['costumer_name']
-            ord_type[i['order_id']] = i['info']['type']
-    all_orders['costumer_name'] = all_orders['order_id'].map(cost_n)
-    all_orders['type'] = all_orders['order_id'].map(ord_type)
-    if all_orders.empty:
-        return {}
-    all_jobs = all_orders[all_orders['job_id'].notna()]
-    sorter = {'Finished': 2, 'Production': 0, 'Start': 1}
-    all_jobs['sorter'] = all_jobs['status'].map(sorter)
-    all_jobs.sort_values(by=['sorter', 'date_created'], ascending=[True, False], inplace=True)
-    all_jobs['status'] = 'order_status_' + all_jobs['status'].astype(str)
-    columns = ['costumer_name', 'order_id', 'job_id', 'type', 'status', 'date_created', 'description']
-    return all_jobs[columns].to_dict('records')
-
-
 def get_dictionary(username):
     all_dicts = main.mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
     import json
@@ -91,17 +65,6 @@ def gen_patterns(order_type='regular'):
     return lists, patterns
 
 
-def jobs():
-    if not users.validate_user():
-        return users.logout()
-    order_type = "regular"
-    if 'filter' in main.session['user_config']:
-        if main.session['user_config']['filter']:
-            order_type = main.session['user_config']['filter']
-    dictionary = get_dictionary(main.session['username'])
-    return main.render_template('/jobs.html', jobs=jobs_list(order_type), dictionary=dictionary)
-
-
 def shape_editor():
     shape_data = {}
     shapes = {}
@@ -109,10 +72,12 @@ def shape_editor():
     dtd_order = []
     defaults = {'edges': [], 'ang': []}
     if main.request.form:
-        shape_data = {'edges': 0, 'shape': main.request.form['shape_data'], 'tot_len': 0}
+        shape_data = {'edges': 0, 'shape': main.request.form['shape_data'], 'tot_len': 0, 'shape_data': main.request.form['1']}
         if main.request.form['shape_data'] != '332':
             for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
                 shape_data['tot_len'] += int(main.request.form[str(item)])
+                if item > 1:
+                    shape_data['shape_data'] += ',' + main.request.form[str(item)]
         else:
             if 'x' in main.request.form['2'] or 'X' in main.request.form['2']:
                 loops = main.request.form['2'].replace('X','x')
@@ -126,21 +91,20 @@ def shape_editor():
             else:
                 tot_l = int(main.request.form['2'])
             shape_data['tot_len'] = int(main.request.form['1']) * tot_l * 3.25
-        orders.new_order_row()
+            shape_data['shape_data'] = main.request.form['2']
     else:
         req_vals = list(main.request.values)
         if len(req_vals) > 0:
-            if 'ang' in main.configs.shapes[req_vals[0]]:
-                ang = main.configs.shapes[req_vals[0]]['ang']
+            shape_conf = main.configs.shapes[req_vals[0]]
+            if 'ang' in shape_conf:
+                ang = shape_conf['ang']
             else:
                 ang = []
-            shape_data = {'shape': req_vals[0], 'edges': list(range(1, main.configs.shapes[req_vals[0]]['edges'] + 1)),
+            shape_data = {'shape': req_vals[0], 'edges': list(range(1, shape_conf['edges'] + 1)),
                           'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
                           'angels': ang}
             defaults['ang'] = ang
             dtd_order = list(map(str, shape_data['edges']))
-            # for _ang in range(1, len(shape_data['angels']) + 1):
-            #     dtd_order.append('ang_'+str(_ang))
             for item in dtd_order:
                 datatodisp[item] = 1
         else:
@@ -150,8 +114,9 @@ def shape_editor():
                                      'edges': main.configs.shapes[shape]['edges']}
     if 'job_id' in main.session:
         if main.session['job_id']:
-            job_data = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
+            job_data, info = orders.get_order_data(main.session['order_id'], main.session['job_id'])
             if job_data:
+                job_data = job_data[0]
                 if 'shape_data' in job_data:
                     defaults = {'edges': job_data['shape_data'], 'ang': job_data['shape_ang']}
     return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data, defaults=defaults,
@@ -382,17 +347,19 @@ def reports_page():
         query = {}
         if report == 'production':
             query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'}}
-            detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length',
-                               'diam', 'Start_ts', 'Finished_ts', 'order_id', 'job_id','work_time']
-            data_to_display = ['machine_id', 'machine_name', 'username', 'operator','lines', 'quantity', 'weight', 'work_time', 'ht_avg']
+            detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length', 'diam',
+                        'Start_ts', 'Finished_ts', 'order_id', 'job_id', 'work_time']
+            data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
+                               'work_time', 'ht_avg']
             if 'machine_id' in req_vals:
+                # todo: query loses date
                 mid = req_vals['machine_id']
                 query['machine_id'] = int(mid)
                 data_to_display = detailed
             elif 'machine_id' in req_form:
                 query['machine_id'] = int(req_form['machine_id'])
             temp_report_data = list(main.mongo.read_collection_list('production_log', query))
-            temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id','Start_ts'))
+            temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id', 'Start_ts'))
             if temp_report_data:
                 machine_id = temp_report_data[0]['machine_id']
                 time0 = datetime.now() - datetime.now()
@@ -442,7 +409,7 @@ def reports_page():
                     report_data.append({'operator': 'סה"כ משקל בפועל'})
         elif report == 'orders':
             query = {'info.date_created': {'$gte': report_date['from'] + ' 00:00:00', '$lte': report_date['to'] + ' 23:59:59'},
-                     'info.status': {'$ne': 'canceled'},
+                     'info.status': {'$ne': 'canceled'}, 'info.type': {'$ne': 'integration'},
                      'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל']}}
             if 'client_name' in req_vals.keys():
                 query['client_name'] = req_vals['client_name']
@@ -456,40 +423,55 @@ def reports_page():
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
         # Read all orders data with Info, mean that it's not including order rows
-        orders_df = main.mongo.read_collection_df('orders', query=query)
-        if not orders_df.empty:
-            # normalize json to df
-            info_df = pd.json_normalize(orders_df['info'])
-            info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
-            # add order id from main df
-            new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
-            new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
-            new_df.drop(new_df[new_df['type'] == 'integration'].index, inplace=True)
-            new_df['status'] = 'order_status_' + new_df['status'].astype(str)
-            new_df['costumer_name'] = new_df['costumer_name'].astype(str)
-            new_df.sort_values('costumer_name', inplace=True)
-            _report_data = new_df.to_dict('records')
-            temp_total_weight = 0
-            global_total_weight = new_df['total_weight'].sum()
-            last_client = _report_data[0]['costumer_name']
-            template_row = {}
-            for item in _report_data[0]:
-                template_row[item] = ''
-            template_row['costumer_name'] = 'סהכ ללקוח'
-            for row in _report_data:
-                if row['costumer_name'] == last_client:
-                    temp_total_weight += row['total_weight']
-                else:
-                    template_row['total_weight'] = str(temp_total_weight)
-                    report_data.append(template_row.copy())
-                    temp_total_weight = row['total_weight']
-                    last_client = row['costumer_name']
-                report_data.append(row)
-            template_row['total_weight'] = temp_total_weight
-            report_data.append(template_row.copy())
-            template_row['costumer_name'] = 'סהכ כללי'
-            template_row['total_weight'] = global_total_weight
-            report_data.append(template_row.copy())
+        orders_raw = main.mongo.read_collection_list('orders', query)
+        orders_data = []
+        global_total_weight = 0
+        for row in orders_raw:
+            new_row = {'order_id': row['order_id']}
+            new_row.update(row['info'])
+            new_row['order_id'] = row['order_id']
+            new_row['status'] = 'order_status_' + new_row['status']
+            new_row['date_created'] = datetime.strptime(new_row['date_created'], '%Y-%m-%d %H:%M:%S')
+            orders_data.append(new_row)
+            if 'total_weight' not in new_row:
+                new_row['total_weight'] = 0
+            global_total_weight += new_row['total_weight']
+        orders_data.sort(key=lambda k: k['costumer_name'])
+        # orders_df = main.mongo.read_collection_df('orders', query=query)
+        # print(orders_df)
+        # if not orders_df.empty:
+        #     # normalize json to df
+        #     info_df = pd.json_normalize(orders_df['info'])
+        #     info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
+        #     # add order id from main df
+        #     new_df = pd.concat([orders_df['order_id'], info_df], axis=1)#.fillna(0)
+        #     new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
+        #     new_df.drop(new_df[new_df['type'] == 'integration'].index, inplace=True)
+        #     new_df['status'] = 'order_status_' + new_df['status'].astype(str)
+        #     new_df['costumer_name'] = new_df['costumer_name'].astype(str)
+        #     new_df.sort_values('costumer_name', inplace=True)
+        #     _report_data = new_df.to_dict('records')
+
+        temp_total_weight = 0
+        last_client = orders_data[0]['costumer_name']
+        template_row = {}
+        for item in orders_data[0]:
+            template_row[item] = ''
+        template_row['costumer_name'] = 'סהכ ללקוח'
+        for row in orders_data:
+            if row['costumer_name'] == last_client:
+                temp_total_weight += row['total_weight']
+            else:
+                template_row['total_weight'] = str(temp_total_weight)
+                report_data.append(template_row.copy())
+                temp_total_weight = row['total_weight']
+                last_client = row['costumer_name']
+            report_data.append(row)
+        template_row['total_weight'] = temp_total_weight
+        report_data.append(template_row.copy())
+        template_row['costumer_name'] = 'סהכ כללי'
+        template_row['total_weight'] = global_total_weight
+        report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
                                 dictionary=get_dictionary(main.session['username']), data_to_display=data_to_display)
 

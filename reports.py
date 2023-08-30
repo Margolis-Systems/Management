@@ -118,7 +118,7 @@ class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type, disable_weight=False, select_jobs=[], split=''):
         # Format data
-        rows, info, additional = orders.get_order_data(order_id, reverse=False, split=split)
+        rows, info = orders.get_order_data(order_id, reverse=False, split=split)
         if select_jobs:
             rlen = len(rows)
             for i in range(rlen):

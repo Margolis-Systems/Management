@@ -78,7 +78,7 @@ div {
 
         <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
         <td> <button onclick='openNewWindow("\split_order")' type="button" class="btn btn-warning btn-block">פיצול הזמנה</button></td>
-        <td><label>סה"כ משקל</label><input type="number" value="{{ total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
+        <td><label>סה"כ משקל</label><input type="number" value="{{ order_data.info.total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
     </tr>
 </table>
 {% if order_data.include %}

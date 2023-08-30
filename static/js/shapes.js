@@ -23,8 +23,8 @@ const sendMessage = () => {
     newWindow.postMessage({ foo: 'bar' }, '*');
 };
 
-const closeWindow = (shape_selected, tot_len) => {
-    window.opener.postMessage({shp: shape_selected, len: tot_len}, '*');
+const closeWindow = (shape_selected, tot_len, shape_dt) => {
+    window.opener.postMessage({shp: shape_selected, len: tot_len, shapedt: shape_dt}, '*');
     window.close();
 };
 
@@ -36,7 +36,8 @@ setTimeout("window.close()",1000)
 };
 
 window.addEventListener('message', (event) => {
-    shapeData.value = event.data.shp;
+    console.log(event.data)
+    shapeData.value = event.data.shapedt;
     formInput.value = event.data.shp;
     lengInput.value = event.data.len;
     if (event.data.shp != '332'){
@@ -161,7 +162,7 @@ function focusNext(inputIndex) {
         var safety = 0;
         while (safety < 20){
             inputIndex += 1;
-            if (inputIndex >= inputNames.length && do_once == 0 ||inputNames[inputIndex] == 'weight' && do_once == 0){
+            if (inputIndex >= inputNames.length && do_once == 0){
                 form = document.getElementById("input_form");
                 if (form.checkValidity() && do_once==0){
                     do_once = 1;

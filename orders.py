@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-
 import configs
 import functions
 import main
@@ -17,7 +16,6 @@ def orders():
         return users.logout()
     if 'order_id' in main.session.keys():
         main.session['job_id'] = ""
-
         return main.redirect('/edit_order')
     query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
     if 'user_config' in main.session:
@@ -38,34 +36,19 @@ def orders():
             else:
                 if req_form[item]:
                     query[item] = {'$regex': req_form[item]}
-    # Read all orders data with Info, mean that it's not including order rows
-    orders_df = main.mongo.read_collection_df('orders', query=query)
-    if orders_df.empty:
-        if not main.request.form:
-            return main.render_template('orders.html', orders={}, display_items=[], dictionary={}, defaults={})
-        return main.redirect('/orders')
     main.session['user_config']['search'] = query
     main.session.modified = True
-    # normalize json to df
-    info_df = pd.json_normalize(orders_df['info'])
-    info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
-    # add order id from main df
-    new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)
-    for item in main.configs.data_to_display['orders']:
-        if item not in new_df.columns:
-            new_df[item] = ""
-    orders_info = new_df[main.configs.data_to_display['orders']].copy()
-    orders_info['status'] = 'order_status_' + orders_info['status'].astype(str)
-    if orders_info['total_weight'].any():
-        orders_info['total_weight'] = orders_info['total_weight'].astype(int)
-    if orders_info['split'].any():
-        orders_info['split'] = orders_info['split'].astype(int)
-    if 'in_use' in new_df:
-        orders_info['in_use'] = new_df['in_use']
-    orders_info.sort_values(by=['date_created'], ascending=[False], inplace=True)
+    # Read all orders data with Info, mean that it's not including order rows
+    orders_data = main.mongo.read_collection_list('orders', query)
+    orders_info = []
+    for order in orders_data:
+        row = order['info'].copy()
+        row['order_id'] = order['order_id']
+        row['status'] = 'order_status_' + row['status']
+        orders_info.append(row)
     dictionary = pages.get_dictionary(main.session['username'])
-    return main.render_template('orders.html', orders=orders_info.to_dict('index'),
-                                display_items=main.configs.data_to_display['orders'],
+    orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
+    return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults)
 
 
@@ -73,38 +56,39 @@ def new_order(client="", order_type=""):
     user_group = users.validate_user()
     if not user_group:
         return users.logout()
-    if 'name' in main.request.form.keys() or client:
-        if 'site' in main.request.form.keys() and 'sites_list' in main.session.keys():
-            if 'order_type' in main.request.form and 'order_id' in main.session.keys():
-                if main.request.form['order_type'] == main.session['order_id']:
-                    doc = {'info.costumer_name': main.request.form['name'],
+    req_form = dict(main.request.form)
+    if 'name' in req_form or client:
+        if 'site' in req_form and 'sites_list' in main.session.keys():
+            if 'order_type' in req_form and 'order_id' in main.session.keys():
+                if req_form['order_type'] == main.session['order_id']:
+                    doc = {'info.costumer_name': req_form['name'],
                            'info.costumer_id':
-                               main.mongo.read_collection_one('costumers', {'name': main.request.form['name']})['id'],
-                           'info.costumer_site': main.request.form['site']}
+                               main.mongo.read_collection_one('costumers', {'name': req_form['name']})['id'],
+                           'info.costumer_site': req_form['site']}
                     main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists': True}},
                                           doc, '$set')
                     return main.redirect('/orders')
-            if main.request.form['site'] in main.session['sites_list']:
+            if req_form['site'] in main.session['sites_list']:
                 main.session['sites_list'] = []
                 user = main.session['username']
-                client = main.request.form['name']
+                client = req_form['name']
                 client_id = main.mongo.read_collection_one('costumers', {'name': client})['id']
-                site = main.request.form['site']
-                order_type = main.request.form['order_type']
+                site = req_form['site']
+                order_type = req_form['order_type']
                 order_id = new_order_id()
                 order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'date_delivery': ts(),
                                                         'type': order_type, 'costumer_name': client,
                                                         'costumer_id': client_id,
-                                                        'costumer_site': site, 'status': 'NEW'}}
+                                                        'costumer_site': site, 'status': 'NEW'}, 'rows': []}
                 main.mongo.insert_collection_one('orders', order)
                 main.session['order_id'] = order_id
                 return main.redirect('/orders')
-        elif 'name' in main.request.form.keys():
-            client = main.request.form['name']
+        elif 'name' in req_form:
+            client = req_form['name']
     if len(list(main.request.values)) == 1 and not order_type:
         order_type = list(main.request.values)[0]
-    elif 'order_type' in main.request.form.keys():
-        order_type = main.request.form['order_type']
+    elif 'order_type' in req_form:
+        order_type = req_form['order_type']
     client_list, sites_list = clients.gen_client_list(client)
     permission = False
     if user_group > 50:
@@ -116,34 +100,15 @@ def new_order(client="", order_type=""):
 
 
 def new_order_row():
-    if 'last_row' in main.session:
-        last_edit = datetime.strptime(main.session['last_row'], '%Y-%m-%d %H:%M:%S')
-        dif = (datetime.now() - last_edit).total_seconds()
-        if dif < 1:
-            return
     order_id = main.session['order_id']
     if 'R' in order_id:
         return
-    req_form_data = main.request.form
-    info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
-    if info:
-        if 'in_use' in info['info']:
-            if info['info']['in_use'] != main.session['username']:
-                return
-    if 'shape_data' in req_form_data.keys():
-        new_row = {'order_id': order_id, 'job_id': "0"}
-        for item in req_form_data:
-            if item.isdigit() or item == 'shape_data' or 'ang' in item:
-                new_row[item] = " ".join(req_form_data[item].split())
-        main.mongo.insert_collection_one('orders', new_row)
-        # main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': "0"}, new_row)
-        return
-    main.session['last_row'] = ts()
-    main.session.modified = True
-    job_id = gen_job_id(order_id)
-    if 'job_id' in main.session.keys():
-        if main.session['job_id'] != "":
-            job_id = main.session['job_id']
+    req_form_data = dict(main.request.form)
+    req_vals = dict(main.request.values)
+    order = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
+    job_id = str(len(order['rows']) + 1)
+    if 'addbefore' in req_vals:
+        job_id = req_vals['addbefore']
     new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts()}
     if 'x_length' in req_form_data.keys():
         new_row['x_length'] = []
@@ -151,6 +116,8 @@ def new_order_row():
         new_row['y_length'] = []
         new_row['y_pitch'] = []
     for item in req_form_data:
+        if req_form_data[item].isnumeric():
+            req_form_data[item] = str(int(req_form_data[item]))
         if req_form_data[item] not in ['---', ''] and '_hid' not in item:
             if '_length' in item or '_pitch' in item:
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
@@ -158,13 +125,9 @@ def new_order_row():
                 new_row[item] = req_form_data[item]
     # Order comment
     if 'comment_hid' in req_form_data:
-        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.comment': req_form_data['comment_hid']}, '$set')
+        order['info']['comment'] = req_form_data['comment_hid']
     if 'date_delivery_hid' in req_form_data:
-        date_delivery = req_form_data['date_delivery_hid']
-        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.date_delivery': date_delivery}, '$set')
-    # ---------------------------------------------------------------------------------------- #
+        order['info']['date_delivery'] = req_form_data['date_delivery_hid']
     # Order data handling
     if 'diam_x' in new_row:
         new_row['mkt'] = "2005020000"
@@ -210,10 +173,9 @@ def new_order_row():
         new_row['y_bars'] = int(bars_y)
         new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
         new_row['y_weight'] = calc_weight(new_row['diam_y'], new_row['length'], bars_y)
-        new_row['description'] = "V" + str(new_row['width']) + "X" + str(bars_x) + "X" + str(
-            new_row['diam_x']) + "WBX" + x_pitch + \
-                                 " H" + str(new_row['length']) + "X" + str(bars_y) + "X" + str(
-            new_row['diam_y']) + "WBX" + y_pitch
+        new_row['description'] = "V" + str(new_row['width']) + "X" + str(bars_x) + "X" + str(new_row['diam_x']) + \
+                                 "WBX" + x_pitch + " H" + str(new_row['length']) + "X" + str(bars_y) + "X" + \
+                                 str(new_row['diam_y']) + "WBX" + y_pitch
         new_row['unit_weight'] = round(new_row['x_weight'] + new_row['y_weight'], 2)
         new_row['weight'] = round(new_row['unit_weight'] * int(new_row['quantity']), 2)
         if 'הזמנת_ייצור' in new_row:
@@ -236,33 +198,11 @@ def new_order_row():
         if 'הזמנת_ייצור' in new_row:
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'shape' in req_form_data:
-        temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
-        # if not temp_order_data:
-        #     temp_order_data = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': job_id})
-        #     new_row['shape_data'] = temp_order_data['shape_data']
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
-        if temp_order_data:
-            if temp_order_data['shape_data'] == new_row['shape']:
-                main.mongo.delete_many('orders', {'order_id': order_id, 'job_id': "0"})
-                new_row['shape_data'] = []
-                new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
-                for item in temp_order_data:
-                    if item.isdigit():
-                        new_row['shape_data'].append(temp_order_data[item])
-                    elif 'ang_' in item:
-                        new_row['shape_ang'][int(item.replace('ang_', '')) - 1] = temp_order_data[item]
-            else:
-                functions.log('shape_data_error', {'new_row': new_row, 'form': req_form_data, 'temp': temp_order_data,
-                                                   'user': main.session['username']})
-                print("NO SHAPE data !!!!!")
-                return
-        else:
-            temp_order_data = main.mongo.read_collection_one('orders',
-                                                  {'order_id': new_row['order_id'], 'job_id': new_row['job_id']})
-            new_row['shape_data'] = temp_order_data['shape_data']
-            new_row['shape_ang'] = temp_order_data['shape_ang']
+        new_row['shape_data'] = req_form_data['shape_hid'].split(',')
+        new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
         if new_row['shape'] == '332':
             new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
         else:
@@ -276,40 +216,36 @@ def new_order_row():
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
-
-    # if prev:
-    #     for item in prev:
-    #         if item not in new_row and item in ['shape_data', 'shape_ang']:
-    #             new_row[item] = prev[item]
-    main.mongo.upsert_collection_one('orders', {'order_id': new_row['order_id'], 'job_id': new_row['job_id']},
-                                     new_row)  # , upsert=True
-    update_orders_total_weight()
-    req_vals = dict(main.request.values)
-    if 'addbefore' in req_vals:
-        if req_vals['addbefore']:
-            reorder_job_id(req_vals['addbefore'])
+    order['info']['total_weight'] = 0
+    for i in range(len(order['rows'])):
+        if 'job_id' in main.session.keys():
+            if order['rows'][i]['job_id'] == main.session['job_id']:
+                order['rows'].pop(i)
+                break
+        if 'addbefore' in req_vals:
+            if int(order['rows'][i]['job_id']) >= int(req_vals['addbefore']):
+                order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id'])+1)
+        order['info']['total_weight'] += int(order['rows'][i]['weight'])
+    order['rows'].append(new_row)
+    order['info']['total_weight'] = round(order['info']['total_weight'])
+    order['info']['rows'] = len(order['rows'])
+    main.mongo.update_one('orders', {'order_id': new_row['order_id']}, order, '$set')
 
 
 def edit_order():
     if not users.validate_user():
         return users.logout()
-    if len(list(main.request.values)) == 1:
-        main.session['order_id'] = list(main.request.values)[0]
-    elif len(main.request.form.keys()) > 1:
+    req_vals = list(main.request.values)
+    if main.request.form:
         new_order_row()
         return main.redirect('/orders')
+    elif req_vals:
+        main.session['order_id'] = req_vals[0]
     if 'order_id' not in main.session.keys():
         return main.redirect('/orders')
-    order_data, page_data, total_weight = edit_order_data()
+    order_data, page_data = edit_order_data()
     if not order_data:
         return close_order()
-    # TODO: Dual use protection
-    # elif 'in_use' in order_data['info']:
-    #     if order_data['info']['in_use'] != main.session['username']:
-    #         return close_order()
-    # else:
-    #     main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.status': 'NEW'},
-    #                           {'info.in_use': main.session['username']}, '$set')
     defaults = {'bar_type': 'מצולע'}
     msg = ''
     # Copy last element fix
@@ -317,19 +253,25 @@ def edit_order():
         if 'element' in order_data['order_rows'][0]:
             defaults['element'] = order_data['order_rows'][0]['element']
     return main.render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                                dictionary=page_data[2], rebar_data={}, defaults=defaults, total_weight=total_weight,
-                                msg=msg, )
+                                dictionary=page_data[2], rebar_data={}, defaults=defaults, msg=msg, )
 
 
 def get_order_data(order_id, job_id="", split="", reverse=True):
-    query = {'order_id': order_id, 'job_id': {'$ne': "0"}, 'info': {'$exists': False}, 'type': {'$ne': 'integration'}}
-    if job_id:
-        query['job_id'] = job_id
-    if split:
-        query['order_split'] = int(split)
-    order_data = list(main.mongo.read_collection_list('orders', query))
-    additional = main.mongo.read_collection_one('orders', {'order_id': order_id, 'job_id': "0"})
-    info = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})['info']
+    query = {'order_id': order_id, 'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
+    _order_data = main.mongo.read_collection_one('orders', query)
+    info = _order_data['info'].copy()
+    order_data = []
+    for row in _order_data['rows']:
+        if job_id:
+            if row['job_id'] == job_id:
+                order_data.append(row)
+                break
+        elif split:
+            if 'split' in row:
+                if row['split'] == split:
+                    order_data.append(row)
+        else:
+            order_data.append(row)
     if info['type'] == 'R':
         info['type'] = 'regular'
     info['order_id'] = order_id
@@ -338,10 +280,9 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
         if info['type'] == 'rebar':
             row['diam'] = row['diam_x']
             row['pitch'] = row['x_pitch']
-    info['order_id'] = order_id
     info['status'] = 'order_status_' + info['status']
     order_data.sort(key=lambda k: int(k['job_id']), reverse=reverse)
-    return order_data.copy(), info, additional
+    return order_data.copy(), info
 
 
 def new_order_id():
@@ -364,7 +305,7 @@ def edit_order_data():
     if 'job_id' in main.session.keys():
         job_id = main.session['job_id']
     # Read all data of this order
-    rows, info, additional = get_order_data(order_id, job_id)
+    rows, info = get_order_data(order_id, job_id)
     del info['costumer_id']
     if not info:
         return {}, [], 0
@@ -386,7 +327,7 @@ def edit_order_data():
     dictionary = pages.get_dictionary(username)
     if 'total_weight' not in info:
         info['total_weight'] = 0
-    return order_data, [lists, patterns, dictionary], round(info['total_weight'])
+    return order_data, [lists, patterns, dictionary]
 
 
 def edit_row():
@@ -397,22 +338,14 @@ def edit_row():
         main.session['order_id'] = req_vals['order_id']
         if 'job_id' in req_vals:
             main.session['job_id'] = req_vals['job_id']
-        order_data, page_data, total_weight = edit_order_data()
+        order_data, page_data = edit_order_data()
         if order_data:
             order_data['dtd_order'] = list(order_data['data_to_display'].keys())
             defaults = {'bar_type': 'מצולע'}
-            for item in order_data['order_rows'][0]:
-                if isinstance(order_data['order_rows'][0][item], list):
-                    for li in range(len(order_data['order_rows'][0][item])):
-                        if li > 0:
-                            defaults[item + "_" + str(li - 1)] = order_data['order_rows'][0][item][li]
-                        else:
-                            defaults[item] = order_data['order_rows'][0][item][li]
-                elif 'job_id' in req_vals:
-                    defaults[item] = order_data['order_rows'][0][item]
-                    defaults[item] = order_data['order_rows'][0][item]
-                elif 'addbefore' in req_vals:
-                    defaults['addbefore'] = req_vals['addbefore']
+            if 'addbefore' in req_vals:
+                defaults['addbefore'] = req_vals['addbefore']
+            else:
+                defaults.update(order_data['order_rows'][0])
             return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
                                         lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
@@ -459,47 +392,38 @@ def cancel_order():
 
 
 def update_order_status(new_status, order_id, job_id=""):
-    rows, info, additional = get_order_data(order_id)
+    order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+    if not order:
+        return
+    flag = True
     if job_id != "":
-        resp = main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_id},
-                                     {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
-        if resp.matched_count > 0:
-            functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
-            if new_status == 'Production':
-                if main.mongo.read_collection_one('orders', {'order_id': order_id + 'R'}):
-                    update_order_status(new_status, order_id + 'R')
-        if not rows:
-            return
-        for row in rows:
-            if row['status'] != "order_status_Finished":
-                return
-        update_order_status('Finished', order_id)
+        for i in range(len(order['rows'])):
+            if order['rows'][i]['job_id'] == job_id:
+                order['rows'][i]['status'] = new_status
+                functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
+            if order['rows'][i]['job_id'] != 'Finished':
+                flag = False
+        if flag:
+            update_order_status('Finished', order_id)
     else:
-        resp = main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}}, {'info.status':
-                                                                                                       new_status,
-                                                                                                   'info.status_updated_by':
-                                                                                                       main.session[
-                                                                                                           'username']},
-                                     '$set')
-        main.mongo.update_many('orders',
-                               {'order_id': order_id, 'info': {'$exists': False}, 'status': {'$ne': "Finished"}},
-                               {'status': new_status, 'status_updated_by': main.session['username']}, '$set')
+        order['info']['status'] = new_status
+        for i in range(len(order['rows'])):
+            order['rows'][i]['status'] = new_status
         if 'reason' in main.request.form:
             functions.log('cancel_order', main.request.form['reason'])
-            main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                  {'info.cancel_reason': main.request.form['reason']}, '$set')
+            order['info']['cancel_reason'] =  main.request.form['reason']
         else:
-            main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                  {'info.cancel_reason': ''}, '$unset')
-        if resp.matched_count > 0:
-            functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
-            if new_status == 'Processed' and info['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
-                msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} \n{username} ' \
-                    .format(order_id=order_id, date_created=info['date_created'], date_delivery=info['date_delivery'],
-                            costumer_name=info['costumer_name'], costumer_site=info['costumer_site'],
-                            total_weight=info['total_weight'], rows=info['rows'], username=main.session['username'])
-                phone_book = ['0509595953', '0509393938', '0528008018']
-                functions.send_sms(msg, phone_book)
+            if 'cancel_reason' in order['info']:
+                del order['info']['cancel_reason']
+        functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
+        if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
+            msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} \n{username} ' \
+                .format(order_id=order_id, date_created=order['info']['date_created'], date_delivery=order['info']['date_delivery'],
+                        costumer_name=order['info']['costumer_name'], costumer_site=order['info']['costumer_site'],
+                        total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'])
+            phone_book = ['0509595953', '0509393938', '0528008018']
+            functions.send_sms(msg, phone_book)
+    main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
 
 
 def close_order():
@@ -509,59 +433,24 @@ def close_order():
         req_vals = list(main.request.values)
         additional_func = req_vals[0]
         if additional_func == 'delete_row':
-            main.mongo.delete_many('orders', {'order_id': main.session['order_id'], 'job_id': main.session['job_id']})
-            update_orders_total_weight()
-            reorder_job_id()
+            order_id = main.session['order_id']
+            order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+            indx_to_del = None
+            order['info']['total_weight'] = 0
+            for i in range(len(order['rows'])):
+                order['info']['total_weight'] += order['rows'][i]['weight']
+                if int(order['rows'][i]['job_id']) > int(main.session['job_id']):
+                    order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
+                elif int(order['rows'][i]['job_id']) == int(main.session['job_id']):
+                    indx_to_del = i
+            order['rows'].pop(indx_to_del)
+            order['info']['rows'] = len(order['rows'])
+            main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
             return main.redirect('/orders')
         elif additional_func == 'scan':
             return main.redirect('/scan')
-    if 'order_id' in main.session:
-        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info.in_use': main.session['username']},
-                              {'info.in_use': ''}, '$unset')
     users.clear()
     return main.redirect('/orders')
-
-
-def update_orders_total_weight(order_id=''):
-    if not order_id:
-        order_id = main.session['order_id']
-    order_data_df = main.mongo.read_collection_df('orders', query={'info': {'$exists': False}, 'order_id': order_id,
-                                                                   'job_id': {'$ne': "0"}})
-    rows_count = len(order_data_df.index)
-    if rows_count == 0:
-        total_weight = 0
-    else:
-        total_weight = sum(order_data_df[order_data_df['order_id'] == order_id]['weight'].to_list())
-    if not math.isnan(total_weight):
-        main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.total_weight': int(total_weight), 'info.rows': rows_count}, '$set')
-
-
-def reorder_job_id(job_id=''):
-    order_id = main.session['order_id']
-    job_list, info, additional = get_order_data(order_id, reverse=True)
-    rows = len(job_list)
-    index = len(job_list)
-    if job_list:
-        if job_id:
-            main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job_list[0]['job_id']},
-                                  {'job_id': str(rows + 1)}, '$set')
-        for job in job_list:
-            if job_id:
-                if job == job_list[0]:
-                    continue
-            if job['job_id'] != '0' and index <= rows:
-                main.mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
-                                      {'job_id': str(index)}, '$set')
-                if job['job_id'] == job_id:
-                    break
-            index -= 1
-
-        if job_id:
-            main.mongo.update_one('orders', {'order_id': order_id, 'job_id': str(rows + 1)},
-                                  {'job_id': job_id}, '$set')
-    main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                          {'info.rows': str(rows)}, '$set')
 
 
 def calc_weight(diam, length, qnt):
@@ -569,6 +458,8 @@ def calc_weight(diam, length, qnt):
 
 
 def peripheral_orders(add_orders, order_id, orig_job_id):
+    # TODO: REBUILED
+    return
     description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id + " שורה מספר: " + orig_job_id
     order_id += "R"
     for order in range(len(add_orders)):
@@ -592,14 +483,6 @@ def peripheral_orders(add_orders, order_id, orig_job_id):
                           {'info.total_weight': round(total_weight), 'info.rows': len(weight_list)}, '$set')
 
 
-def gen_job_id(order_id):
-    job_ids_df = main.mongo.read_collection_df('orders', query={'order_id': order_id, 'info': {'$exists': False}})
-    if job_ids_df.empty:
-        return "1"
-    job_ids = job_ids_df['job_id'].astype(int).tolist()
-    return str(int(max(job_ids)) + 1)
-
-
 def copy_order():
     if main.request.form:
         req_form = dict(main.request.form)
@@ -610,33 +493,35 @@ def copy_order():
             order_data = list(main.mongo.read_collection_list('orders', {'order_id': order_id}))
             for doc in order_data:
                 doc['order_id'] = new_id
-                if 'info' in doc:
-                    doc['info']['status'] = 'NEW'
-                else:
-                    doc['status'] = 'NEW'
+                doc['info']['date_created'] = ts()
                 main.mongo.insert_collection_one('orders', doc)
+                update_order_status('NEW', new_id)
         return '', 204
     return main.render_template('/copy_order.html')
 
 
 def split_order():
-    rows, info, adit = get_order_data(main.session['order_id'], reverse=False)
+    order_id = main.session['order_id']
+    order = main.mongo.read_collection_one('orders', {'order_id': order_id})
     if main.request.form:
         req_form = dict(main.request.form)
-        for item in req_form:
-            if req_form[item]:
-                split = int(req_form[item])
-            else:
-                split = 1
-            main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'job_id': item},
-                                  {'order_split': split}, '$set')
-        _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
-        main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists': True}},
-                              {'info.split': len(_split)}, '$set')
-        if len(_split) == 1:
-            main.mongo.update_many('orders', {'order_id': main.session['order_id'], 'job_id': {'$exists': True}},
-                                   {'order_split': split}, '$unset')
-            main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists': True}},
-                                  {'info.split': len(_split)}, '$unset')
+        splits = []
+        for i in req_form:
+            if req_form[i] not in splits:
+                splits.append(i)
+        if len(splits) < 2:
+            if 'split' in order['info']:
+                del order['info']['split']
+        for i in range(len(order['rows'])):
+            if len(splits) < 2:
+                if 'order_split' in order['rows'][i]:
+                    del order['rows'][i]['order_split']
+            elif order['rows'][i]['job_id'] in req_form:
+                if req_form[order['rows'][i]['job_id']]:
+                    order['rows'][i]['order_split'] = req_form[order['rows'][i]['job_id']]
+                else:
+                    order['rows'][i]['order_split'] = 1
+        print(order['rows'])
+        main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
         return '', 204
-    return main.render_template('/split_order.html', order=rows)
+    return main.render_template('/split_order.html', order=order['rows'])

@@ -7,7 +7,7 @@
 <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 {% if shape_data != {} %}
 {% if shape_data.edges == 0 %}
-<body onload="closeWindow({{shape_data.shape}}, {{shape_data.tot_len}})">
+<body onload="closeWindow({{shape_data.shape}}, {{shape_data.tot_len}}, '{{shape_data.shape_data}}')">
 {% else %}
 <table class="table table-striped" dir="rtl" align="center">
     <form id="input_form" method=POST action="{{ url_for('shape_editor') }}" onsubmit="input_form.disabled = true; return true;"  onkeydown="return event.key != 'Enter';">

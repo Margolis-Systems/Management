@@ -1,12 +1,20 @@
 {% extends "layout.html" %}
 {% block body %}
 <table class="table table-striped" align="center" dir="rtl">
-    <tr>
-        <td>
+    <tr><!--
         <td><button onclick="location.href='/new_order?regular'" type="button" class="btn btn-primary btn-block">הזמנת ברזל חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar'" type="button" class="btn btn-primary btn-block">הזמנת רשת חדשה</button></td>
         <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block">הזמנת כוורת חדשה</button></td>
-        <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block" disabled>הזמנת כלונסאות חדשה</button></td>
+        <td><button onclick="location.href='/new_order?rebar_special'" type="button" class="btn btn-primary btn-block" disabled>הזמנת כלונסאות חדשה</button></td>-->
+        <td><button class="btn btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="new_order_dropdown">
+            הזמנה חדשה
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="new_order_dropdown">
+            <li><a class="dropdown-item" href="/new_order?regular">ברזל</a></li>
+            <li><a class="dropdown-item" href="/new_order?rebar">רשת</a></li>
+            <li><a class="dropdown-item" href="/new_order?rebar_special">כוורת</a></li>
+            <li><a class="dropdown-item" href="/new_order?rebar_special">כלונסאות</a></li>
+          </ul></td>
         <td><button onclick='openNewWindow("\copy_order")' type="button" class="btn btn-primary btn-block" >העתק הזמנה</button></td>
         <td>
             <form method=POST id="date_form" autocomplete="off" action="{{ url_for('orders_page') }}">
@@ -55,28 +63,30 @@
         <td width="5%"  style="outline: thin solid;text-align: center"></td>
     </tr>
     {% for order in orders %}
-    <tr bgcolor="{{dictionary.html_colors[orders[order].status]}}">
+    <tr bgcolor="{{dictionary.html_colors[order.status]}}">
         {% for item in display_items %}
-        <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ orders[order]['order_id'] }}'">
-        {% if dictionary[orders[order][item]] %}
-            {{dictionary[orders[order][item]]}}
+        <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'">
+        {% if dictionary[order[item]] %}
+            {{dictionary[order[item]]}}
         {% else %}
-            {{ orders[order][item] }}
+            {{ order[item] }}
         {% endif %}
         </td>
         {% endfor %}
         <td height="50" style="outline: thin solid;text-align: center">
-            {% if orders[order]['in_use'] and orders[order]['in_use'] != 0 %}
-            בשימוש על ידי: {{orders[order]['in_use']}}
+            {% if order['in_use'] and order['in_use'] != 0 %}
+            בשימוש על ידי: {{order['in_use']}}
             {% else %}
-            <button type="button" onclick='openNewWindow("\change_order_status?order_id={{orders[order]["order_id"]}}")'>שנה סטטוס</button></td>
+            <button type="button" onclick='openNewWindow("\change_order_status?order_id={{order["order_id"]}}")'>שנה סטטוס</button></td>
             {% endif %}
         <td height="50" style="outline: thin solid;text-align: center">
-            <button type=button" onclick="openNewWindow('\order_files?order_id={{orders[order].order_id}}')" type="button">צפיה בקבצים</button></td>
+            <button type=button" onclick="openNewWindow('\order_files?order_id={{order.order_id}}')" type="button">צפיה בקבצים</button></td>
     </tr>
     {% endfor %}
 </table >
+<script src="\static\js\bootstrap.js" ></script>
 <script src="\static\js\shapes.js" ></script>
+<script src="\static\js\popper.js"></script>
 <script>
 const refresh = () => {
 setTimeout(function(){
