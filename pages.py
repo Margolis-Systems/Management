@@ -201,13 +201,14 @@ def scan():
     decode = {}
     user = main.session['username']
     user_data = users.get_user_data()
-    order = main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': user})
+    # todo: order?
+    # order = None  # main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': user})
     machine = main.mongo.read_collection_one('machines', {'username': user})
     if not machine:
         msg = 'לא הוקצתה מכונה למפעיל'
-    if order:
-        order_id = order['order_id']
-        job_id = order['job_id']
+    # if order:
+    #     order_id = order['order_id']
+    #     job_id = order['job_id']
     req_form = dict(main.request.form)
     if 'scan' in req_form.keys():
         decode = reports.Images.decode_qr(req_form['scan'])
@@ -223,33 +224,34 @@ def scan():
         production_log(req_form)
         return main.redirect('/scan')
     if order_id:
-        job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
-        if not job and decode:
+        order = orders.get_order_data(order_id)
+        if not order:
             # Create integration order
-            integration_order = decode.copy()
-            add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(), 'status_updated_by': main.session['username']}
-            integration_order.update(add_info)
-            main.mongo.insert_collection_one('orders', integration_order)
             info = {'costumer_name': '', 'costumer_id': '', 'created_by': main.session['username'], 'costumer_site': '',
                     'date_created': functions.ts(), 'type': 'integration', 'status': 'Production'}
-            main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                             {'order_id': order_id, 'info': info})
-            orders.update_orders_total_weight(order_id)
-            job = main.mongo.read_collection_one(main.configs.orders_collection, {'order_id': order_id, 'job_id': job_id})
-        if 'status' in job:
-            if job['status'] == 'Production':
-                status = "Start"
-            elif job['status'] == "Start":
-                status = "Finished"
-            elif job['status'] == "Processed":
-                orders.update_order_status('Production', order_id)
-                status = "Start"
-            else:
-                if main.session['username'] == 'operator34' and job['status'] == "Finished":
-                    status = "Start"
+            order = {'order_id': order_id, 'info': info, 'rows': []}
+        row = decode.copy()
+        add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(), 'status_updated_by': main.session['username']}
+        row.update(add_info)
+        for i in range(len(order['rows'])):
+            if order['rows'][i]['job_id'] == row['job_id']:
+                if 'status' in row:
+                    if row['status'] == 'Production':
+                        status = "Start"
+                    elif row['status'] == "Start":
+                        status = "Finished"
+                    elif row['status'] == "Processed":
+                        orders.update_order_status('Production', order_id)
+                        status = "Start"
                 else:
-                    msg = job['status']
-                    order_id = ''
+                    if main.session['username'] == 'operator34' and row['status'] == "Finished" and order['rows'][i]['status_updated_by'] != 'operator34':
+                        status = "Start"
+                    else:
+                        msg = row['status']
+                        order_id = ''
+                order['rows'].pop(i)
+                break
+        order['rows'].append(row)
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
                                 dictionary=get_dictionary(main.session['username']), user={'name': user, 'lang': user_data['lang']})
 
@@ -367,6 +369,7 @@ def reports_page():
                 machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
                          'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
                 for line in temp_report_data:
+                    line['weight'] = round(float(line['weight'] / 1000))
                     if line['machine_id'] != machine_id:
                         if machine_total['work_time'].total_seconds() > 0:
                             machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000))
@@ -389,7 +392,7 @@ def reports_page():
                         # else:
                         #     line['ht_avg'] = 0
                     report_data.append(line)
-                    machine_total['weight'] += int(line['weight'])
+                    machine_total['weight'] += round(float(line['weight']))
                     machine_total['quantity'] += int(line['quantity'])
                     machine_total['lines'] += 1
                     if 'Finished_ts' in line:
@@ -423,40 +426,28 @@ def reports_page():
             if 'username' in req_vals.keys():
                 query['username'] = req_vals['username']
         # Read all orders data with Info, mean that it's not including order rows
-        orders_raw = main.mongo.read_collection_list('orders', query)
+        all_orders = list(main.mongo.read_collection_list('orders', query))
         orders_data = []
         global_total_weight = 0
-        for row in orders_raw:
-            new_row = {'order_id': row['order_id']}
-            new_row.update(row['info'])
-            new_row['order_id'] = row['order_id']
+        for order in all_orders:
+            new_row = {'order_id': order['order_id']}
+            new_row.update(order['info'])
             new_row['status'] = 'order_status_' + new_row['status']
             new_row['date_created'] = datetime.strptime(new_row['date_created'], '%Y-%m-%d %H:%M:%S')
-            orders_data.append(new_row)
+            if 'rows' not in order:
+                order['rows'] = []
             if 'total_weight' not in new_row:
                 new_row['total_weight'] = 0
-            global_total_weight += new_row['total_weight']
+                # todo: validate
+                global_total_weight += new_row['total_weight']
+            orders_data.append(new_row)
         orders_data.sort(key=lambda k: k['costumer_name'])
-        # orders_df = main.mongo.read_collection_df('orders', query=query)
-        # print(orders_df)
-        # if not orders_df.empty:
-        #     # normalize json to df
-        #     info_df = pd.json_normalize(orders_df['info'])
-        #     info_df['date_created'] = pd.to_datetime(info_df['date_created'], format='%Y-%m-%d %H:%M:%S')
-        #     # add order id from main df
-        #     new_df = pd.concat([orders_df['order_id'], info_df], axis=1)#.fillna(0)
-        #     new_df = new_df[['order_id','costumer_name','costumer_site','date_created','date_delivery','type','rows','total_weight','status']]
-        #     new_df.drop(new_df[new_df['type'] == 'integration'].index, inplace=True)
-        #     new_df['status'] = 'order_status_' + new_df['status'].astype(str)
-        #     new_df['costumer_name'] = new_df['costumer_name'].astype(str)
-        #     new_df.sort_values('costumer_name', inplace=True)
-        #     _report_data = new_df.to_dict('records')
-
         temp_total_weight = 0
-        last_client = orders_data[0]['costumer_name']
         template_row = {}
-        for item in orders_data[0]:
-            template_row[item] = ''
+        if orders_data:
+            last_client = orders_data[0]['costumer_name']
+            for item in orders_data[0]:
+                template_row[item] = ''
         template_row['costumer_name'] = 'סהכ ללקוח'
         for row in orders_data:
             if row['costumer_name'] == last_client:

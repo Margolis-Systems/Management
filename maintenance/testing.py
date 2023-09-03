@@ -31,7 +31,7 @@ def get_order_data_V1(order_id, job_id="", split="", reverse=True):
     return order_data.copy(), info, additional
 
 
-query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
+query = {'info': {'$exists': True}, 'info.type': 'integration'}
 orders_df = mongo.read_collection_df('orders', query=query)
 info_df = pd.json_normalize(orders_df['info'])
 new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)

@@ -110,6 +110,7 @@ function copyLastRow(dict, dataToDisplay){
     dataToDisplay['weight'] = 2;
     for(item in dataToDisplay){
         if(dataToDisplay[item] != 2 && dataToDisplay[item] != 4){
+        // validate no undefind
             try {
                 document.getElementById(item).value = dict[item];
             }
@@ -157,6 +158,7 @@ function formSubmit(){
 
 var do_once = 0
 function focusNext(inputIndex) {
+// reorder func
     inputNames = dtd_order;
     if (event.keyCode === 13){
         var safety = 0;

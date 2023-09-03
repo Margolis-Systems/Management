@@ -106,9 +106,14 @@ def new_order_row():
     req_form_data = dict(main.request.form)
     req_vals = dict(main.request.values)
     order = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
+    if 'rows' not in order:
+        order['rows'] = []
     job_id = str(len(order['rows']) + 1)
     if 'addbefore' in req_vals:
         job_id = req_vals['addbefore']
+    elif 'job_id' in main.session:
+        if main.session['job_id']:
+            job_id = main.session['job_id']
     new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts()}
     if 'x_length' in req_form_data.keys():
         new_row['x_length'] = []
@@ -123,11 +128,6 @@ def new_order_row():
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
             else:
                 new_row[item] = req_form_data[item]
-    # Order comment
-    if 'comment_hid' in req_form_data:
-        order['info']['comment'] = req_form_data['comment_hid']
-    if 'date_delivery_hid' in req_form_data:
-        order['info']['date_delivery'] = req_form_data['date_delivery_hid']
     # Order data handling
     if 'diam_x' in new_row:
         new_row['mkt'] = "2005020000"
@@ -208,6 +208,12 @@ def new_order_row():
         else:
             new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
     else:
+        # Order comment
+        if 'comment_hid' in req_form_data:
+            order['info']['comment'] = req_form_data['comment_hid']
+        if 'date_delivery_hid' in req_form_data:
+            order['info']['date_delivery'] = req_form_data['date_delivery_hid']
+        main.mongo.update_one('orders', {'order_id': new_row['order_id']}, order, '$set')
         return
     # Takes to manual input for weight
     if 'weight' in req_form_data:
@@ -216,7 +222,7 @@ def new_order_row():
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
-    order['info']['total_weight'] = 0
+    order['info']['total_weight'] = new_row['weight']
     for i in range(len(order['rows'])):
         if 'job_id' in main.session.keys():
             if order['rows'][i]['job_id'] == main.session['job_id']:
@@ -262,6 +268,7 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
     info = _order_data['info'].copy()
     order_data = []
     for row in _order_data['rows']:
+        row['weight'] = round(row['weight'])
         if job_id:
             if row['job_id'] == job_id:
                 order_data.append(row)
@@ -443,6 +450,7 @@ def close_order():
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
                 elif int(order['rows'][i]['job_id']) == int(main.session['job_id']):
                     indx_to_del = i
+            order['info']['total_weight'] = int(order['info']['total_weight'])
             order['rows'].pop(indx_to_del)
             order['info']['rows'] = len(order['rows'])
             main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
@@ -458,29 +466,36 @@ def calc_weight(diam, length, qnt):
 
 
 def peripheral_orders(add_orders, order_id, orig_job_id):
-    # TODO: REBUILED
-    return
     description = "הזמנת ייצור להכנת רשת. מספר הזמנת מקור: " + order_id + " שורה מספר: " + orig_job_id
     order_id += "R"
-    for order in range(len(add_orders)):
-        job_id = str(order + 1) + '_' + orig_job_id
-        order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
+    order_data = main.mongo.read_collection_df('orders', query={'order_id': order_id})
+    if order_data.empty:
         info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'],
                 'date_created': ts(), 'type': 'R', 'status': 'NEW'}
-        main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                                         {'order_id': order_id, 'info': info})
-        peripheral_order = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts(),
-                            'description': description, 'quantity': add_orders[order]['qnt'], 'shape': "1",
-                            'length': add_orders[order]['length'], 'bar_type': 'מצולע',
-                            'diam': add_orders[order]['diam'], 'weight': order_weight,
-                            'shape_data': [add_orders[order]['length']], 'element': 'שורה: ' + orig_job_id}
-        main.mongo.upsert_collection_one('orders', {'order_id': order_id, 'job_id': job_id}, peripheral_order)
-    order_data = main.mongo.read_collection_df('orders', query={'order_id': order_id,
-                                                                'info': {'$exists': False}, 'job_id': {'$ne': '0'}})
-    weight_list = order_data['weight'].to_list()
-    total_weight = sum(weight_list)
-    main.mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                          {'info.total_weight': round(total_weight), 'info.rows': len(weight_list)}, '$set')
+        rows = []
+    else:
+        info = order_data['info'].to_dict()[0]
+        rows = order_data['rows'].to_dict()[0]
+    for order in range(len(add_orders)):
+        job_id = str(order + 1) + '_' + orig_job_id
+        to_pop = []
+        for i in range(len(rows)):
+            if rows[i]['job_id'] == job_id:
+                to_pop.insert(0, i)
+        for p in to_pop:
+            rows.pop(p)
+        order_weight = calc_weight(add_orders[order]['diam'], add_orders[order]['length'], add_orders[order]['qnt'])
+        rows.append({'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts(),
+                     'description': description, 'quantity': add_orders[order]['qnt'], 'shape': "1",
+                     'length': add_orders[order]['length'], 'bar_type': 'מצולע',
+                     'diam': add_orders[order]['diam'], 'weight': order_weight,
+                     'shape_data': [add_orders[order]['length']], 'element': 'שורה: ' + orig_job_id})
+    total_weight = 0
+    for row in rows:
+        total_weight += row['weight']
+    update_order = {'order_id': order_id, 'rows': rows, 'info': info}
+    main.mongo.update_one('orders', {'order_id': order_id},
+                          update_order, '$set', upsert=True)
 
 
 def copy_order():
@@ -521,7 +536,6 @@ def split_order():
                     order['rows'][i]['order_split'] = req_form[order['rows'][i]['job_id']]
                 else:
                     order['rows'][i]['order_split'] = 1
-        print(order['rows'])
         main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
         return '', 204
     return main.render_template('/split_order.html', order=order['rows'])

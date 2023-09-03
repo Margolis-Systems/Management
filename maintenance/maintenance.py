@@ -125,7 +125,7 @@ if __name__ == '__main__':
     # mongo_backup()
     # add_ang()
     # update_orders_total_weight()
-    mongo_restore("C:\\Projects\\Tzomet\\old ver\\20-08-2023_21-45-17-755352")
+    mongo_restore("C:\\Projects\\Tzomet\\old ver\\02-09-2023_20-00-04-160445")
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()
