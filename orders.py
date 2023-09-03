@@ -263,8 +263,10 @@ def edit_order():
 
 
 def get_order_data(order_id, job_id="", split="", reverse=True):
-    query = {'order_id': order_id, 'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
+    query = {'order_id': order_id, 'info': {'$exists': True}}
     _order_data = main.mongo.read_collection_one('orders', query)
+    if not _order_data:
+        return {}, {}
     info = _order_data['info'].copy()
     order_data = []
     for row in _order_data['rows']:

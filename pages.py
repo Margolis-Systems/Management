@@ -201,14 +201,15 @@ def scan():
     decode = {}
     user = main.session['username']
     user_data = users.get_user_data()
-    # todo: order?
-    # order = None  # main.mongo.read_collection_one('orders', {'status': 'Start', 'status_updated_by': user})
     machine = main.mongo.read_collection_one('machines', {'username': user})
     if not machine:
         msg = 'לא הוקצתה מכונה למפעיל'
-    # if order:
-    #     order_id = order['order_id']
-    #     job_id = order['job_id']
+    order = main.mongo.read_collection_one('orders', {'rows': {'$elemMatch': {'status': 'Start', 'status_updated_by': main.session['username']}}})
+    if order:
+        order_id = order['order_id']
+        for r in order['rows']:
+            if r['status'] == 'Start' and r['status_updated_by'] == main.session['username']:
+                job_id = r['job_id']
     req_form = dict(main.request.form)
     if 'scan' in req_form.keys():
         decode = reports.Images.decode_qr(req_form['scan'])
@@ -224,34 +225,45 @@ def scan():
         production_log(req_form)
         return main.redirect('/scan')
     if order_id:
-        order = orders.get_order_data(order_id)
-        if not order:
-            # Create integration order
-            info = {'costumer_name': '', 'costumer_id': '', 'created_by': main.session['username'], 'costumer_site': '',
-                    'date_created': functions.ts(), 'type': 'integration', 'status': 'Production'}
-            order = {'order_id': order_id, 'info': info, 'rows': []}
+        rows, info = orders.get_order_data(order_id)
         row = decode.copy()
         add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(), 'status_updated_by': main.session['username']}
         row.update(add_info)
+        if not rows:
+            # Create integration order
+            info = {'costumer_name': '', 'costumer_id': '', 'created_by': main.session['username'], 'costumer_site': '',
+                    'date_created': functions.ts(), 'type': 'integration', 'status': 'Production'}
+            order = {'order_id': order_id, 'info': info, 'rows': [row]}
+            main.mongo.insert_collection_one('orders', order)
+        else:
+            info['status'] = info['status'].replace('order_status_', '')
+            order = {'order_id': order_id, 'info': info, 'rows': rows}
+            for r in order['rows']:
+                if r['job_id'] == job_id:
+                    row = r
         for i in range(len(order['rows'])):
             if order['rows'][i]['job_id'] == row['job_id']:
-                if 'status' in row:
-                    if row['status'] == 'Production':
-                        status = "Start"
-                    elif row['status'] == "Start":
-                        status = "Finished"
-                    elif row['status'] == "Processed":
-                        orders.update_order_status('Production', order_id)
-                        status = "Start"
-                else:
-                    if main.session['username'] == 'operator34' and row['status'] == "Finished" and order['rows'][i]['status_updated_by'] != 'operator34':
-                        status = "Start"
-                    else:
-                        msg = row['status']
-                        order_id = ''
                 order['rows'].pop(i)
                 break
         order['rows'].append(row)
+        if 'status' in row:
+            row['status'] = row['status'].replace('order_status_', '')
+            if row['status'] == 'Production':
+                status = "Start"
+            elif row['status'] == "Start":
+                status = "Finished"
+            elif row['status'] == "Processed":
+                orders.update_order_status('Production', order_id)
+                status = "Start"
+            else:
+                if main.session['username'] == 'operator34' and row['status'] == "Finished" \
+                        and order['rows'][i]['status_updated_by'] != 'operator34':
+                    status = "Start"
+                else:
+                    msg = row['status']
+                    order_id = ''
+
+        main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
                                 dictionary=get_dictionary(main.session['username']), user={'name': user, 'lang': user_data['lang']})
 
@@ -430,6 +442,7 @@ def reports_page():
         orders_data = []
         global_total_weight = 0
         for order in all_orders:
+            # order['total_weight'] = round(float(order['total_weight'] / 1000))
             new_row = {'order_id': order['order_id']}
             new_row.update(order['info'])
             new_row['status'] = 'order_status_' + new_row['status']
@@ -439,7 +452,7 @@ def reports_page():
             if 'total_weight' not in new_row:
                 new_row['total_weight'] = 0
                 # todo: validate
-                global_total_weight += new_row['total_weight']
+            global_total_weight += new_row['total_weight'] / 1000
             orders_data.append(new_row)
         orders_data.sort(key=lambda k: k['costumer_name'])
         temp_total_weight = 0
@@ -450,18 +463,19 @@ def reports_page():
                 template_row[item] = ''
         template_row['costumer_name'] = 'סהכ ללקוח'
         for row in orders_data:
+            row['total_weight'] = round(row['total_weight'] / 1000)
             if row['costumer_name'] == last_client:
                 temp_total_weight += row['total_weight']
             else:
-                template_row['total_weight'] = str(temp_total_weight)
+                template_row['total_weight'] = round(temp_total_weight)
                 report_data.append(template_row.copy())
                 temp_total_weight = row['total_weight']
                 last_client = row['costumer_name']
             report_data.append(row)
-        template_row['total_weight'] = temp_total_weight
+        template_row['total_weight'] = round(temp_total_weight)
         report_data.append(template_row.copy())
         template_row['costumer_name'] = 'סהכ כללי'
-        template_row['total_weight'] = global_total_weight
+        template_row['total_weight'] = round(global_total_weight)
         report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
                                 dictionary=get_dictionary(main.session['username']), data_to_display=data_to_display)
@@ -510,14 +524,15 @@ def delete_attachment():
 
 def production_log(form_data):
     log = form_data.copy()
-    job_data = main.mongo.read_collection_one('orders', {'order_id': log['order_id'], 'job_id': log['job_id']})
+    # job_data = main.mongo.read_collection_one('orders', {'order_id': log['order_id'], 'job_id': log['job_id']})
+    job_data = orders.get_order_data(log['order_id'], log['job_id'])
     keys_to_log = ['weight', 'length', 'quantity', 'diam']
     machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
     for item in keys_to_log:
         if item in job_data:
             log[item] = job_data[item]
-        else:
-            print('production log \nitem not found: ', item)
+        # else:
+        #     print('production log \nitem not found: ', item)
     log.update(machine_data)
     log[form_data['status']+'_ts'] = functions.ts()
     main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id']}, log, '$set', upsert=True)

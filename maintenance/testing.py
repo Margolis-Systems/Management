@@ -7,7 +7,7 @@ import configs
 mongo = configs.mongo
 import pandas as pd
 def get_order_data_V1(order_id, job_id="", split="", reverse=True):
-    query = {'order_id': order_id, 'job_id': {'$ne': "0"}, 'info': {'$exists': False}, 'type': {'$ne': 'integration'}}
+    query = {'order_id': order_id, 'job_id': {'$ne': "0"}, 'info': {'$exists': False}}
     if job_id:
         query['job_id'] = job_id
     if split:
@@ -31,7 +31,7 @@ def get_order_data_V1(order_id, job_id="", split="", reverse=True):
     return order_data.copy(), info, additional
 
 
-query = {'info': {'$exists': True}, 'info.type': 'integration'}
+query = {'info': {'$exists': True}, 'info.type': {'$ne':'integration'}}
 orders_df = mongo.read_collection_df('orders', query=query)
 info_df = pd.json_normalize(orders_df['info'])
 new_df = pd.concat([orders_df['order_id'], info_df], axis=1).fillna(0)

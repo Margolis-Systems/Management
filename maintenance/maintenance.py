@@ -5,6 +5,8 @@ import shutil
 import requests
 import bson
 
+import orders
+
 sys.path.insert(1, 'C:\\Server')
 import configs
 
@@ -121,11 +123,21 @@ def send_sms(msg, _dist_numbers=[]):
     return resp
 
 
+def fix_weight_integ_ord():
+    to_fix = mongo.read_collection_list('production_log', {'quantity': {'$exists': False}})
+    for ord in to_fix:
+        job, info = orders.get_order_data(ord['order_id'], ord['job_id'])
+        print(job)
+        ord['weight'] = job[0]['weight']
+        ord['quantity'] = job[0]['quantity']
+        mongo.update_one('production_log', {'order_id': ord['order_id'], 'job_id': ord['job_id']}, ord, '$set')
+
 if __name__ == '__main__':
-    # mongo_backup()
+    mongo_backup()
+    # fix_weight_integ_ord()
     # add_ang()
     # update_orders_total_weight()
-    mongo_restore("C:\\Projects\\Tzomet\\old ver\\02-09-2023_20-00-04-160445")
+    # mongo_restore("C:\\Projects\\Tzomet\\old ver\\02-09-2023_20-00-04-160445")
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()
