@@ -46,7 +46,11 @@
     {% else %}
     {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
     <td>
+    {% if item in defaults %}
+    <input type="checkbox" id="{{ item }}" value="Yes" class="form-check-input" name="{{ item }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' checked>
+    {% else %}
     <input type="checkbox" id="{{ item }}" value="Yes" class="form-check-input" name="{{ item }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
+    {% endif %}
     {% else %}
     <td>
     ----

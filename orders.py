@@ -355,6 +355,14 @@ def edit_row():
                 defaults['addbefore'] = req_vals['addbefore']
             else:
                 defaults.update(order_data['order_rows'][0])
+                spec_ = ['x_length', 'x_pitch', 'y_length', 'y_pitch']
+                for item in spec_:
+                    if item in defaults:
+                        for i in range(len(defaults[item])):
+                            if i > 0:
+                                defaults[item+'_'+str(i)] = defaults[item][i]
+                        defaults[item] = defaults[item][0]
+                        print(defaults)
             return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
                                         lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
@@ -448,7 +456,7 @@ def close_order():
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
                 order['info']['total_weight'] += order['rows'][i]['weight']
-                if int(order['rows'][i]['job_id']) > int(main.session['job_id']):
+                if int(order['rows'][i]['job_id']) > int(main.session['job_id'] and 'R' not in order_id):
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
                 elif int(order['rows'][i]['job_id']) == int(main.session['job_id']):
                     indx_to_del = i
@@ -479,7 +487,7 @@ def peripheral_orders(add_orders, order_id, orig_job_id):
         info = order_data['info'].to_dict()[0]
         rows = order_data['rows'].to_dict()[0]
     for order in range(len(add_orders)):
-        job_id = str(order + 1) + '_' + orig_job_id
+        job_id = orig_job_id + '_' + str(order + 1)
         to_pop = []
         for i in range(len(rows)):
             if rows[i]['job_id'] == job_id:
@@ -495,6 +503,7 @@ def peripheral_orders(add_orders, order_id, orig_job_id):
     total_weight = 0
     for row in rows:
         total_weight += row['weight']
+    info['total_weight'] = round(total_weight)
     update_order = {'order_id': order_id, 'rows': rows, 'info': info}
     main.mongo.update_one('orders', {'order_id': order_id},
                           update_order, '$set', upsert=True)

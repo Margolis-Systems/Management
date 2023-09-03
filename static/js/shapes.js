@@ -163,23 +163,23 @@ function focusNext(inputIndex) {
     if (event.keyCode === 13){
         var safety = 0;
         while (safety < 20){
+            form = document.getElementById("input_form");
+            if (form.checkValidity() && do_once==0){
+                do_once = 1;
+                form.submit();
+                break
+            }
             inputIndex += 1;
             if (inputIndex >= inputNames.length && do_once == 0){
-                form = document.getElementById("input_form");
-                if (form.checkValidity() && do_once==0){
-                    do_once = 1;
-                    form.submit();
+                if (inputIndex >= inputNames.length){
+                    inputIndex = 0;
                 }
-                else{
-                    if (inputIndex >= inputNames.length){
-                        inputIndex = 0;
-                    }
-                    //if (shapeData){
-                    //    if (shapeData.value == "") {
-                    //        alert("נדרשים פרטי צורה");
-                    //    }
-                    //}
-                }
+                //if (shapeData){
+                //    if (shapeData.value == "") {
+                //        alert("נדרשים פרטי צורה");
+                //    }
+                //}
+
             }
             if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){
                 inputName = inputNames[inputIndex];
