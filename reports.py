@@ -26,7 +26,7 @@ class Images:
     def format_qr_data(data):
         formatted = 'BF2D@Hj @r' + data['order_id'] + '@i@p' + data['job_id']
         if 'length' in data.keys():
-            formatted += '@l' + str(int(data['length'])*10)
+            formatted += '@l' + str(int(float(data['length'])*10))
         if 'quantity' in data.keys():
             formatted += '@n' + str(data['quantity'])
         if 'weight' in data.keys():
@@ -80,6 +80,8 @@ class Images:
         if enable_text_plot:
             text_pos = []
             for i in range(len(positions) - 1):
+                if i >= len(text):
+                    break
                 position = ((positions[i][0] + positions[i + 1][0] - len(str(text[i])) * 6) / 2,
                             (positions[i][1] + positions[i + 1][1]) / 2 - 6)
                 bbox = draw.textbbox((position[0] - 1, position[1]-2), str(text[i]), font=ImageFont.truetype(font_dir, font_size + 4))

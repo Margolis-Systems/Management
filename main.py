@@ -270,8 +270,10 @@ def integration_orders():
     intg_orders = mongo.read_collection_list('production_log', {'order_id': {'$regex': '2207'}})
     intg_orders = sorted(intg_orders, key=lambda x: int(x['job_id']))
     intg_orders = sorted(intg_orders, key=lambda x: int(x['order_id']))
+    dtd = ['order_id', 'job_id', 'status', 'machine_id', 'machine_name', 'username', 'operator', 'diam', 'length',
+           'quantity', 'weight', 'Start_ts', 'Finished_ts']
     # intg_orders = sorted(intg_orders, key=itemgetter('order_id', 'job_id'))
-    return render_template('integration_orders.html', orders=intg_orders, dictionary=pages.get_dictionary(session['username']))
+    return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary(session['username']))
 
 
 '''

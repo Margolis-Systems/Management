@@ -130,11 +130,14 @@ def fix_weight_integ_ord():
         print(job)
         ord['weight'] = job[0]['weight']
         ord['quantity'] = job[0]['quantity']
-        mongo.update_one('production_log', {'order_id': ord['order_id'], 'job_id': ord['job_id']}, ord, '$set')
+        print(ord)
+        ersp = mongo.update_one('production_log', {'order_id': ord['order_id'], 'job_id': ord['job_id']}, ord, '$set')
+        print(ersp.matched_count)
+
 
 if __name__ == '__main__':
-    mongo_backup()
-    # fix_weight_integ_ord()
+    # mongo_backup()
+    fix_weight_integ_ord()
     # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\02-09-2023_20-00-04-160445")

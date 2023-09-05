@@ -7,7 +7,7 @@
   }
 }
 </style>
-<table class="table table-striped" align="center" dir="rtl">
+<table class="table table-sm" align="center" dir="rtl">
     <tr class="d-print-none">
         <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
         <td><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
@@ -36,7 +36,7 @@
     </tr>
 </table>
 {% if report_data %}
-<table class="table" align="center" dir="rtl">
+<table class="table table-sm" align="center" dir="rtl">
     <tr>
         {% if not data_to_display %}
         {% set data_to_display=report_data[0] %}

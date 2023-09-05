@@ -203,10 +203,7 @@ def new_order_row():
             new_row['bar_type'] = "חלק"
         new_row['shape_data'] = req_form_data['shape_hid'].split(',')
         new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
-        if new_row['shape'] == '332':
-            new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], 1)
-        else:
-            new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
+        new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
     else:
         # Order comment
         if 'comment_hid' in req_form_data:
@@ -224,10 +221,13 @@ def new_order_row():
             new_row[item] = str(new_row[item])
     order['info']['total_weight'] = new_row['weight']
     for i in range(len(order['rows'])):
+        if i >= len(order['rows']):
+            break
         if 'job_id' in main.session.keys():
             if order['rows'][i]['job_id'] == main.session['job_id']:
                 order['rows'].pop(i)
-                break
+                if i >= len(order['rows']):
+                    break
         if 'addbefore' in req_vals:
             if int(order['rows'][i]['job_id']) >= int(req_vals['addbefore']):
                 order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id'])+1)
@@ -269,7 +269,9 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
         return {}, {}
     info = _order_data['info'].copy()
     order_data = []
+    # total_weight = 0
     for row in _order_data['rows']:
+        # total_weight += row['weight']
         row['weight'] = round(row['weight'])
         if job_id:
             if row['job_id'] == job_id:
@@ -290,6 +292,7 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
             row['diam'] = row['diam_x']
             row['pitch'] = row['x_pitch']
     info['status'] = 'order_status_' + info['status']
+    # print(round(total_weight), info)
     order_data.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return order_data.copy(), info
 
@@ -452,14 +455,19 @@ def close_order():
         if additional_func == 'delete_row':
             order_id = main.session['order_id']
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+            print(order)
             indx_to_del = None
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
+                # print(order['rows'][i]['job_id'] ,main.session['job_id'])
                 order['info']['total_weight'] += order['rows'][i]['weight']
-                if int(order['rows'][i]['job_id']) > int(main.session['job_id'] and 'R' not in order_id):
+                if int(order['rows'][i]['job_id']) > int(main.session['job_id']) and 'R' not in order_id:
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
                 elif int(order['rows'][i]['job_id']) == int(main.session['job_id']):
+                    print(i)
                     indx_to_del = i
+            if indx_to_del:
+                order['info']['total_weight'] -= order['rows'][indx_to_del]['weight']
             order['info']['total_weight'] = int(order['info']['total_weight'])
             order['rows'].pop(indx_to_del)
             order['info']['rows'] = len(order['rows'])

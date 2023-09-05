@@ -2,23 +2,18 @@
 {% block body %}
 <table class="table table-condensed" dir="rtl" align="center">
     <tr>
-        <b><td>שורה</td>
-        <td>מספר הזמנה</td>
-        <td>Start</td>
-        <td>קוטר</td>
-        <td>אורך</td>
-        <td>מספר מכונה</td>
-        <td>שם מכונה</td>
-        <td>שם מפעיל</td>
-        <td>כמות</td>
-        <td>סטטוס</td>
-        <td>שם מסופון</td>
-        <td>משקל</td>
-        <td>FINISH</td>
+        {% for item in data_to_display %}
+        <b><td>
+        {% if dictionary[item] %}
+            {{dictionary[item]}}
+        {% else %}
+            {{ item }}
+        {% endif %}</td></b>
+        {% endfor %}
     </tr>
     {% for order in orders %}
     <tr>
-        {% for item in order %}
+        {% for item in data_to_display %}
         {% if item != 'maintenance' %}
         <td height="50" style="outline: thin solid;text-align: center">
         {% if dictionary[order[item]] %}
