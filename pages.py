@@ -204,7 +204,8 @@ def scan():
     machine = main.mongo.read_collection_one('machines', {'username': user})
     if not machine:
         msg = 'לא הוקצתה מכונה למפעיל'
-    order = main.mongo.read_collection_one('orders', {'rows': {'$elemMatch': {'status': 'Start', 'status_updated_by': main.session['username']}}})
+    order = main.mongo.read_collection_one('orders', {'rows': {'$elemMatch': {'status': 'Start',
+                                           'status_updated_by': main.session['username']}}})
     if order:
         order_id = order['order_id']
         for r in order['rows']:
@@ -227,7 +228,8 @@ def scan():
     if order_id:
         rows, info = orders.get_order_data(order_id)
         row = decode.copy()
-        add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(), 'status_updated_by': main.session['username']}
+        add_info = {'status': 'Production', 'type': 'integration', 'date_created': functions.ts(),
+                    'status_updated_by': main.session['username']}
         row.update(add_info)
         if not rows:
             # Create integration order
@@ -262,7 +264,7 @@ def scan():
                 else:
                     msg = row['status']
                     order_id = ''
-
+        # print(order_id, order)
         main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
                                 dictionary=get_dictionary(main.session['username']), user={'name': user, 'lang': user_data['lang']})
@@ -287,6 +289,7 @@ def order_files():
     msg = ""
     if main.request.method == 'POST':
         try:
+            print(order_id)
             save_file(order_id, main.request.files['file'], description)
             return main.redirect('/order_files')
         except Exception as e:
@@ -304,6 +307,7 @@ def save_file(order_id, f, description):
         username = file_name.replace('.pdf','')
     if order_id == '0':
         scanner = file_name.replace('.pdf', '') + '_scanner'
+        print(scanner)
         temp = main.mongo.read_collection_one('attachments', {'name': scanner})
         order_id = temp['order_id']
         main.mongo.delete_many('attachments', {'name': scanner})
@@ -528,7 +532,7 @@ def file_listener():
         order_id = main.request.values['order_id']
     else:
         order_id = main.session['order_id']
-    scanner = main.mongo.read_collection_one('users',{'name': main.session['username']})['default_scanner']
+    scanner = main.mongo.read_collection_one('users', {'name': main.session['username']})['default_scanner']
     main.mongo.upsert_collection_one('attachments', {'name': scanner}, {'name': scanner, 'order_id': order_id})
     return '', 204
 

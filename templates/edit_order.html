@@ -57,7 +57,7 @@ div {
         </td>
         <td colspan="100">
             תאריך אספקה
-            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onchange="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
+            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onfocusout="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
         </td>
     </tr>
 </form>
