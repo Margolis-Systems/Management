@@ -263,6 +263,7 @@ def edit_order():
 
 
 def get_order_data(order_id, job_id="", split="", reverse=True):
+    print('splt', split)
     query = {'order_id': order_id, 'info': {'$exists': True}}
     _order_data = main.mongo.read_collection_one('orders', query)
     if not _order_data:
@@ -278,8 +279,8 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
                 order_data.append(row)
                 break
         elif split:
-            if 'split' in row:
-                if row['split'] == split:
+            if 'order_split' in row:
+                if str(row['order_split']) == split:
                     order_data.append(row)
         else:
             order_data.append(row)
@@ -428,10 +429,11 @@ def update_order_status(new_status, order_id, job_id=""):
     else:
         order['info']['status'] = new_status
         for i in range(len(order['rows'])):
-            order['rows'][i]['status'] = new_status
+            if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production']:
+                order['rows'][i]['status'] = new_status
         if 'reason' in main.request.form:
             functions.log('cancel_order', main.request.form['reason'])
-            order['info']['cancel_reason'] =  main.request.form['reason']
+            order['info']['cancel_reason'] = main.request.form['reason']
         else:
             if 'cancel_reason' in order['info']:
                 del order['info']['cancel_reason']

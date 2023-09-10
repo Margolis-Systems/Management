@@ -79,34 +79,25 @@ def shape_editor():
                 if item > 1:
                     shape_data['shape_data'] += ',' + main.request.form[str(item)]
         else:
-            # loops = main.request.form['2'].replace('X', 'x')
-            # if 'x' in loops:
-            #     loops = loops.split('x')
-            #     tot_l = 0
-            #     for _l in loops:
-            #         if tot_l == 0:
-            #             tot_l += int(_l)
-            #         else:
-            #             tot_l *= int(_l)
-            # else:
-            #     tot_l = int(main.request.form['2'])
             shape_data['tot_len'] = int(main.request.form['1']) * 3.25
-            # shape_data['shape_data'] = ''
     else:
         req_vals = list(main.request.values)
         if len(req_vals) > 0:
-            shape_conf = main.configs.shapes[req_vals[0]]
-            if 'ang' in shape_conf:
-                ang = shape_conf['ang']
+            if req_vals[0] in main.configs.shapes:
+                shape_conf = main.configs.shapes[req_vals[0]]
+                if 'ang' in shape_conf:
+                    ang = shape_conf['ang']
+                else:
+                    ang = []
+                shape_data = {'shape': req_vals[0], 'edges': list(range(1, shape_conf['edges'] + 1)),
+                              'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
+                              'angels': ang}
+                defaults['ang'] = ang
+                dtd_order = list(map(str, shape_data['edges']))
+                for item in dtd_order:
+                    datatodisp[item] = 1
             else:
-                ang = []
-            shape_data = {'shape': req_vals[0], 'edges': list(range(1, shape_conf['edges'] + 1)),
-                          'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
-                          'angels': ang}
-            defaults['ang'] = ang
-            dtd_order = list(map(str, shape_data['edges']))
-            for item in dtd_order:
-                datatodisp[item] = 1
+                shape_data = {'edges': 0}
         else:
             for shape in main.configs.shapes:
                 if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\
@@ -157,19 +148,33 @@ def choose_printer():
         for r in range(copies):
             # If not asked for specific split, print all parts
             if not split:
-                _split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
-                if not _split:
-                    _split.append('')
-                for i in range(len(_split)):
-                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=_split[i])
+                order = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id']})
+                _split = []
+                if order:
+                    for ro in order['rows']:
+                        if 'order_split' in ro:
+                            if str(ro['order_split']) not in _split:
+                                _split.append(str(ro['order_split']))
+                if _split:
+                    for i in range(len(_split)):
+                        reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=_split[i])
+                else:
+                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                                                select_jobs=select_jobs)
+
             else:
                 reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=split)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
     else:
-        split = main.mongo.read_uniq('orders', 'order_split', {'order_id': main.session['order_id']})
-        split = [str(s) for s in split]
+        order = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id']})
+        split = []
+        if order:
+            for r in order['rows']:
+                if 'order_split' in r:
+                    if str(r['order_split']) not in split:
+                        split.append(str(r['order_split']))
         req_vals = list(main.request.values)
         sub_type = ''
         print_type = req_vals[0]
