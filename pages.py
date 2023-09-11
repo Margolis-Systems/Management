@@ -294,7 +294,6 @@ def order_files():
     msg = ""
     if main.request.method == 'POST':
         try:
-            print(order_id)
             save_file(order_id, main.request.files['file'], description)
             return main.redirect('/order_files')
         except Exception as e:
@@ -312,7 +311,6 @@ def save_file(order_id, f, description):
         username = file_name.replace('.pdf','')
     if order_id == '0':
         scanner = file_name.replace('.pdf', '') + '_scanner'
-        print(scanner)
         temp = main.mongo.read_collection_one('attachments', {'name': scanner})
         order_id = temp['order_id']
         main.mongo.delete_many('attachments', {'name': scanner})
@@ -466,7 +464,8 @@ def reports_page():
             # Read all orders data with Info, mean that it's not including order rows
             all_orders = list(main.mongo.read_collection_list('orders', query))
             orders_data = []
-            global_total_weight = 0
+            # global_total_weight = 0
+            total_weight = {'global': 0, 'temp': 0}
             for order in all_orders:
                 # order['total_weight'] = round(float(order['total_weight'] / 1000))
                 new_row = {'order_id': order['order_id']}
@@ -479,10 +478,16 @@ def reports_page():
                     order['rows'] = []
                 if 'total_weight' not in new_row:
                     new_row['total_weight'] = 0
-                global_total_weight += new_row['total_weight'] / 1000
+                total_weight['global'] += new_row['total_weight'] / 1000
+                type_dict = {'regular': 'סהכ ברזל', 'rebar': 'סהכ רשת', 'special_rebar': 'סהכ כוורת', 'piles': 'סהכ כלונסאות'}
+                ord_type = type_dict[new_row['type']]
+                if ord_type not in total_weight:
+                    total_weight[ord_type] = new_row['total_weight'] / 1000
+                else:
+                    total_weight[ord_type] += new_row['total_weight'] / 1000
                 orders_data.append(new_row)
             orders_data.sort(key=lambda k: k['costumer_name'])
-            temp_total_weight = 0
+            total_weight['temp'] = 0
             template_row = {}
             if orders_data:
                 last_client = orders_data[0]['costumer_name']
@@ -492,17 +497,24 @@ def reports_page():
             for row in orders_data:
                 row['total_weight'] = round(row['total_weight'] / 1000, 2)
                 if row['costumer_name'] == last_client:
-                    temp_total_weight += row['total_weight']
+                    total_weight['temp'] += row['total_weight']
                 else:
-                    template_row['total_weight'] = round(temp_total_weight, 2)
+                    template_row['total_weight'] = round(total_weight['temp'], 2)
                     report_data.append(template_row.copy())
-                    temp_total_weight = row['total_weight']
+                    total_weight['temp'] = row['total_weight']
                     last_client = row['costumer_name']
                 report_data.append(row)
-            template_row['total_weight'] = round(temp_total_weight, 2)
+            template_row['total_weight'] = round(total_weight['temp'], 2)
             report_data.append(template_row.copy())
+
+            for weight in total_weight:
+                if weight in ['global', 'temp']:
+                    continue
+                template_row['total_weight'] = round(total_weight[weight], 2)
+                template_row['costumer_name'] = weight
+                report_data.append(template_row.copy())
             template_row['costumer_name'] = 'סהכ כללי'
-            template_row['total_weight'] = round(global_total_weight, 2)
+            template_row['total_weight'] = round(total_weight['global'], 2)
             report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
                                 dictionary=get_dictionary(main.session['username']), data_to_display=data_to_display)

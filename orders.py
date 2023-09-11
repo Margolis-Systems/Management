@@ -263,7 +263,6 @@ def edit_order():
 
 
 def get_order_data(order_id, job_id="", split="", reverse=True):
-    print('splt', split)
     query = {'order_id': order_id, 'info': {'$exists': True}}
     _order_data = main.mongo.read_collection_one('orders', query)
     if not _order_data:
@@ -366,7 +365,6 @@ def edit_row():
                             if i > 0:
                                 defaults[item+'_'+str(i)] = defaults[item][i]
                         defaults[item] = defaults[item][0]
-                        print(defaults)
             return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
                                         lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
@@ -457,7 +455,6 @@ def close_order():
         if additional_func == 'delete_row':
             order_id = main.session['order_id']
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
-            print(order)
             indx_to_del = None
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
@@ -466,7 +463,6 @@ def close_order():
                 if int(order['rows'][i]['job_id']) > int(main.session['job_id']) and 'R' not in order_id:
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
                 elif int(order['rows'][i]['job_id']) == int(main.session['job_id']):
-                    print(i)
                     indx_to_del = i
             if indx_to_del:
                 order['info']['total_weight'] -= order['rows'][indx_to_del]['weight']
