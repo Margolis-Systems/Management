@@ -72,7 +72,7 @@ class Images:
         font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
         im = Image.new('RGB', size, 'white')
         draw = ImageDraw.Draw(im)
-        if shape != '332':
+        if shape not in ['331', '332']:
             draw.line(positions, fill="black", width=3)
         else:
             draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
@@ -143,7 +143,7 @@ class Bartender:
                 template_row = {'temp_select': table_selector}
                 for indx in range(table_rows):
                     if table_rows * row_n + indx >= len(rows):
-                        # print("break ", row_n + indx, " > ", len(rows) - 1)
+                        # print(print("break ", row_n + indx, " > ", len(rows) - 1)
                         break
                     n = table_rows * row_n + indx
                     i = table_cells * indx
