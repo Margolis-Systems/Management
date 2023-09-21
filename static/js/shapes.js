@@ -40,9 +40,9 @@ window.addEventListener('message', (event) => {
     shapeData.value = event.data.shapedt;
     formInput.value = event.data.shp;
     lengInput.value = event.data.len;
-    if (event.data.shp != '332'){
-        calc_weight();
-    }
+    //if (event.data.shp != '332'){
+    //    calc_weight();
+    //}
 });
 
 function confirmDel() {

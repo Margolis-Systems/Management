@@ -135,9 +135,22 @@ def fix_weight_integ_ord():
         print(ersp.matched_count)
 
 
+def fix_job_id():
+    ord_id = '763'
+    order = mongo.read_collection_one('orders', {'order_id': ord_id})
+    print(order['rows'][0].keys())
+    # orders_info.sort(key=lambda k: int(k['order_id'].replace('R', '')), reverse=True)
+    inpt = input()
+    order['rows'].sort(key=lambda k: int(k[inpt]), reverse=False)
+    for i in range(1,len(order['rows'])+1):
+        order['rows'][i-1]['job_id'] = str(i)
+        order['rows'][i-1]['order_id'] = ord_id
+    mongo.update_one('orders', {'order_id': ord_id}, order, '$set')
+
+
 if __name__ == '__main__':
     # mongo_backup()
-    fix_weight_integ_ord()
+    # fix_weight_integ_ord()
     # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\Projects\\Tzomet\\old ver\\02-09-2023_20-00-04-160445")
@@ -146,3 +159,5 @@ if __name__ == '__main__':
     # mesh_description()
     # resp = mongo.read_uniq('machines', 'machine_id', {'machine_name': 'MS'})
     # print(resp)
+    machine_list = mongo.read_collection_list('machines', {'machine_id': {'$exists': True}})
+    print(list(machine_list))

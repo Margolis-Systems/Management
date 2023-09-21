@@ -161,7 +161,7 @@ class Bartender:
                     else:
                         # template_row["tb" + str(3 + i)] = "רשת מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
-                        if int(row['diam_x']) >= 14 or int(row['diam_y']) >= 14:
+                        if float(row['diam_x']) >= 14 or float(row['diam_y']) >= 14:
                             template_row["tb" + str(3 + i)] = template_row["tb" + str(3 + i)].replace('דקה', 'עבה')
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
@@ -296,6 +296,7 @@ class Bartender:
             summary_data.append(info)
             for row in rows:
                 total_weight += row['weight']
+                row['length'] = int(float(row['length']))
                 if 'bar_type' not in row:
                     row['bar_type'] = "מצולע"
                 # Summary data
@@ -304,7 +305,7 @@ class Bartender:
                     table_data[row['diam']]['weight'] += row['weight']
                     table_data[row['diam']]['length'] += int(row['length']) * quantity
                 else:
-                    table_data[row['diam']] = {'weight': row['weight'], 'length': int(row['length']) * quantity,
+                    table_data[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
                                                'weight_per_M': configs.weights[row['diam']], 'type': row['bar_type']}
                 # Special summary data
                 if row['shape'] not in ["905"]:
@@ -358,11 +359,12 @@ class Bartender:
             # Reorder diam summary list
             # table_data = OrderedDict(table_data.items(), key=lambda t: t[0])
             li = list(table_data.keys())
-            sort_keys = list(map(int, li))
+            sort_keys = list(map(float, li))
             sort_keys.sort()
+
             temp = {}
             for key in sort_keys:
-                temp[key] = table_data[str(key)]
+                temp[key] = table_data[str(key).replace('.0','')]
             table_data = temp
             to_del = []
             for key in special_sum:

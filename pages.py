@@ -265,8 +265,9 @@ def scan():
                 orders.update_order_status('Production', order_id)
                 status = "Start"
             else:
+                # print(order['rows'][i])
                 if main.session['username'] == 'operator34' and row['status'] == "Finished" \
-                        and order['rows'][i]['status_updated_by'] != 'operator34':
+                        :#and order['rows'][i]['status_updated_by'] != 'operator34':
                     status = "Start"
                 else:
                     msg = row['status']
@@ -366,10 +367,13 @@ def reports_page():
                     report_date['to'] = req_form['date_from']
     # Report type handle
     if 'report' in req_vals.keys():
+        weight_multp = 1
         report = req_vals['report']
         query = {}
+        machines_id = []
+        machine_list = []
         if report == 'production':
-            query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to'] + '00:00:00'}}
+            query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length', 'diam',
                         'Start_ts', 'Finished_ts', 'order_id', 'job_id', 'work_time']
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
@@ -379,8 +383,12 @@ def reports_page():
                 mid = req_vals['machine_id']
                 query['machine_id'] = int(mid)
                 data_to_display = detailed
-            elif 'machine_id' in req_form:
-                query['machine_id'] = int(req_form['machine_id'])
+            # elif 'machine_id' in req_form:
+            #     query['machine_id'] = int(req_form['machine_id'])
+            else:
+                machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}}))
+                for m in machine_list:
+                    machines_id.append(m['machine_id'])
             temp_report_data = list(main.mongo.read_collection_list('production_log', query))
             temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id', 'Start_ts'))
             if temp_report_data:
@@ -392,6 +400,8 @@ def reports_page():
                 machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
                          'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
                 for line in temp_report_data:
+                    if machine_total['machine_id'] in machines_id:
+                        machines_id.remove(machine_total['machine_id'])
                     if line['order_id'] not in doubles:
                         doubles[line['order_id']] = [line['job_id']]
                     elif line['job_id'] not in doubles[line['order_id']]:
@@ -434,9 +444,20 @@ def reports_page():
                     total[key] += machine_total[key]
                 machine_total['weight'] = round(machine_total['weight'], 2)
                 report_data.append(machine_total)
+                empty_line = {'weight': 0, 'quantity': 0, 'machine_id': 'machine_id', 'machine_name': 'machine_name',
+                         'username': 'username', 'operator': 'operator', 'work_time': 0, 'lines': 0}
+                for _mid in machines_id:
+                    new_line = empty_line.copy()
+                    for m in machine_list:
+                        if m['machine_id'] == _mid:
+                            for i in m:
+                                new_line[i] = m[i]
+                            break
+                    report_data.append(new_line)
                 if 'machine_id' not in req_vals:
                     total['operator'] = 'סה"כ לדו"ח:'
                     total['weight'] = round(total['weight'], 2)
+                    # del total['']
                     report_data.append(total)
                     double_total['operator'] = 'סה"כ שורות משותפות'
                     double_total['weight'] = round(double_total['weight'], 2)
@@ -480,13 +501,13 @@ def reports_page():
                     order['rows'] = []
                 if 'total_weight' not in new_row:
                     new_row['total_weight'] = 0
-                total_weight['global'] += new_row['total_weight'] / 1000
-                type_dict = {'regular': 'סהכ ברזל', 'rebar': 'סהכ רשת', 'special_rebar': 'סהכ כוורת', 'piles': 'סהכ כלונסאות'}
+                total_weight['global'] += new_row['total_weight'] / weight_multp
+                type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט'}
                 ord_type = type_dict[new_row['type']]
                 if ord_type not in total_weight:
-                    total_weight[ord_type] = new_row['total_weight'] / 1000
+                    total_weight[ord_type] = new_row['total_weight'] / weight_multp
                 else:
-                    total_weight[ord_type] += new_row['total_weight'] / 1000
+                    total_weight[ord_type] += new_row['total_weight'] / weight_multp
                 orders_data.append(new_row)
             orders_data.sort(key=lambda k: k['costumer_name'])
             total_weight['temp'] = 0
@@ -497,7 +518,7 @@ def reports_page():
                     template_row[item] = ''
             template_row['costumer_name'] = 'סהכ ללקוח'
             for row in orders_data:
-                row['total_weight'] = round(row['total_weight'] / 1000, 2)
+                row['total_weight'] = round(row['total_weight'] / weight_multp, 2)
                 if row['costumer_name'] == last_client:
                     total_weight['temp'] += row['total_weight']
                 else:

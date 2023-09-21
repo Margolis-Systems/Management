@@ -357,6 +357,7 @@ def edit_row():
             if 'addbefore' in req_vals:
                 defaults['addbefore'] = req_vals['addbefore']
             else:
+                # print(order_data['order_rows'])
                 defaults.update(order_data['order_rows'][0])
                 spec_ = ['x_length', 'x_pitch', 'y_length', 'y_pitch']
                 for item in spec_:
@@ -412,6 +413,8 @@ def cancel_order():
 
 def update_order_status(new_status, order_id, job_id=""):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+    while 'order_status_' in new_status:
+        new_status = new_status.replace('order_status_', '')
     if not order:
         return
     flag = True
@@ -419,6 +422,7 @@ def update_order_status(new_status, order_id, job_id=""):
         for i in range(len(order['rows'])):
             if order['rows'][i]['job_id'] == job_id:
                 order['rows'][i]['status'] = new_status
+                order['rows'][i]['status_updated_by'] = main.session['username']
                 functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
             if order['rows'][i]['job_id'] != 'Finished':
                 flag = False
@@ -522,12 +526,15 @@ def copy_order():
         copies = int(req_form['copies'])
         for copy in list(range(copies)):
             new_id = new_order_id()
-            order_data = list(main.mongo.read_collection_list('orders', {'order_id': order_id}))
-            for doc in order_data:
-                doc['order_id'] = new_id
-                doc['info']['date_created'] = ts()
-                main.mongo.insert_collection_one('orders', doc)
-                update_order_status('NEW', new_id)
+            order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+            # for doc in order_data:
+            order['order_id'] = new_id
+            order['info']['date_created'] = ts()
+            order['info']['created_by'] = main.session['username']
+            for row in order['rows']:
+                row['order_id'] = new_id
+            main.mongo.insert_collection_one('orders', order)
+            update_order_status('NEW', new_id)
         return '', 204
     return main.render_template('/copy_order.html')
 
