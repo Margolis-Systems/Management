@@ -48,6 +48,7 @@ def orders():
         orders_info.append(row)
     dictionary = pages.get_dictionary(main.session['username'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
+    print(dictionary)
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults)
 
@@ -146,12 +147,12 @@ def new_order_row():
             new_row['trim_x_end'] = 5
             new_row['x_length'][0] = int(new_row['x_length'][0]) - 5
         for i in range(len(new_row['x_length'])):
-            if new_row['x_pitch'][i] != "0":
+            if new_row['y_pitch'][i] != "0":
                 new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
-                                            int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])).replace('.0', '')
+                                            int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])).replace('.0', '')
                 new_row['x_length'][i] = str(
-                    int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])))
-                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['x_pitch'][i]))
+                    int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])))
+                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['y_pitch'][i]))
             else:
                 bars_y += 1
         new_row['length'] = sum(list(map(int, new_row['y_length'])))
@@ -159,12 +160,12 @@ def new_order_row():
         new_row['length'] += int(float(new_row['trim_y_start']) + float(new_row['trim_y_end']))
         new_row['width'] += int(float(new_row['trim_x_start']) + float(new_row['trim_x_end']))
         for i in range(len(new_row['y_length'])):
-            if new_row['y_pitch'][i] != "0":
+            if new_row['x_pitch'][i] != "0":
                 new_row['trim_y_end'] = str(int(new_row['trim_y_end']) +
-                                            int(new_row['y_length'][i]) % int(new_row['y_pitch'][i]))
+                                            int(new_row['y_length'][i]) % int(new_row['x_pitch'][i]))
                 new_row['y_length'][i] = str(
-                    int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['y_pitch'][i])))
-                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['y_pitch'][i]))
+                    int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['x_pitch'][i])))
+                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['x_pitch'][i]))
             else:
                 bars_x += 1
         x_pitch = '(' + ')('.join(new_row['x_pitch']) + ')'
@@ -173,8 +174,8 @@ def new_order_row():
         new_row['y_bars'] = int(bars_y)
         new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
         new_row['y_weight'] = calc_weight(new_row['diam_y'], new_row['length'], bars_y)
-        new_row['description'] = "V" + str(new_row['width']) + "X" + str(bars_x) + "X" + str(new_row['diam_x']) + \
-                                 "WBX" + x_pitch + " H" + str(new_row['length']) + "X" + str(bars_y) + "X" + \
+        new_row['description'] = "H" + str(new_row['width']) + "X" + str(bars_x) + "X" + str(new_row['diam_x']) + \
+                                 "WBX" + x_pitch + " V" + str(new_row['length']) + "X" + str(bars_y) + "X" + \
                                  str(new_row['diam_y']) + "WBX" + y_pitch
         new_row['unit_weight'] = round(new_row['x_weight'] + new_row['y_weight'], 2)
         new_row['weight'] = round(new_row['unit_weight'] * int(new_row['quantity']), 2)

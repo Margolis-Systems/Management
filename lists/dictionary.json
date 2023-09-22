@@ -20,7 +20,10 @@
         "order_status_Production": "Khaki",
         "order_status_Processed": "LightSalmon",
         "order_status_Finished": "lightgreen",
-        "order_status_canceled": "silver"
+        "order_status_canceled": "silver",
+        "order_status_Delivered": "lightblue",
+        "order_status_Loading": "orange",
+        "order_status_PartlyDelivered": "aqua"
       }
     },
     "he": {
@@ -156,9 +159,13 @@
       "order_status_Finished": "מוכנה",
       "order_status_NEW": "הזמנה חדשה",
       "html_colors": {
-        "order_status_Production": "yellow",
-        "order_status_Processed": "tomato",
-        "order_status_Finished": "lightgreen"
+        "order_status_Production": "Khaki",
+        "order_status_Processed": "LightSalmon",
+        "order_status_Finished": "lightgreen",
+        "order_status_canceled": "silver",
+        "order_status_Delivered": "Green",
+        "order_status_Loading": "Red",
+        "order_status_PartlyDelivered": "Orange"
       },
       "barcode": "Штрих-код",
       "add_scale": "Добавить взвешивание",
