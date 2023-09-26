@@ -23,7 +23,8 @@
         "order_status_canceled": "silver",
         "order_status_Delivered": "lightblue",
         "order_status_Loading": "orange",
-        "order_status_PartlyDelivered": "aqua"
+        "order_status_PartlyDelivered": "aqua",
+      "order_status_Outsource": "red"
       }
     },
     "he": {
@@ -67,6 +68,7 @@
       "order_status_Loading": "ממתין להעמסה",
       "order_status_Delivered": "סופקה",
       "order_status_PartlyDelivered": "סופקה חלקית",
+      "order_status_Outsource": "הזמנה ממקור חוץ",
       "barcode": "ברקוד",
       "add_scale": "הוסף שקילה",
       "refresh": "רענן",
