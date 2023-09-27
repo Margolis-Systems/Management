@@ -259,6 +259,7 @@ def scan():
             row['status'] = row['status'].replace('order_status_', '')
             if row['status'] == 'Production':
                 status = "Start"
+                print('hi')
             elif row['status'] == "Start":
                 status = "Finished"
             elif row['status'] == "Processed":

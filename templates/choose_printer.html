@@ -14,7 +14,7 @@
     <tr>
         <td></td>
     </tr>
-    <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}" autocomplete="off" onsubmit="refreshWindow();">
+    <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}" autocomplete="off" onsubmit="refreshWindow();input_form.disabled = true; return true;">
     <tr><td>בחר מדפסת</td></tr>
         <td>
             <input list="printer" type="text" class="form-control" name="printer" value="{{ defaults.printer }}" placeholder="Choose printer" autofocus="autofocus" required>

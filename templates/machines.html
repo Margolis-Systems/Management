@@ -9,7 +9,7 @@
         <td><b>שם מפעיל</b></td>
     </tr>
     {% for machine in machine_list %}
-    <form id="form_{{machine.machine_id}}" method=POST action="{{ url_for('machines') }}">
+    <form id="form_{{machine.machine_id}}" method=POST action="{{ url_for('machines') }}" onsubmit="form_{{machine.machine_id}}.disabled = true; return true;">
         <tr>
             <td>{{machine.machine_id}}</td>
             <td>{{machine.machine_name}}</td>
@@ -23,7 +23,7 @@
         </tr>
     </form>
     {% endfor %}
-    <form id="form" method=POST action="{{ url_for('machines') }}">
+    <form id="form" method=POST action="{{ url_for('machines') }}" onsubmit="input_form.disabled = true; return true;">
         <tr>
             <td></td>
             <td><input type="text" name="machine_name" required></td>

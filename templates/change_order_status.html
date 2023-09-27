@@ -11,7 +11,7 @@
 </head>
 <body>
 <div class="form-floating">
-    <form name="change_status" id="change_status" method=POST action="{{ url_for('change_order_status') }}">
+    <form name="change_status" id="change_status" method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
         <input list="status" type="text" class="form-control" name="status" placeholder="New Status" autofocus="autofocus" required>
             <datalist id="status">
                 <option value="NEW">הזמנה חדשה</option>

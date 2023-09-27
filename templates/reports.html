@@ -15,7 +15,7 @@
         <td><button onclick="location.href='/reports?report=clear'" type="button" class="btn btn-danger btn-block">איפוס</button></td>
     </tr>
     <tr>
-        <form method=POST id="date_form" autocomplete="off" action="{{ url_for('reports_page') }}">
+        <form method=POST id="date_form" autocomplete="off" action="{{ url_for('reports_page') }}" onsubmit="date_form.disabled = true; return true;">
             {% if machine_id %}
             <input type="hidden" name="machine_id" value="{{machine_id}}">
             {% endif %}

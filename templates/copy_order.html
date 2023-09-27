@@ -11,12 +11,12 @@
 </head>
 <body>
 <div class="form-floating">
-    <form name="choose_printer" id="copy_order" method=POST action="{{ url_for('copy_order') }}">
+    <form name="choose_printer" id="copy_order" method=POST action="{{ url_for('copy_order') }}" onsubmit="copy_order.disabled = true; return true;">
         מספר הזמנה<br>
         <input type="number" class="form-control" name="order_id" placeholder="מספר הזמנה" autofocus="autofocus" required>
         כמות העתקים<br>
         <input type="number" class="form-control" name="copies" min="1" value="1" placeholder="כמות עותקים">
-        <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="refreshWindow();">אישור</button>
+        <button class="w-100 btn btn-lg btn-primary" id="submitbtn" type="submit" onclick="refreshWindow();submitbtn.disabled = true;copy_order.submit();">אישור</button>
         <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
         <input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label>
     </form>

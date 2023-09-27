@@ -2,7 +2,7 @@
 {% block body %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <form method=POST autocomplete="off" action="{{ url_for('new_order') }}">
+        <form method=POST id="input_form" autocomplete="off" action="{{ url_for('new_order') }}" onsubmit="input_form.disabled = true; return true;">
             <td>
                 <input type="hidden" name="order_type" value="{{ order_type }}">
                 {% if site == "" %}

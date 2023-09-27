@@ -48,7 +48,6 @@ def orders():
         orders_info.append(row)
     dictionary = pages.get_dictionary(main.session['username'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
-    print(dictionary)
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults)
 
@@ -416,6 +415,7 @@ def update_order_status(new_status, order_id, job_id=""):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
     while 'order_status_' in new_status:
         new_status = new_status.replace('order_status_', '')
+    new_status = new_status.replace(' ', '')
     if not order:
         return
     flag = True
@@ -430,6 +430,7 @@ def update_order_status(new_status, order_id, job_id=""):
         if flag:
             update_order_status('Finished', order_id)
     else:
+        print(new_status,'hi')
         order['info']['status'] = new_status
         for i in range(len(order['rows'])):
             if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production']:

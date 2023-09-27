@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-<form method=POST autocomplete="off" action="{{ url_for('edit_client') }}">
+<form method=POST id="input_form" autocomplete="off" action="{{ url_for('edit_client') }}" onsubmit="input_form.disabled = true; return true;">
 {% if client_data['id'] %}
 <input type="hidden" name="id" value="{{client_data['id']}}">
 {% endif %}

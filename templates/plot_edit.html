@@ -6,7 +6,7 @@
 </head>
 <body>
 <table class="table table-striped" dir="rtl" align="center">
-    <form id="shape_form" method=POST action="{{ url_for('plot_editor') }}">
+    <form id="shape_form" method=POST action="{{ url_for('plot_editor') }}" onsubmit="shape_form.disabled = true; return true;">
         <tr>
             <td>
                 <input type="hidden" name="shape" value="{{shape}}">
