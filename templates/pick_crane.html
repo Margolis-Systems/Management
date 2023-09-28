@@ -19,7 +19,7 @@
         </tr>
         <tr>
             <td>
-                <input list="site" type="text" class="form-control" name="site" placeholder="pick crane" autofocus="autofocus" required>
+                <select list="site" type="text" class="form-control" name="site" placeholder="pick crane" autofocus="autofocus" required>
                     <datalist id="site">
                     {% for site in sites %}
                         <option value="{{ site }}">{{ site }}</option>

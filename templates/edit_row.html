@@ -42,12 +42,16 @@ div {
     {% include order_data.include %}
 {% endif %}
 <table class="table table-striped" dir="rtl" align="center">
-        <td colspan="5">
-            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" onchange="this.form.submit()" value="{{ order_data.info['comment'] }}">
+    <tr>
+        <td colspan="4">
+            הערות
+            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" value="{{ order_data.info['comment'] }}" readonly>
         </td>
         <td colspan="100">
-            <input type="date" class="form-control" name="date_delivery_hid" placeholder="תאריך אספקה" onchange="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
+            תאריך אספקה
+            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" value="{{ order_data.info['date_delivery'] }}" readonly>
         </td>
+    </tr>
     <tr>
         <td><button type=button class="btn btn-primary btn-block" onclick="formSubmit()">עדכן</button></td>
         <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>

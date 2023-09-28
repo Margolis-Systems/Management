@@ -27,12 +27,14 @@
     {% else %}
     {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
     <td>
-    <input list="{{ item }}_l" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
-        <datalist id="{{ item }}_l">
+    <select id="{{ item }}" class="form-control" name="{{ item }}" autofocus="autofocus" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
         {% for optn in lists[item] %}
-            <option value="{{ optn }}">{{dictionary[optn]}}</option>
+        {% if defaults[item] == optn %}
+            <option value="{{ optn }}" selected>{{ optn }} {{dictionary[optn]}}</option>
+        {% else %}
+            <option value="{{ optn }}">{{ optn }} {{dictionary[optn]}}</option>
+        {% endif %}
         {% endfor %}
-        </datalist>
     {% else %}
     {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
     <td>

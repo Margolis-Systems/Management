@@ -15,7 +15,16 @@
             <td>{{machine.machine_name}}</td>
             <td>
                 <input type="hidden" name="machine" value="{{machine.machine_id}}">
-                <input list="users" name="username" onchange="form_{{machine.machine_id}}.submit()" value="{{machine.username}}">
+                <select list="users" name="username" onchange="form_{{machine.machine_id}}.submit()">
+                    <datalist id="users">
+                        {% for user in users_list %}
+                        {% if user == machine.username%}
+                        <option value="{{user}}" selected>{{user}}</option>
+                        {% else %}
+                        <option value="{{user}}">{{user}}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </datalist>
             </td>
             <td>
                 <input type="text" name="operator_name" onchange="form_{{machine.machine_id}}.submit()" value="{{machine.operator}}">
@@ -28,7 +37,12 @@
             <td></td>
             <td><input type="text" name="machine_name" required></td>
             <td>
-                <input list="users" name="username" required>
+                <select list="users2" name="username" required>
+                    <datalist id="users2">
+                        {% for user in users_list %}
+                        <option value="{{user}}">{{user}}</option>
+                        {% endfor %}
+                    </datalist>
             </td>
             <td>
                 <input type="text" name="operator" required>
@@ -39,11 +53,6 @@
             <td><button type="submit">הוסף</button> </td>
         </tr>
     </form>
-    <datalist id="users">
-        {% for user in users_list %}
-        <option value="{{user}}">{{user}}</option>
-        {% endfor %}
-    </datalist>
     {% if msg %}
     <tr>
         <td colspan="100">{{msg}}</td>
