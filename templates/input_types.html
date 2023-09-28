@@ -8,6 +8,10 @@
     <td>
     <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' autofocus>
     {% else %}
+    {% if order_data.data_to_display[item] == 0.2 %} <!-- Regular not required -->
+    <td>
+    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' autofocus>
+    {% else %}
     {% if order_data.data_to_display[item] == '0.1' %} <!-- Regular not required -->
     <td>
     <input type="number" step="0.1" id="{{ item }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' autofocus>
@@ -28,6 +32,7 @@
     {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
     <td>
     <select id="{{ item }}" class="form-control" name="{{ item }}" autofocus="autofocus" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
+            <option style="display:none" selected></option>
         {% for optn in lists[item] %}
         {% if defaults[item] == optn %}
             <option value="{{ optn }}" selected>{{ optn }} {{dictionary[optn]}}</option>
@@ -46,6 +51,15 @@
         </datalist>
     <input name="{{ item }}_hid" value='{{ defaults[item+"_data"]|join(",") }}' id="{{ item }}_data" type="text" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
     {% else %}
+    {% if order_data.data_to_display[item] == 3.2 %} <!-- Data list - Must have a list with the item name -->
+    <td>
+    <input list="{{ item }}_l" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
+        <datalist id="{{ item }}_l">
+        {% for optn in lists[item] %}
+            <option value="{{ optn }}">{{dictionary[optn]}}</option>
+        {% endfor %}
+        </datalist>
+    {% else %}
     {% if order_data.data_to_display[item] == 4 %} <!-- Check box -->
     <td>
     {% if item in defaults %}
@@ -56,6 +70,8 @@
     {% else %}
     <td>
     ----
+    {% endif %}
+    {% endif %}
     {% endif %}
     {% endif %}
     {% endif %}

@@ -194,15 +194,22 @@ class Bartender:
                 if row['element'] in el_buf:
                     continue
                 if 'pack_quantity' in row and 'label' in print_type:
-                    print('here')
                     pack_rows = []
                     row['quantity'] = int(row['quantity'])
                     row['pack_quantity'] = int(row['pack_quantity'])
+                    total_packs = math.ceil(row['quantity']/row['pack_quantity'])
+                    pack_index = 1
                     while row['quantity'] > 0:
                         pack_row = row.copy()
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
+                            pack_row['weight'] = round(int(pack_row['unit_weight'])*row['pack_quantity'])
+                            pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
+                        else:
+                            pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
+                            pack_row['weight'] = round(int(pack_row['unit_weight'])*row['quantity'])
                         pack_rows.append(pack_row)
+                        pack_index += 1
                         row['quantity'] -= row['pack_quantity']
                     _rows.extend(pack_rows)
                     continue
