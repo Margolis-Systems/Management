@@ -1,6 +1,4 @@
 # Server
-import flask
-import main
 from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory, make_response
 from waitress import serve
 from werkzeug.utils import secure_filename
@@ -20,7 +18,7 @@ from operator import itemgetter
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
 
-with open('pid.txt', 'w') as pid:  # C:\\Server\\
+with open('pid.txt', 'w') as pid:
     pid.write(str(os.getpid()))
 
 
@@ -91,12 +89,6 @@ def close_order():
 @app.route('/scan', methods=['POST', 'GET'])
 def scan():
     return pages.scan()
-
-
-@app.route('/jobs', methods=['POST', 'GET'])
-def jobs():
-    users.clear()
-    return pages.jobs()
 
 
 @app.route('/shape_editor', methods=['POST', 'GET'])
@@ -172,7 +164,6 @@ def remove_site():
 
 @app.route('/scale', methods=['POST', 'GET'])
 def scaling():
-    # users.clear()
     return scale.main_page()
 
 
@@ -256,7 +247,6 @@ def setconf():
     username = session['username']
     new_conf = {'lang': req_vals['lang']}
     mongo.update_one('users', {'name': username}, new_conf, '$set')
-    print(username, new_conf)
     return '', 204
 
 
@@ -272,13 +262,8 @@ def integration_orders():
     intg_orders = sorted(intg_orders, key=lambda x: int(x['order_id']))
     dtd = ['order_id', 'job_id', 'status', 'machine_id', 'machine_name', 'username', 'operator', 'diam', 'length',
            'quantity', 'weight', 'Start_ts', 'Finished_ts']
-    # intg_orders = sorted(intg_orders, key=itemgetter('order_id', 'job_id'))
     return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary(session['username']))
 
-
-'''
-@app.route('/mep', methods=['POST'])
-'''
 
 production = False
 if __name__ == '__main__':

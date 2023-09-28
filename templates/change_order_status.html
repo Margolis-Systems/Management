@@ -10,24 +10,34 @@
     <link href="/static/css/bootstrap.css" rel="stylesheet">
 </head>
 <body>
-<div class="form-floating">
+<table class="table form-floating">
     <form name="change_status" id="change_status" method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
-        <input list="status" type="text" class="form-control" name="status" placeholder="New Status" autofocus="autofocus" required>
-            <datalist id="status">
-                <option value="NEW">הזמנה חדשה</option>
-                <option value="Processed">הוקלדה</option>
-                <option value="Production">ירד לייצור</option>
-                <option value="Finished">מוכנה</option>
-                <option value="Loading">ממתינה להעמסה</option>
-                <option value="Delivered">סופקה</option>
-                <option value="PartlyDelivered">סופקה חלקית</option>
-                <option value="Outsource">הזמנה ממקור חוץ</option>
-            </datalist>
-        <input type="hidden" name="order_id" value="{{order_id}}">
+    <tr>
+        <td>
+            <select class="form-control" name="status" autofocus="autofocus" required>
+                    <option value="NEW">הזמנה חדשה</option>
+                    <option value="Processed">הוקלדה</option>
+                    <option value="Production">ירד לייצור</option>
+                    <option value="Finished">מוכנה</option>
+                    <option value="Loading">ממתינה להעמסה</option>
+                    <option value="Delivered">סופקה</option>
+                    <option value="PartlyDelivered">סופקה חלקית</option>
+                    <option value="Outsource">הזמנה ממקור חוץ</option>
+            <input type="hidden" name="order_id" value="{{order_id}}">
+        </td>
+    </tr>
+    <tr>
+        <td>
         <button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="refreshWindow();">אישור</button>
+        </td>
+    </tr>
+    <tr>
+        <td>
         <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
+        </td>
+    </tr>
     </form>
-</div>
+</table>
 <script src="\static\js\shapes.js" ></script>
 </body>
 </html>

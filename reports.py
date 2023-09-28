@@ -193,6 +193,19 @@ class Bartender:
                         el_buf.append(row['element'])
                 if row['element'] in el_buf:
                     continue
+                if 'pack_quantity' in row and 'label' in print_type:
+                    print('here')
+                    pack_rows = []
+                    row['quantity'] = int(row['quantity'])
+                    row['pack_quantity'] = int(row['pack_quantity'])
+                    while row['quantity'] > 0:
+                        pack_row = row.copy()
+                        if row['quantity'] - row['pack_quantity'] >= 0:
+                            pack_row['quantity'] = row['pack_quantity']
+                        pack_rows.append(pack_row)
+                        row['quantity'] -= row['pack_quantity']
+                    _rows.extend(pack_rows)
+                    continue
                 _rows.append(row)
             rows = _rows
             index = 0
@@ -437,6 +450,7 @@ class Bartender:
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"
+            # file_dir = "C:\\copy_here\\1.txt"
         # --------------------------------
         # Write btw temp file
         with open(file_dir, 'w', encoding='cp1255') as print_file:
