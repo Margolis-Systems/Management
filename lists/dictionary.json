@@ -105,7 +105,8 @@
       "work_time": "זמן עבודה",
       "ht_avg": "ממוצע טון שעה",
       "status_updated_by": "עודכן על ידי",
-      "date_delivery": "תאריך אספקה"
+      "date_delivery": "תאריך אספקה",
+      "pack_quantity": "כמות בחבילה"
     },
     "ru": {
       "2006080100": "⌀8  10X10",
