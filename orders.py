@@ -216,6 +216,8 @@ def new_order_row():
     if 'weight' in req_form_data:
         if req_form_data['weight'].replace('.', '').isdigit():
             new_row['weight'] = float(req_form_data['weight'])
+        if 'unit_weight' in new_row:
+            new_row['unit_weight'] = round(new_row['weight'] / int(new_row['quantity']))
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
@@ -413,9 +415,11 @@ def cancel_order():
 
 def update_order_status(new_status, order_id, job_id=""):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+    # todo: use dict options
     while 'order_status_' in new_status:
         new_status = new_status.replace('order_status_', '')
-    new_status = new_status.replace(' ', '')
+    while ' ' in new_status:
+        new_status = new_status.replace(' ', '')
     if not order:
         return
     flag = True
@@ -430,7 +434,6 @@ def update_order_status(new_status, order_id, job_id=""):
         if flag:
             update_order_status('Finished', order_id)
     else:
-        print(new_status,'hi')
         order['info']['status'] = new_status
         for i in range(len(order['rows'])):
             if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production']:

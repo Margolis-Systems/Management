@@ -17,10 +17,14 @@
     <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}" autocomplete="off" onsubmit="refreshWindow();input_form.disabled = true; return true;">
     <tr><td>בחר מדפסת</td></tr>
         <td>
-            <input list="printer" type="text" class="form-control" name="printer" value="{{ defaults.printer }}" placeholder="Choose printer" autofocus="autofocus" required>
+            <select list="printer" type="text" class="form-control" name="printer" placeholder="Choose printer" autofocus="autofocus" required>
                 <datalist id="printer">
                 {% for printer in printer_list %}
-                    <option value="{{ printer }}">{{ printer_list[printer] }}</option>
+                    {% if printer == defaults.printer %}
+                    <option value="{{ printer }}" selected>{{ printer }}: {{ printer_list[printer] }}</option>
+                    {% else %}
+                    <option value="{{ printer }}">{{ printer }}: {{ printer_list[printer] }}</option>
+                    {% endif %}
                 {% endfor %}
                 </datalist>
         </td>

@@ -7,7 +7,7 @@
                 <input type="hidden" name="order_type" value="{{ order_type }}">
                 {% if site == "" %}
                 <label>בחר לקוח</label>
-                <input list="client_list" class="form-control" name="name" placeholder="select client" autofocus="autofocus" required>
+                <select list="client_list" class="form-control" name="name" placeholder="select client" autofocus="autofocus" required>
                     <datalist id="client_list">
                     {% for item in clients %}
                         <option value="{{ item }}">
@@ -16,7 +16,7 @@
                 {% else %}
                 <label>בחר אתר לקוח / לקוח נבחר: {{clients}}</label><br>
                 <input type="hidden" name="name" value="{{clients}}">
-                <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" required>
+                <select list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" required>
                     <datalist id="sites_list">
                     {% for item in site %}
                         <option value="{{ item }}">
