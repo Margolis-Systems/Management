@@ -400,7 +400,8 @@ def reports_page():
                 double_total = {'weight': 0, 'quantity': 0, 'lines': 0}
                 machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
                          'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
-                for line in temp_report_data:
+                for i in range(len(temp_report_data)):
+                    line = temp_report_data[i]
                     if machine_total['machine_id'] in machines_id:
                         machines_id.remove(machine_total['machine_id'])
                     if line['order_id'] not in doubles:
@@ -411,10 +412,10 @@ def reports_page():
                         double_total['weight'] += float(line['weight']) / 1000
                         double_total['quantity'] += int(line['quantity'])
                         double_total['lines'] += 1
-                    line['weight'] = round(float(line['weight'] / 1000), 2)
+                    line['weight'] = round(float(line['weight'] / 1000), 4)
                     if line['machine_id'] != machine_id:
                         if machine_total['work_time'].total_seconds() > 0:
-                            machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000), 2)
+                            machine_total['ht_avg'] = round(machine_total['weight']/(machine_total['work_time'].total_seconds()/3600), 2)
                         else:
                             machine_total['ht_avg'] = 0
                         for key in total:
@@ -424,21 +425,31 @@ def reports_page():
                         machine_id = line['machine_id']
                         machine_total = {'weight': 0, 'quantity': 0, 'machine_id': line['machine_id'], 'machine_name': line['machine_name'],
                                  'username': line['username'], 'operator': line['operator'], 'work_time': time0, 'lines': 0}
-                    if 'machine_id' in req_vals:
-                        if 'Finished_ts' in line:
-                            if line['Finished_ts'] > line['Start_ts']:
-                                line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
-                            else:
-                                line['work_time'] = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S')
+                    # if 'machine_id' in req_vals:
+                    # if 'Finished_ts' in line:
+                    #     if line['Finished_ts'] > line['Start_ts']:
+                    #         line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                    #     else:
+                    #         line['work_time'] = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S')
+                    try:
+                        line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                        if machine_total['lines'] > 0:
+                            temp = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(temp_report_data[i-1]['Finished_ts'], '%Y-%m-%d %H:%M:%S')
+                            if temp > line['work_time']:
+                                line['work_time'] = temp
+                    except:
+                        continue
                     report_data.append(line)
                     machine_total['weight'] += float(line['weight'])
                     machine_total['quantity'] += int(line['quantity'])
                     machine_total['lines'] += 1
-                    if 'Finished_ts' in line:
-                        if line['Finished_ts'] > line['Start_ts']:
-                            machine_total['work_time'] += datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                    if 'work_time' in line:
+                        machine_total['work_time'] += line['work_time']
+                    # if 'Finished_ts' in line:
+                    #     if line['Finished_ts'] > line['Start_ts']:
+                    #         machine_total['work_time'] += datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
                 if machine_total['work_time'].total_seconds() > 0:
-                    machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600 * 1000), 2)
+                    machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600), 2)
                 else:
                     machine_total['ht_avg'] = 0
                 for key in total:
@@ -458,6 +469,8 @@ def reports_page():
                 if 'machine_id' not in req_vals:
                     total['operator'] = 'סה"כ לדו"ח:'
                     total['weight'] = round(total['weight'], 2)
+                    del total['ht_avg']
+                    del total['work_time']
                     # del total['']
                     report_data.append(total)
                     double_total['operator'] = 'סה"כ שורות משותפות'
