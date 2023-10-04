@@ -308,9 +308,9 @@ class Bartender:
                     line[obj] = info[obj]
                 if bends:
                     if len(bends) == 2:
-                        line['img_dir'] = Images.create_shape_plot('L', bends).split('\\')[-1].replace('.png', '')
+                        line['img_dir'] = Images.create_shape_plot('405', bends).split('\\')[-1].replace('.png', '')
                     elif len(bends) == 3:
-                        line['img_dir'] = Images.create_shape_plot('U', bends).split('\\')[-1].replace('.png', '')
+                        line['img_dir'] = Images.create_shape_plot('404', bends).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 summary_data.append(line)
         else:
@@ -462,10 +462,10 @@ class Bartender:
         # --------- for testing ----------
         if main.session['username'] in ['baruch', 'Baruch']:
             file_dir = file_dir.replace('.txt', '.tmp')
-        testing = True
+        testing = False
         if testing:
-            # file_dir = "H:\\NetCode\\margolisys\\1.txt"
-            file_dir = "C:\\copy_here\\1.txt"
+            file_dir = "H:\\NetCode\\margolisys\\1.txt"
+            # file_dir = "C:\\copy_here\\1.txt"
         # --------------------------------
         # Write btw temp file
         with open(file_dir, 'w', encoding='cp1255') as print_file:
