@@ -164,7 +164,7 @@ def new_order_row():
         new_row['width'] += int(float(new_row['trim_x_start']) + float(new_row['trim_x_end']))
         for i in range(len(new_row['y_length'])):
             if new_row['x_pitch'][i] != "0":
-                new_row['trim_y_end'] = str(int(new_row['trim_y_end']) +
+                new_row['trim_y_end'] = str(float(new_row['trim_y_end']) +
                                             int(new_row['y_length'][i]) % int(new_row['x_pitch'][i]))
                 new_row['y_length'][i] = str(
                     int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['x_pitch'][i])))
@@ -419,11 +419,12 @@ def cancel_order():
 
 def update_order_status(new_status, order_id, job_id=""):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
-    # todo: use dict options
+    # ---------- over protection ------------------------
     while 'order_status_' in new_status:
         new_status = new_status.replace('order_status_', '')
     while ' ' in new_status:
         new_status = new_status.replace(' ', '')
+    # ---------- over protection ------------------------
     if not order:
         return
     flag = True
@@ -536,7 +537,6 @@ def copy_order():
         for copy in list(range(copies)):
             new_id = new_order_id()
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
-            # for doc in order_data:
             order['order_id'] = new_id
             order['info']['date_created'] = ts()
             order['info']['created_by'] = main.session['username']
