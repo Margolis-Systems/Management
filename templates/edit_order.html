@@ -14,7 +14,7 @@ div {
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
     {% for item in order_data.info %}
-    {% if item not in ['comment','date_delivery'] %}
+    {% if item not in ['comment','date_delivery', 'linked_orders'] %}
         <td>
             <b>
                 {% if dictionary[item] %}
@@ -29,7 +29,7 @@ div {
     </tr>
     <tr>
     {% for item in order_data.info %}
-    {% if item not in ['comment','date_delivery'] %}
+    {% if item not in ['comment','date_delivery', 'linked_orders'] %}
         {% if item in ['costumer_name', 'costumer_site'] %}
         <td ondblclick='openNewWindow("/new_order?{{order_data.info.order_id}}")'>
         {% else %}
@@ -75,9 +75,9 @@ div {
     <tr>
         <td><button type=button class="btn btn-primary btn-block" name="input_form" onclick="formSubmit()">שורה חדשה</button></td>
         <td colspan="2"><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
-
         <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
         <td> <button onclick='openNewWindow("\split_order")' type="button" class="btn btn-warning btn-block">פיצול הזמנה</button></td>
+        <td> <button onclick='openNewWindow("\link_order")' type="button" class="btn btn-warning btn-block">קישור הזמנה</button></td>
         <td><label>סה"כ משקל</label><input type="number" value="{{ order_data.info.total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
     </tr>
 </table>

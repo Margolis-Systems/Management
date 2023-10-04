@@ -25,7 +25,7 @@
         <td>{{job.weight}}</td>
         <td>{{job.length}}</td>
         <td>{{job.shape}}</td>
-        <td><input list="list" type="number" name="{{job.job_id}}" value="{{job.order_split}}" placeholder="1" min="1"></td>
+        <td><input list="list" type="number" class="form-control" name="{{job.job_id}}" value="{{job.order_split}}" placeholder="1" min="1"></td>
           <datalist id="list">
               <option value="1">1</option>
               <option value="2">2</option>
@@ -35,7 +35,7 @@
           </datalist>
       </tr>
       {% endfor %}
-      <tr><td><button type="submit" onclick="refreshWindow();">פצל</button> </td></tr>
+      <tr><td><button type="submit" class="btn btn-warning" onclick="refreshWindow();">פצל</button> </td></tr>
     </form>
 </table>
 <script src="\static\js\shapes.js" ></script>

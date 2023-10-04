@@ -259,7 +259,6 @@ def scan():
             row['status'] = row['status'].replace('order_status_', '')
             if row['status'] == 'Production':
                 status = "Start"
-                print('hi')
             elif row['status'] == "Start":
                 status = "Finished"
             elif row['status'] == "Processed":
@@ -352,6 +351,8 @@ def gen_file_id():
 
 def reports_page():
     report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
+    if 'report_date' in main.session:
+        report_date = main.session['report_date']
     report_data = []
     data_to_display = []
     report = ''
@@ -366,6 +367,8 @@ def reports_page():
                 report_date['to'] = req_form['date_to']
                 if req_form['date_to'] < req_form['date_from']:
                     report_date['to'] = req_form['date_from']
+        main.session['report_date'] = report_date
+        main.session.modified = True
     # Report type handle
     if 'report' in req_vals.keys():
         weight_multp = 1
@@ -380,12 +383,9 @@ def reports_page():
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
                                'work_time', 'ht_avg']
             if 'machine_id' in req_vals:
-                # todo: query loses date
                 mid = req_vals['machine_id']
                 query['machine_id'] = int(mid)
                 data_to_display = detailed
-            # elif 'machine_id' in req_form:
-            #     query['machine_id'] = int(req_form['machine_id'])
             else:
                 machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}}))
                 for m in machine_list:
@@ -425,12 +425,6 @@ def reports_page():
                         machine_id = line['machine_id']
                         machine_total = {'weight': 0, 'quantity': 0, 'machine_id': line['machine_id'], 'machine_name': line['machine_name'],
                                  'username': line['username'], 'operator': line['operator'], 'work_time': time0, 'lines': 0}
-                    # if 'machine_id' in req_vals:
-                    # if 'Finished_ts' in line:
-                    #     if line['Finished_ts'] > line['Start_ts']:
-                    #         line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
-                    #     else:
-                    #         line['work_time'] = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S')
                     try:
                         line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
                         if machine_total['lines'] > 0:
@@ -445,9 +439,6 @@ def reports_page():
                     machine_total['lines'] += 1
                     if 'work_time' in line:
                         machine_total['work_time'] += line['work_time']
-                    # if 'Finished_ts' in line:
-                    #     if line['Finished_ts'] > line['Start_ts']:
-                    #         machine_total['work_time'] += datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
                 if machine_total['work_time'].total_seconds() > 0:
                     machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600), 2)
                 else:
@@ -498,6 +489,10 @@ def reports_page():
                     query['client_name'] = req_vals['client_name']
                 if 'username' in req_vals.keys():
                     query['username'] = req_vals['username']
+            elif report == 'open_orders':
+                query = {'info.status': {'$nin': ['Delivered', 'canceled']}, 'info.type': {'$ne': 'integration'},
+                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל']},
+                         'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             # Read all orders data with Info, mean that it's not including order rows
             all_orders = list(main.mongo.read_collection_list('orders', query))
             orders_data = []

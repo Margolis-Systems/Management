@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tzomet ERP</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<table class="table table-striped" dir="rtl" align="center">
+    <form name="link_order" id="link_order" method=POST autocomplete="off">
+      <tr>
+        <td>מספר הזמנה</td>
+          <td>סוג</td>
+          <td>הערות</td>
+      </tr>
+      {% for order in linked_orders %}
+      <tr>
+        <td>{{order.order_id}}</td>
+        <td>{{order.type}}</td>
+        <td>{{order.comment}}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+          <td><input class="form-control" name="order_id"></td>
+          <td><button type="submit" class="btn btn-warning">קשר</button> </td></tr>
+    </form>
+</table>
+<script src="\static\js\shapes.js" ></script>
+</body>
+</html>
