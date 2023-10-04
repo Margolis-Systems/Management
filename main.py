@@ -111,6 +111,11 @@ def split_order():
     return orders.split_order()
 
 
+@app.route('/link_order', methods=['POST', 'GET'])
+def link_order():
+    return orders.link_order()
+
+
 @app.route('/order_file_upload', methods=['POST', 'GET'])
 def order_file_upload():
     return pages.order_files()

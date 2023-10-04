@@ -39,12 +39,16 @@ def orders():
     main.session['user_config']['search'] = query
     main.session.modified = True
     # Read all orders data with Info, mean that it's not including order rows
-    orders_data = main.mongo.read_collection_list('orders', query)
+    orders_data = main.mongo.read_collection_list('orders', query)#, limit=800)
     orders_info = []
     for order in orders_data:
         row = order['info'].copy()
         row['order_id'] = order['order_id']
         row['status'] = 'order_status_' + row['status']
+        # temp = row['linked_orders'].copy()
+        # row['linked_orders'] = ''
+        # for i in temp:
+        #     row['linked_orders'] += '{}: {}'.format(i['order_id'], i['type'])
         orders_info.append(row)
     dictionary = pages.get_dictionary(main.session['username'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
@@ -568,3 +572,36 @@ def split_order():
         main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
         return '', 204
     return main.render_template('/split_order.html', order=order['rows'])
+
+
+def link_order():
+    order_data, order_info = get_order_data(main.session['order_id'])
+    if main.request.form:
+        req_form = dict(main.request.form)
+        link_order_id = req_form['order_id']
+        link_order_data, link_order_info = get_order_data(link_order_id)
+        cur_l = {}
+        to_l = {}
+        for key in ['order_id', 'type', 'comment']:
+            if key in link_order_info:
+                to_l[key] = link_order_info[key]
+            if key in order_info:
+                cur_l[key] = order_info[key]
+        _link = [cur_l, to_l]
+        if 'linked_orders' in order_info:
+            _link.extend(order_info['linked_orders'])
+        if 'linked_orders' in link_order_info:
+            _link.extend(link_order_info['linked_orders'])
+        link = []
+        _filter = []
+        for i in _link:
+            if i['order_id'] not in _filter:
+                _filter.append(i['order_id'])
+                link.append(i)
+        for lin in link:
+            main.mongo.update_one('orders', {'order_id': lin['order_id']}, {'info.linked_orders': link}, '$set')
+        return main.redirect('/link_order')
+    linked_orders = []
+    if 'linked_orders' in order_info:
+        linked_orders = order_info['linked_orders']
+    return main.render_template('/link_order.html', linked_orders=linked_orders)

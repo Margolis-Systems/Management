@@ -77,9 +77,12 @@ class DBHandle:
         return dic
 
     @staticmethod
-    def read_collection_list(collect, query=dict({}), db_name=""):
+    def read_collection_list(collect, query=dict({}), db_name="", limit=0):
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
+        if limit:
+            dic = db[collect].find(query, {'_id': False}).sort([('_id', -1)]).limit(limit)
+            return dic
         dic = db[collect].find(query, {'_id': False})
         return dic
 
@@ -132,6 +135,7 @@ class DBHandle:
         db = DBHandle.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
+        # print(query,':', doc)
         return collection.update_one(key, {query: doc}, upsert=upsert)
 
     @staticmethod
