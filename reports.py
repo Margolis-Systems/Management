@@ -4,6 +4,7 @@ import orders
 import functions
 import configs
 import math
+import os
 from collections import OrderedDict
 from PIL import Image, ImageDraw, ImageFont
 
@@ -60,23 +61,28 @@ class Images:
 
     @staticmethod
     def create_shape_plot(shape, text=[], enable_text_plot=True):
-        _positions = configs.shapes[shape]['draw_positions']
+        size = (200, 60)
+        font_size = 16
+        font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
+        if shape.isdigit():
+            _positions = configs.shapes[shape]['draw_positions']
+            im = Image.new('RGB', size, 'white')
+        else:
+            im = Image.open(os.getcwd()+'\\static\\images\\specials\\girders.png')
+            _positions = [[0, 25], [200, 25]]
+        draw = ImageDraw.Draw(im)
         positions = []
         for i in _positions:
             positions.append(tuple(i))
         file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
         if not text:
             text = list(range(1, len(positions)))
-        size = (200, 60)
-        font_size = 16
-        font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
-        im = Image.new('RGB', size, 'white')
-        draw = ImageDraw.Draw(im)
-        if shape not in ['331', '332']:
-            draw.line(positions, fill="black", width=3)
-        else:
-            draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
-            positions = [(10,30),(20,30),(200,30)]
+        if shape.isdigit():
+            if shape not in ['331', '332']:
+                draw.line(positions, fill="black", width=3)
+            else:
+                draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
+                positions = [(10,30),(20,30),(200,30)]
         if enable_text_plot:
             text_pos = []
             for i in range(len(positions) - 1):
@@ -230,6 +236,10 @@ class Bartender:
                     if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
                             and row['shape'] not in ['332', '49', '59']) or row['shape'] in configs.circle:
                         line['circle'] = 'כן'
+                elif 'shape' in line:
+                    line['img_dir'] = Images.create_shape_plot(line['shape'], [line['shape']]).split('\\')[
+                        -1].replace('.png', '')
+                    line['temp_select'] = 1
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
                     if len(line['element']) > 0:

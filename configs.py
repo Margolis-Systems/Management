@@ -30,6 +30,7 @@ data_to_display = mongo.read_collection_one("data_lists", {"name": "data_to_disp
 weights = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
 # shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
 rebar_catalog = mongo.read_collection_one("data_lists", {"name": "rebar_catalog"})['data']
+girders_catalog = mongo.read_collection_one("data_lists", {"name": "girders_catalog"})['data']
 print_dict = mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']
 bartender_formats = mongo.read_collection_one('data_lists', {'name': 'bartender_formats'})['data']
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
