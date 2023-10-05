@@ -1,20 +1,17 @@
 import base64
-
+import json
 import functions
 import main
 import users
 import reports
 import orders
 import os
-import pandas as pd
-import pages
 from operator import itemgetter
 from datetime import datetime
 
 
 def get_dictionary(username):
-    all_dicts = main.mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
-    import json
+    # all_dicts = main.mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
     main_dir = "C:\\Server\\"
     if not os.path.exists(main_dir):
         main_dir = "C:\\projects\\Tzomet\\Management\\"
@@ -28,6 +25,8 @@ def get_dictionary(username):
 
 
 def gen_patterns(order_type='regular'):
+    lists = {}
+    patterns = {}
     if order_type == 'rebar':
         diam = []
         cat_num = []
@@ -55,6 +54,8 @@ def gen_patterns(order_type='regular'):
                     'diam_y': '|'.join(diam), 'mkt': '|'.join(cat_num)}
         lists = {'pitch_x': rebar_type, 'pitch_y': rebar_type, 'diam_x': diam, 'diam_y': diam,
                  'mkt': list(main.configs.rebar_catalog.keys())}
+    elif order_type == 'girders':
+        lists['mkt'] = list(main.configs.girders_catalog.keys())
     else:
         shapes_list = main.configs.shapes.keys()
         diam = list(main.configs.weights.keys())
@@ -511,7 +512,7 @@ def reports_page():
                 if 'total_weight' not in new_row:
                     new_row['total_weight'] = 0
                 total_weight['global'] += new_row['total_weight'] / weight_multp
-                type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט'}
+                type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט', 'girders': 'סהכ מסבכונים'}
                 ord_type = type_dict[new_row['type']]
                 if ord_type not in total_weight:
                     total_weight[ord_type] = new_row['total_weight'] / weight_multp

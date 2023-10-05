@@ -40,17 +40,22 @@ def orders():
     main.session.modified = True
     # Read all orders data with Info, mean that it's not including order rows
     orders_data = main.mongo.read_collection_list('orders', query)#, limit=800)
+    dictionary = pages.get_dictionary(main.session['username'])
     orders_info = []
     for order in orders_data:
         row = order['info'].copy()
         row['order_id'] = order['order_id']
         row['status'] = 'order_status_' + row['status']
-        # temp = row['linked_orders'].copy()
-        # row['linked_orders'] = ''
-        # for i in temp:
-        #     row['linked_orders'] += '{}: {}'.format(i['order_id'], i['type'])
+        if 'linked_orders' in row:
+            temp = row['linked_orders'].copy()
+            row['linked_orders'] = ''
+            for i in temp:
+                if i['order_id'] != row['order_id']:
+                    order_type = i['type']
+                    if i['type'] in dictionary:
+                        order_type = dictionary[i['type']]
+                    row['linked_orders'] += '{}: {}'.format(i['order_id'], order_type)
         orders_info.append(row)
-    dictionary = pages.get_dictionary(main.session['username'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults)
@@ -187,20 +192,26 @@ def new_order_row():
             y_bars = {'length': new_row['length'], 'qnt': bars_y * int(new_row['quantity']), 'diam': new_row['diam_y']}
             peripheral_orders([x_bars, y_bars], order_id, job_id)
     elif 'mkt' in new_row:
-        cat_item = main.configs.rebar_catalog[new_row['mkt']]
-        for item in cat_item:
-            if item not in ['pack_quantity']:
-                new_row[item] = cat_item[item]
-        pitch = int(new_row['x_pitch'])
-        x_bars = {'length': new_row['width'], 'qnt': int(int(new_row['quantity']) * (int(new_row['length']) / pitch)),
-                  'diam': new_row['diam_x']}
-        y_bars = {'length': new_row['length'],
-                  'qnt': int(((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity'])),
-                  'diam': new_row['diam_y']}
-        new_row['weight'] = round(
-            float(main.configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
-        if 'הזמנת_ייצור' in new_row:
-            peripheral_orders([x_bars, y_bars], order_id, job_id)
+        if new_row['mkt'] in main.configs.rebar_catalog:
+            cat_item = main.configs.rebar_catalog[new_row['mkt']]
+            for item in cat_item:
+                if item not in ['pack_quantity']:
+                    new_row[item] = cat_item[item]
+            pitch = int(new_row['x_pitch'])
+            x_bars = {'length': new_row['width'], 'qnt': int(int(new_row['quantity']) * (int(new_row['length']) / pitch)),
+                      'diam': new_row['diam_x']}
+            y_bars = {'length': new_row['length'],
+                      'qnt': int(((int(new_row['width']) - 10) / pitch + 1) * int(new_row['quantity'])),
+                      'diam': new_row['diam_y']}
+            new_row['weight'] = round(
+                float(main.configs.rebar_catalog[new_row['mkt']]['unit_weight']) * float(new_row['quantity']), 1)
+            if 'הזמנת_ייצור' in new_row:
+                peripheral_orders([x_bars, y_bars], order_id, job_id)
+        elif new_row['mkt'] in main.configs.girders_catalog:
+            cat = main.configs.girders_catalog[new_row['mkt']]
+            new_row['shape'] = new_row['mkt']
+            new_row['weight'] = float(cat['unit_weight']) * int(new_row['quantity'])
+            new_row['unit_weight'] = cat['unit_weight']
     elif 'shape' in req_form_data:
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
@@ -237,7 +248,7 @@ def new_order_row():
         if 'addbefore' in req_vals:
             if int(order['rows'][i]['job_id']) >= int(req_vals['addbefore']):
                 order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id'])+1)
-        order['info']['total_weight'] += int(order['rows'][i]['weight'])
+        order['info']['total_weight'] += float(order['rows'][i]['weight'])
     order['rows'].append(new_row)
     order['info']['total_weight'] = round(order['info']['total_weight'])
     order['info']['rows'] = len(order['rows'])
@@ -434,7 +445,7 @@ def update_order_status(new_status, order_id, job_id=""):
                 order['rows'][i]['status'] = new_status
                 order['rows'][i]['status_updated_by'] = main.session['username']
                 functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
-            if order['rows'][i]['job_id'] != 'Finished':
+            if order['rows'][i]['status'] != 'Finished':
                 flag = False
         if flag:
             update_order_status('Finished', order_id)
@@ -601,7 +612,20 @@ def link_order():
         for lin in link:
             main.mongo.update_one('orders', {'order_id': lin['order_id']}, {'info.linked_orders': link}, '$set')
         return main.redirect('/link_order')
+    elif main.request.values:
+        req_vals = dict(main.request.values)
+        unlink_order_id = req_vals['order_id']
+        link = []
+        for i in order_info['linked_orders']:
+            if i['order_id'] != unlink_order_id:
+                link.append(i)
+        for lin in link:
+            if len(link) == 1:
+                link = []
+            main.mongo.update_one('orders', {'order_id': lin['order_id']}, {'info.linked_orders': link}, '$set')
+        main.mongo.update_one('orders', {'order_id': unlink_order_id}, {'info.linked_orders': []}, '$set')
+        return main.redirect('/link_order')
     linked_orders = []
     if 'linked_orders' in order_info:
         linked_orders = order_info['linked_orders']
-    return main.render_template('/link_order.html', linked_orders=linked_orders)
+    return main.render_template('/link_order.html', linked_orders=linked_orders, cur_order=main.session['order_id'])

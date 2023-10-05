@@ -16,13 +16,17 @@
         <td>מספר הזמנה</td>
           <td>סוג</td>
           <td>הערות</td>
+          <td></td>
       </tr>
       {% for order in linked_orders %}
+        {% if order.order_id != cur_order %}
       <tr>
         <td>{{order.order_id}}</td>
         <td>{{order.type}}</td>
         <td>{{order.comment}}</td>
+          <td><button class="btn btn-danger" type="button" onclick="location.href='/link_order?order_id={{order.order_id}}'">בטל</button></td>
       </tr>
+        {% endif %}
       {% endfor %}
       <tr>
           <td><input class="form-control" name="order_id"></td>
