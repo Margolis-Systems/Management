@@ -154,12 +154,18 @@ class Bartender:
                     n = table_rows * row_n + indx
                     i = table_cells * indx
                     row = rows[n]
+                    if float(row['diam_x']) > 10:
+                        row['description'] = row['description'].replace("רשת סטנדרט","מיוחדת לפי תוכנית כוורת מרותכת דקה")
                     template_row["tb" + str(1 + i)] = row['job_id']
                     template_row["tb" + str(2 + i)] = row['mkt']
                     template_row["tb" + str(4 + i)] = row['description']
                     template_row["tb" + str(5 + i)] = row['quantity']
                     if rows[n]['mkt'] != "2005020000":
-                        template_row["tb" + str(3 + i)] = "רשת סטנדרט"
+                        if float(row['diam_x']) > 10:
+                            row['description'] = row['description'].replace("רשת סטנדרט","מיוחדת לפי תוכנית כוורת מרותכת דקה")
+                            template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
+                        else:
+                            template_row["tb" + str(3 + i)] = "רשת סטנדרט"
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
@@ -172,7 +178,7 @@ class Bartender:
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = int(row['weight'] / int(row['quantity']))
+                            template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -209,11 +215,11 @@ class Bartender:
                         pack_row = row.copy()
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
-                            pack_row['weight'] = round(int(pack_row['unit_weight'])*row['pack_quantity'])
+                            pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
-                            pack_row['weight'] = round(int(pack_row['unit_weight'])*row['quantity'])
+                            pack_row['weight'] = round(float(pack_row['unit_weight'])*row['quantity'])
                         pack_rows.append(pack_row)
                         pack_index += 1
                         row['quantity'] -= row['pack_quantity']

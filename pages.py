@@ -513,7 +513,8 @@ def reports_page():
                     new_row['total_weight'] = 0
                 total_weight['global'] += new_row['total_weight'] / weight_multp
                 type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט', 'girders': 'סהכ מסבכונים'}
-                ord_type = type_dict[new_row['type']]
+                if new_row['type']:
+                    ord_type = type_dict[new_row['type']]
                 if ord_type not in total_weight:
                     total_weight[ord_type] = new_row['total_weight'] / weight_multp
                 else:

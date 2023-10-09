@@ -24,6 +24,7 @@
         "order_status_Delivered": "lightblue",
         "order_status_Loading": "orange",
         "order_status_PartlyDelivered": "aqua",
+        "order_status_PartlyDeliveredClosed": "aqua",
       "order_status_Outsource": "red"
       }
     },
