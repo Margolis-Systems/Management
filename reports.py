@@ -226,7 +226,7 @@ class Bartender:
                     _rows.extend(pack_rows)
                     continue
                 _rows.append(row)
-            rows = _rows
+            rows = _rows.copy()
             index = 0
             for row in rows:
                 if row['job_id'] == "0":

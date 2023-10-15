@@ -129,14 +129,16 @@ def choose_printer():
             try:
                 if '-' in req_form['print_select']:
                     temp = req_form['print_select'].split('-')
-                    select_jobs = list(range(int(temp[0]), int(temp[1])+1))
-                    select_jobs = [str(x) for x in select_jobs]
+                    select_jobs = list(range(int(temp[0]), int(temp[1])))
                 elif ',' in req_form['print_select']:
                     temp = req_form['print_select'].split(',')
                     for t in temp:
-                        select_jobs.append(t)
+                        select_jobs.append(int(t))
+                elif req_form['print_select'].isdigit():
+                    select_jobs = [req_form['print_select']]
             except:
                 select_jobs = []
+            select_jobs = [str(x) for x in select_jobs]
         disable_weight = False
         if 'disable_weight' in req_form:
             disable_weight = True
