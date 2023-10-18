@@ -57,7 +57,7 @@ div {
         </td>
         <td colspan="100">
             תאריך אספקה
-            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onfocusout="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
+            <input type="date" class="form-control" name="date_delivery_hid" id="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onfocusout="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
         </td>
     </tr>
 </form>
@@ -138,5 +138,9 @@ div {
 <script>
 datatodisp = JSON.parse('{{order_data.data_to_display|tojson}}');
 dtd_order = {{order_data.dtd_order|safe}};
+//date_delivery = document.getElementById('date_delivery_hid');
+//if (!date_delivery.value){
+//date_delivery.valueAsDate = new Date();
+//}
 </script>
 {% endblock %}

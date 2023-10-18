@@ -85,7 +85,7 @@ def new_order(client="", order_type=""):
                 site = req_form['site']
                 order_type = req_form['order_type']
                 order_id = new_order_id()
-                order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'date_delivery': ts(),
+                order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'date_delivery': ts('html_date'),
                                                         'type': order_type, 'costumer_name': client,
                                                         'costumer_id': client_id,
                                                         'costumer_site': site, 'status': 'NEW'}, 'rows': []}
@@ -448,7 +448,7 @@ def update_order_status(new_status, order_id, job_id=""):
             if order['rows'][i]['status'] != 'Finished':
                 flag = False
         if flag:
-            update_order_status('Finished', order_id)
+            order['info']['status'] = new_status
     else:
         order['info']['status'] = new_status
         for i in range(len(order['rows'])):
@@ -550,6 +550,7 @@ def copy_order():
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
             order['order_id'] = new_id
             order['info']['date_created'] = ts()
+            order['info']['date_delivery'] = ts()
             order['info']['created_by'] = main.session['username']
             for row in order['rows']:
                 row['order_id'] = new_id

@@ -69,6 +69,6 @@ if __name__ == '__main__':
     # SIZE 200 X 60
     # INPUT
     # print_keys()
-    pos = [(100, 5), (100, 25), (15, 30), (15, 50), (185, 50),(185,20)]
-    name = '73'
+    pos = [(15, 5), (15, 50), (95, 50), (95, 5), (175, 5), (175, 50)]
+    name = '13'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')
