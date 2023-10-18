@@ -18,14 +18,19 @@ def orders():
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
     query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
+    defaults = {'from': functions.ts('html_date', 14), 'to': functions.ts('html_date')}
     if 'user_config' in main.session:
         if 'search' in main.session['user_config']:
             if main.session['user_config']['search']:
                 query = main.session['user_config']['search']
+                for k in query:
+                    if '$regex' in query[k]:
+                        defaults[k] = query[k]['$regex']
+                        if k == 'info.costumer_name':
+                            defaults['info.costumer_site'] = []
     if 'filter' in main.session['user_config']:
         if main.session['user_config']['filter']:
             query['info.type'] = {'$regex': main.session['user_config']['filter']}
-    defaults = {'from': functions.ts('html_date', 14), 'to': functions.ts('html_date')}
     if main.request.form:
         req_form = dict(main.request.form)
         for item in req_form:
@@ -36,8 +41,9 @@ def orders():
             else:
                 if req_form[item]:
                     query[item] = {'$regex': req_form[item]}
-    main.session['user_config']['search'] = query
-    main.session.modified = True
+        main.session['user_config']['search'] = query
+        main.session.modified = True
+        return main.redirect('/orders')
     # Read all orders data with Info, mean that it's not including order rows
     orders_data = main.mongo.read_collection_list('orders', query)#, limit=800)
     dictionary = pages.get_dictionary(main.session['username'])
@@ -56,6 +62,11 @@ def orders():
                         order_type = dictionary[i['type']]
                     row['linked_orders'] += '{}: {}'.format(i['order_id'], order_type)
         orders_info.append(row)
+        if 'info.costumer_site' in defaults:
+            if not isinstance(defaults['info.costumer_site'], list):
+                defaults['info.costumer_site'] = [defaults['info.costumer_site']]
+            if row['costumer_site'] not in defaults['info.costumer_site']:
+                defaults['info.costumer_site'].append(row['costumer_site'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults)
@@ -85,7 +96,7 @@ def new_order(client="", order_type=""):
                 site = req_form['site']
                 order_type = req_form['order_type']
                 order_id = new_order_id()
-                order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'date_delivery': ts(),
+                order = {'order_id': order_id, 'info': {'created_by': user, 'date_created': ts(), 'date_delivery': ts('html_date'),
                                                         'type': order_type, 'costumer_name': client,
                                                         'costumer_id': client_id,
                                                         'costumer_site': site, 'status': 'NEW'}, 'rows': []}
@@ -448,7 +459,7 @@ def update_order_status(new_status, order_id, job_id=""):
             if order['rows'][i]['status'] != 'Finished':
                 flag = False
         if flag:
-            update_order_status('Finished', order_id)
+            order['info']['status'] = new_status
     else:
         order['info']['status'] = new_status
         for i in range(len(order['rows'])):
@@ -550,9 +561,14 @@ def copy_order():
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
             order['order_id'] = new_id
             order['info']['date_created'] = ts()
+            order['info']['date_delivery'] = ts('html_date')
             order['info']['created_by'] = main.session['username']
             for row in order['rows']:
                 row['order_id'] = new_id
+                row['status'] = 'NEW'
+                row['date_created'] = order['info']['date_created']
+                del row['status_updated_by']
+                # todo: if הזמנת ייצור
             main.mongo.insert_collection_one('orders', order)
             update_order_status('NEW', new_id)
         return '', 204

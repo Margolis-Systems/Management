@@ -25,13 +25,16 @@ users_collection = config['users_collection']
 orders_reverse = config['orders_reverse']
 net_print_dir = config['net_print_dir']
 company_name = config['company_name']
-# rebar_weights = mongo.read_collection_one("data_lists", {"name": "rebar_weights"})['data']
+
 data_to_display = mongo.read_collection_one("data_lists", {"name": "data_to_display"})['data']
 weights = mongo.read_collection_one("data_lists", {"name": "weights"})['data']
-# shapes = mongo.read_collection_one("data_lists", {"name": "shapes"})['data']
 rebar_catalog = mongo.read_collection_one("data_lists", {"name": "rebar_catalog"})['data']
 girders_catalog = mongo.read_collection_one("data_lists", {"name": "girders_catalog"})['data']
+
 print_dict = mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']
 bartender_formats = mongo.read_collection_one('data_lists', {'name': 'bartender_formats'})['data']
+# todo: read from mongo
+print_dicts = {'regular': {}, 'rebar': {}, 'pile': {}, 'girders': {}}
+
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
 circle = ['925', '966', '215', '216', '78', '79', '119', '68', '36', '44', '16', '6', '331']

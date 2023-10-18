@@ -28,23 +28,31 @@
         <form method=POST autocomplete="off" action="{{ url_for('orders_page') }}">
         <td>
             <label>חיפוש</label>
-            <input type="text" name="order_id" placeholder="מספר הזמנה">
-            <input type="text" name="info.costumer_name" placeholder="שם לקוח">
+            <input type="text" name="order_id" value="{{defaults.order_id}}" placeholder="מספר הזמנה">
+            <input type="text" name="info.costumer_name" value="{{defaults['info.costumer_name']}}" placeholder="שם לקוח">
+            {% if defaults['info.costumer_name'] %}
+            <select name="info.costumer_site">
+                {% for opt in defaults['info.costumer_site'] %}
+                <option>{{opt}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
             <button type="submit">חפש</button>
             <button type="button" onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
         </td>
         </form>
-        <td>סינון לפי:</td>
+        <td>סינון לפי סוג:</td>
         <td>
-            <button onclick="location.href='/user_config?filter=regular';refresh();">הזמנות ברזל</button>
+            <select onchange="location.href='/user_config?filter='+this.value;refresh();" >
+                <option style="display:none" selected>בחר סוג</option>
+                <option value="regular">ברזל</option>
+                <option value="rebar">רשת</option>
+                <option value="R">ייצור רשת</option>
+                <option value="girders">מסבכונים</option>
+                <option value="piles">כלונסאות</option>
+            </select>
         </td>
-        <td>
-            <button onclick="location.href='/user_config?filter=rebar';refresh();">הזמנות רשת</button>
-        </td>
-        <td>
-            <button onclick="location.href='/user_config?filter=R';refresh();">ייצור רשת</button>
-        </td>
-        <td>
+        <td colspan="5">
             <button onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
         </td>
     </tr>
