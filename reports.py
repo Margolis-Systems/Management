@@ -1,11 +1,17 @@
 import main
-
 import orders
 import functions
 import configs
+
 import math
 import os
 from collections import OrderedDict
+from datetime import datetime
+from mailmerge import MailMerge
+import docx
+from docx.enum.table import WD_TABLE_DIRECTION
+#from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx2pdf import convert
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -63,7 +69,7 @@ class Images:
     def create_shape_plot(shape, text=[], enable_text_plot=True):
         size = (200, 60)
         font_size = 16
-        font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
+        font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
         if shape.isdigit():
             _positions = configs.shapes[shape]['draw_positions']
             im = Image.new('RGB', size, 'white')
@@ -154,25 +160,29 @@ class Bartender:
                     n = table_rows * row_n + indx
                     i = table_cells * indx
                     row = rows[n]
+                    if float(row['diam_x']) > 10:
+                        row['description'] = row['description'].replace("רשת סטנדרט","מיוחדת לפי תוכנית כוורת מרותכת דקה")
                     template_row["tb" + str(1 + i)] = row['job_id']
                     template_row["tb" + str(2 + i)] = row['mkt']
                     template_row["tb" + str(4 + i)] = row['description']
                     template_row["tb" + str(5 + i)] = row['quantity']
                     if rows[n]['mkt'] != "2005020000":
-                        template_row["tb" + str(3 + i)] = "רשת סטנדרט"
+                        if float(row['diam_x']) > 10:
+                            template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
+                        else:
+                            template_row["tb" + str(3 + i)] = "רשת סטנדרט"
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
                             template_row["tb" + str(6 + i)] = float(configs.rebar_catalog[row['mkt']]['unit_weight'])
                     else:
-                        # template_row["tb" + str(3 + i)] = "רשת מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         if float(row['diam_x']) >= 14 or float(row['diam_y']) >= 14:
                             template_row["tb" + str(3 + i)] = template_row["tb" + str(3 + i)].replace('דקה', 'עבה')
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = int(row['weight'] / int(row['quantity']))
+                            template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']),2)
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -499,5 +509,43 @@ class Bartender:
 
 class Docs:
     @staticmethod
-    def print_doc(title, table_data):
+    def print_doc(order_id, printer, print_type, disable_weight=False, select_jobs='', split=''):
+        rows, info = orders.get_order_data(order_id, reverse=False, split=split)
+        info['order_id'] = order_id
+        # Delete all weights data
+        if disable_weight:
+            for r in rows:
+                for i in r:
+                    if 'weight' in i:
+                        r[i] = ''
+            for i in info:
+                if 'weight' in i:
+                    info[i] = ''
+        doc = Docs.fill_template(print_type, info)
+        Docs.format_tables_data(print_type, rows)
         return
+
+    @staticmethod
+    def fill_template(temp_dir, temp_dict):
+        # Create timestamp
+        temp_dict['print_date'] = datetime.strftime(datetime.now(), '%d%m%Y %H:%M:%S')
+        # Merge data
+        doc = MailMerge(temp_dir)
+        doc.merge(**temp_dict)
+        doc = ''
+        return doc
+
+    @staticmethod
+    def format_tables_data(print_type, rows):
+        dic = {}
+        lines = []
+        for t in configs.print_dicts:
+            if t in print_type:
+                dic = configs.print_dicts[t]
+        for r in rows:
+            new_line = {}
+            for i in dic:
+                if i in r:
+                    new_line[i] = r[i]
+            lines.append(new_line)
+    # def convert_
