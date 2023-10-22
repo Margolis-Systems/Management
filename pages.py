@@ -78,6 +78,8 @@ def shape_editor():
             shape_data['tot_len'] = int(main.request.form['1']) * 3.25
         elif main.request.form['shape_data'] == '331':
             shape_data['tot_len'] = int(main.request.form['1']) * 3.14 + 30
+        elif main.request.form['shape_data'] == '330':
+            shape_data['tot_len'] = int(main.request.form['1']) * 3.14 / 2 + 20
         else:
             for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
                 shape_data['tot_len'] += int(main.request.form[str(item)])
@@ -129,14 +131,16 @@ def choose_printer():
             try:
                 if '-' in req_form['print_select']:
                     temp = req_form['print_select'].split('-')
-                    select_jobs = list(range(int(temp[0]), int(temp[1])+1))
-                    select_jobs = [str(x) for x in select_jobs]
+                    select_jobs = list(range(int(temp[0]), int(temp[1])))
                 elif ',' in req_form['print_select']:
                     temp = req_form['print_select'].split(',')
                     for t in temp:
-                        select_jobs.append(t)
+                        select_jobs.append(int(t))
+                elif req_form['print_select'].isdigit():
+                    select_jobs = [req_form['print_select']]
             except:
                 select_jobs = []
+            select_jobs = [str(x) for x in select_jobs]
         disable_weight = False
         if 'disable_weight' in req_form:
             disable_weight = True
@@ -155,7 +159,7 @@ def choose_printer():
                 _split = []
                 if order:
                     for ro in order['rows']:
-                        if 'order_split' in ro:
+                        if 'order_split' in ro and (ro['order_id'] in select_jobs or not select_jobs):
                             if str(ro['order_split']) not in _split:
                                 _split.append(str(ro['order_split']))
                 if _split:

@@ -133,6 +133,7 @@ class Bartender:
     def net_print(order_id, printer, print_type, disable_weight=False, select_jobs=[], split=''):
         # Format data
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
+        info['order_split'] = split
         if select_jobs:
             rlen = len(rows)
             for i in range(rlen):
@@ -168,13 +169,14 @@ class Bartender:
                     template_row["tb" + str(5 + i)] = row['quantity']
                     if rows[n]['mkt'] != "2005020000":
                         if float(row['diam_x']) > 10:
+                            row['description'] = row['description'].replace("רשת סטנדרט","מיוחדת לפי תוכנית כוורת מרותכת דקה")
                             template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         else:
                             template_row["tb" + str(3 + i)] = "רשת סטנדרט"
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = float(configs.rebar_catalog[row['mkt']]['unit_weight'])
+                            template_row["tb" + str(6 + i)] = row['unit_weight']#float(configs.rebar_catalog[row['mkt']]['unit_weight'])
                     else:
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         if float(row['diam_x']) >= 14 or float(row['diam_y']) >= 14:
@@ -182,7 +184,7 @@ class Bartender:
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']),2)
+                            template_row["tb" + str(6 + i)] = row['unit_weight']#round(row['weight'] / int(row['quantity']), 2)
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -219,24 +221,24 @@ class Bartender:
                         pack_row = row.copy()
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
-                            pack_row['weight'] = round(int(pack_row['unit_weight'])*row['pack_quantity'])
+                            pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
-                            pack_row['weight'] = round(int(pack_row['unit_weight'])*row['quantity'])
+                            pack_row['weight'] = round(float(pack_row['unit_weight'])*row['quantity'])
                         pack_rows.append(pack_row)
                         pack_index += 1
                         row['quantity'] -= row['pack_quantity']
                     _rows.extend(pack_rows)
                     continue
                 _rows.append(row)
-            rows = _rows
+            rows = _rows.copy()
             index = 0
             for row in rows:
                 if row['job_id'] == "0":
                     break
                 line = {}
-                kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora'}
+                kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora', 'order_split': split}
                 for obj in row:
                     line[obj] = row[obj]
                 for obj in info:
