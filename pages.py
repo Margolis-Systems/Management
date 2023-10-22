@@ -78,6 +78,8 @@ def shape_editor():
             shape_data['tot_len'] = int(main.request.form['1']) * 3.25
         elif main.request.form['shape_data'] == '331':
             shape_data['tot_len'] = int(main.request.form['1']) * 3.14 + 30
+        elif main.request.form['shape_data'] == '330':
+            shape_data['tot_len'] = int(main.request.form['1']) * 3.14 / 2 + 20
         else:
             for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
                 shape_data['tot_len'] += int(main.request.form[str(item)])
@@ -157,7 +159,7 @@ def choose_printer():
                 _split = []
                 if order:
                     for ro in order['rows']:
-                        if 'order_split' in ro:
+                        if 'order_split' in ro and (ro['order_id'] in select_jobs or not select_jobs):
                             if str(ro['order_split']) not in _split:
                                 _split.append(str(ro['order_split']))
                 if _split:

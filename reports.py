@@ -127,10 +127,12 @@ class Bartender:
     def net_print(order_id, printer, print_type, disable_weight=False, select_jobs=[], split=''):
         # Format data
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
+        info['order_split'] = split
         if select_jobs:
             rlen = len(rows)
             for i in range(rlen):
                 index = rlen - 1 - i
+                _rows = []
                 if rows[index]['job_id'] not in select_jobs:
                     rows.pop(index)
         bt_format = configs.bartender_formats[info['type']][print_type]
@@ -169,7 +171,7 @@ class Bartender:
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = float(configs.rebar_catalog[row['mkt']]['unit_weight'])
+                            template_row["tb" + str(6 + i)] = row['unit_weight']#float(configs.rebar_catalog[row['mkt']]['unit_weight'])
                     else:
                         # template_row["tb" + str(3 + i)] = "רשת מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
@@ -178,7 +180,7 @@ class Bartender:
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
+                            template_row["tb" + str(6 + i)] = row['unit_weight']#round(row['weight'] / int(row['quantity']), 2)
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -232,7 +234,7 @@ class Bartender:
                 if row['job_id'] == "0":
                     break
                 line = {}
-                kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora'}
+                kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora', 'order_split': split}
                 for obj in row:
                     line[obj] = row[obj]
                 for obj in info:
@@ -246,6 +248,7 @@ class Bartender:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], [line['shape']]).split('\\')[
                         -1].replace('.png', '')
                     line['temp_select'] = 1
+
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
                     if len(line['element']) > 0:

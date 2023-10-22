@@ -428,7 +428,7 @@ def cancel_order():
     return main.render_template('cancel_order.html', order_id=order_id)
 
 
-def update_order_status(new_status, order_id, job_id=""):
+def update_order_status(new_status, order_id, job_id="", force=False):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
     # ---------- over protection ------------------------
     while 'order_status_' in new_status:
@@ -452,22 +452,23 @@ def update_order_status(new_status, order_id, job_id=""):
     else:
         order['info']['status'] = new_status
         for i in range(len(order['rows'])):
-            if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production']:
+            if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production'] or force:
                 order['rows'][i]['status'] = new_status
-        if 'reason' in main.request.form:
-            functions.log('cancel_order', main.request.form['reason'])
-            order['info']['cancel_reason'] = main.request.form['reason']
-        else:
-            if 'cancel_reason' in order['info']:
-                del order['info']['cancel_reason']
-        functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
-        if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
-            msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} \n{username} ' \
-                .format(order_id=order_id, date_created=order['info']['date_created'], date_delivery=order['info']['date_delivery'],
-                        costumer_name=order['info']['costumer_name'], costumer_site=order['info']['costumer_site'],
-                        total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'])
-            phone_book = ['0509595953', '0509393938', '0528008018']
-            functions.send_sms(msg, phone_book)
+        if not force:
+            if 'reason' in main.request.form:
+                functions.log('cancel_order', main.request.form['reason'])
+                order['info']['cancel_reason'] = main.request.form['reason']
+            else:
+                if 'cancel_reason' in order['info']:
+                    del order['info']['cancel_reason']
+            functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
+            if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
+                msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} \n{username} ' \
+                    .format(order_id=order_id, date_created=order['info']['date_created'], date_delivery=order['info']['date_delivery'],
+                            costumer_name=order['info']['costumer_name'], costumer_site=order['info']['costumer_site'],
+                            total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'])
+                phone_book = ['0509595953', '0509393938', '0528008018']
+                functions.send_sms(msg, phone_book)
     main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
 
 
@@ -550,10 +551,15 @@ def copy_order():
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
             order['order_id'] = new_id
             order['info']['date_created'] = ts()
-            order['info']['date_delivery'] = ts()
+            order['info']['date_delivery'] = ts('html_date')
             order['info']['created_by'] = main.session['username']
             for row in order['rows']:
                 row['order_id'] = new_id
+                row['status'] = 'NEW'
+                row['date_created'] = order['info']['date_created']
+                if 'status_updated_by' in row:
+                    del row['status_updated_by']
+                # todo: if הזמנת ייצור
             main.mongo.insert_collection_one('orders', order)
             update_order_status('NEW', new_id)
         return '', 204
