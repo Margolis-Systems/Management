@@ -243,7 +243,7 @@ def new_order_row():
         if req_form_data['weight'].replace('.', '').isdigit():
             new_row['weight'] = float(req_form_data['weight'])
         if 'unit_weight' in new_row:
-            new_row['unit_weight'] = round(new_row['weight'] / int(new_row['quantity']))
+            new_row['unit_weight'] = round(new_row['weight'] / int(new_row['quantity']),2)
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
@@ -454,7 +454,7 @@ def update_order_status(new_status, order_id, job_id="", force=False):
         for i in range(len(order['rows'])):
             if order['rows'][i]['job_id'] == job_id:
                 order['rows'][i]['status'] = new_status
-                order['rows'][i]['status_updated_by'] = main.session['username']
+                order['rows'][i]['status_updated_by'] = main.session['username'] + ' : ' + ts()
                 functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
             if order['rows'][i]['status'] != 'Finished':
                 flag = False

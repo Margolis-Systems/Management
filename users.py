@@ -72,18 +72,11 @@ def edit_user():
 
 
 def validate_user():
-    # todo: complete
-    # username = request.cookies.get('userhash')
-    # if username:
-    #     login_user = mongo.read_collection_one(configs.users_collection, {'name': username})
-    #     if login_user:
-    #         session['username'] = username
-    #         print(username)
     if 'username' in main.session.keys():
         user_data = get_user_data()
         if user_data:
             return user_data['group']
-    return False
+    return 0
 
 
 def clear():

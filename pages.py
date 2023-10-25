@@ -164,13 +164,30 @@ def choose_printer():
                                 _split.append(str(ro['order_split']))
                 if _split:
                     for i in range(len(_split)):
-                        reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=_split[i])
+                        if print_type == 'pdf':
+                            file = reports.Docs.print_doc(main.session['order_id'], disable_weight,
+                                                          select_jobs=select_jobs, split=_split[i])
+                            return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=False)
+                        else:
+                            reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                                                        select_jobs=select_jobs, split=_split[i])
                 else:
-                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
-                                                select_jobs=select_jobs)
+
+                    if print_type == 'pdf':
+                        file = reports.Docs.print_doc(main.session['order_id'], disable_weight, select_jobs=select_jobs)
+                        return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=False)
+                    else:
+                        reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                                                    select_jobs=select_jobs)
 
             else:
-                reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight, select_jobs=select_jobs, split=split)
+
+                if print_type == 'pdf':
+                    file = reports.Docs.print_doc(main.session['order_id'], disable_weight, select_jobs=select_jobs, split=split)
+                    return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=False)
+                else:
+                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                                                select_jobs=select_jobs, split=split)
         if main.request.form['print_type'] == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
@@ -197,7 +214,10 @@ def choose_printer():
                 default_printer = ''
         else:
             default_printer = ''
-        printer_list = main.configs.printers[print_type.replace('test_', '')]
+        if print_type.replace('test_', '') in main.configs.printers:
+            printer_list = main.configs.printers[print_type.replace('test_', '')]
+        else:
+            printer_list = []
     return main.render_template('/choose_printer.html', printer_list=printer_list, print_type=print_type,
                                 defaults={'printer': default_printer, 'copies': copies}, sub_type=sub_type, split=split
                                 , pat='|'.join(split))

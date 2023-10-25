@@ -176,7 +176,7 @@ class Bartender:
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = row['unit_weight']#float(configs.rebar_catalog[row['mkt']]['unit_weight'])
+                            template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
                     else:
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
                         if float(row['diam_x']) >= 14 or float(row['diam_y']) >= 14:
@@ -184,7 +184,7 @@ class Bartender:
                         if disable_weight:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
-                            template_row["tb" + str(6 + i)] = row['unit_weight']#round(row['weight'] / int(row['quantity']), 2)
+                            template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -511,9 +511,20 @@ class Bartender:
 
 class Docs:
     @staticmethod
-    def print_doc(order_id, printer, print_type, disable_weight=False, select_jobs='', split=''):
+    def print_doc(order_id, disable_weight=False, select_jobs='', split=''):
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
         info['order_id'] = order_id
+        if select_jobs:
+            rlen = len(rows)
+            for i in range(rlen):
+                index = rlen - 1 - i
+                if rows[index]['job_id'] not in select_jobs:
+                    rows.pop(index)
+        if not rows:
+            return ''
+        order_type = info['type']
+        if order_type != 'regular':
+            return 'static\\temp\\pdf_construct.pdf'
         # Delete all weights data
         if disable_weight:
             for r in rows:
@@ -523,9 +534,9 @@ class Docs:
             for i in info:
                 if 'weight' in i:
                     info[i] = ''
-        doc = Docs.fill_template(print_type, info)
-        Docs.format_tables_data(print_type, rows)
-        return
+        doc = Docs.fill_template('C:\\Server\\reports\\reports_templates\\default.docx', info)
+        Docs.format_tables_data(doc, order_type, rows)
+        return ''
 
     @staticmethod
     def fill_template(temp_dir, temp_dict):
@@ -538,11 +549,11 @@ class Docs:
         return doc
 
     @staticmethod
-    def format_tables_data(print_type, rows):
+    def format_tables_data(doc, order_type, rows):
         dic = {}
         lines = []
         for t in configs.print_dicts:
-            if t in print_type:
+            if t in order_type:
                 dic = configs.print_dicts[t]
         for r in rows:
             new_line = {}

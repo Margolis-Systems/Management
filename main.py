@@ -53,31 +53,43 @@ def logout():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    if users.validate_user() < 99:
+        return '', 204
     return users.register()
 
 
 @app.route('/update_user', methods=['POST', 'GET'])
 def update_user():
+    if users.validate_user() < 99:
+        return '', 204
     return users.edit_user()
 
 
 @app.route('/orders', methods=['POST', 'GET'])
 def orders_page():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.orders()
 
 
 @app.route('/edit_order', methods=['POST', 'GET'])
 def edit_order():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.edit_order()
 
 
 @app.route('/edit_row', methods=['POST', 'GET'])
 def edit_row():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.edit_row()
 
 
 @app.route('/new_order', methods=['POST', 'GET'])
 def new_order(client="", order_type=""):
+    if users.validate_user() < 10:
+        return '', 204
     return orders.new_order()
 
 
@@ -93,26 +105,36 @@ def scan():
 
 @app.route('/shape_editor', methods=['POST', 'GET'])
 def shape_editor():
+    if users.validate_user() < 10:
+        return '', 204
     return pages.shape_editor()
 
 
 @app.route('/choose_printer', methods=['POST', 'GET'])
 def choose_printer():
+    if users.validate_user() < 10:
+        return '', 204
     return pages.choose_printer()
 
 
 @app.route('/order_files', methods=['POST', 'GET'])
 def order_files():
+    if users.validate_user() < 10:
+        return '', 204
     return pages.order_files()
 
 
 @app.route('/split_order', methods=['POST', 'GET'])
 def split_order():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.split_order()
 
 
 @app.route('/link_order', methods=['POST', 'GET'])
 def link_order():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.link_order()
 
 
@@ -123,42 +145,58 @@ def order_file_upload():
 
 @app.route('/download_attachment', methods=['POST', 'GET'])
 def download_attachment():
+    if users.validate_user() < 10:
+        return '', 204
     return pages.download_attachment()
 
 
 @app.route('/delete_attachment', methods=['POST', 'GET'])
 def delete_attachment():
+    if users.validate_user() < 10:
+        return '', 204
     return pages.delete_attachment()
 
 
 @app.route('/clients', methods=['POST', 'GET'])
 def clients_page():
+    if users.validate_user() < 10:
+        return '', 204
     users.clear()
     return clients.clients()
 
 
 @app.route('/edit_client', methods=['POST', 'GET'])
 def edit_client():
+    if users.validate_user() < 10:
+        return '', 204
     return clients.edit_client()
 
 
 @app.route('/delete_client', methods=['POST', 'GET'])
 def delete_client():
+    if users.validate_user() < 10:
+        return '', 204
     return clients.delete_client()
 
 
 @app.route('/change_order_status', methods=['GET', 'POST'])
 def change_order_status():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.change_order_status()
 
 
 @app.route('/cancel_order', methods=['GET', 'POST'])
 def cancel_order():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.cancel_order()
 
 
 @app.route('/copy_order', methods=['GET', 'POST'])
 def copy_order():
+    if users.validate_user() < 10:
+        return '', 204
     return orders.copy_order()
 
 
@@ -216,6 +254,8 @@ def scale_report():
 
 @app.route('/delete_report_row', methods=['POST', 'GET'])
 def delete_report_row():
+    if users.validate_user() < 10:
+        return '', 204
     return scale.delete_report_row()
 
 
@@ -233,6 +273,8 @@ def plot_editor():
 
 @app.route('/user_config', methods=['POST', 'GET'])
 def user_config():
+    if users.validate_user() < 99:
+        return '', 204
     return users.user_configs()
 
 
@@ -243,11 +285,15 @@ def reports_page():
 
 @app.route('/machines', methods=['POST', 'GET'])
 def machines():
+    if users.validate_user() < 90:
+        return '', 204
     return pages.machines_page()
 
 
 @app.route('/setconf', methods=['POST', 'GET'])
 def setconf():
+    if users.validate_user() < 99:
+        return '', 204
     req_vals = request.values.to_dict()
     username = session['username']
     new_conf = {'lang': req_vals['lang']}
@@ -274,6 +320,6 @@ production = False
 if __name__ == '__main__':
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
-        serve(app, host=configs.server, port=configs.server_port)
+        serve(app, host=configs.server, port=configs.server_port, threads=6)
     else:
         app.run(debug=True, host=configs.server, port=configs.server_port)
