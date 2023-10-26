@@ -510,8 +510,12 @@ class Bartender:
 
 
 class Docs:
+    from docx.enum.table import WD_TABLE_DIRECTION
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
     @staticmethod
     def print_doc(order_id, disable_weight=False, select_jobs='', split=''):
+        print(functions.ts())
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
         info['order_id'] = order_id
         if select_jobs:
@@ -534,9 +538,11 @@ class Docs:
             for i in info:
                 if 'weight' in i:
                     info[i] = ''
-        doc = Docs.fill_template('C:\\Server\\reports\\reports_templates\\default.docx', info)
-        Docs.format_tables_data(doc, order_type, rows)
-        return ''
+        file_name = Docs.fill_template(configs.reports_dir+'reports_templates\\default.docx', info)
+        print(functions.ts())
+        output_file = Docs.format_tables_data(file_name, order_type, rows)
+        print(functions.ts())
+        return output_file
 
     @staticmethod
     def fill_template(temp_dir, temp_dict):
@@ -545,20 +551,56 @@ class Docs:
         # Merge data
         doc = MailMerge(temp_dir)
         doc.merge(**temp_dict)
-        doc = ''
-        return doc
+        file_name = configs.reports_dir+'reports_temp\\{}_{}.docx'\
+            .format(main.session['order_id'], functions.ts('file_name'))
+        doc.write(file_name)
+        return file_name
 
     @staticmethod
-    def format_tables_data(doc, order_type, rows):
-        dic = {}
+    def format_tables_data(file_name, order_type, rows):
+        dic = ['order_id', 'job_id', 'shape', 'length']
         lines = []
-        for t in configs.print_dicts:
-            if t in order_type:
-                dic = configs.print_dicts[t]
+        import pythoncom
+
+        # for t in configs.print_dicts:
+        #     if t in order_type:
+        #         dic = configs.print_dicts[t]
         for r in rows:
             new_line = {}
             for i in dic:
                 if i in r:
                     new_line[i] = r[i]
             lines.append(new_line)
+        doc = docx.Document(file_name)
+        # align = WD_ALIGN_PARAGRAPH.RIGHT
+        # if page_break:
+        #     doc.add_page_break()
+        #     p = doc.add_paragraph('Report number: XXXXXX')
+        #     p.alignment = align
+        # # Add header above table
+        # if table_header:
+        #     p = doc.add_paragraph()
+        #     p.add_run(table_header).underline = True
+        #     p.alignment = align
+        # Table params
+        table = doc.add_table(len(lines), len(lines[0]))
+        # if conf.rtl:
+        #     table.direction = WD_TABLE_DIRECTION.RTL
+        table.style = 'Table Grid'
+        table.allow_autofit = True
+        # Add data to table
+        for row in range(len(lines)):  # Table data
+            # for cell in range(len(lines[0])):
+            #     keys = list(lines[0].keys())
+            #     table.cell(row, cell).text = lines[row][keys[cell]]
+            table.cell(row, 0).text = lines[row]['order_id']
+            table.cell(row, 1).text = lines[row]['job_id']
+            table.cell(row, 2).text = lines[row]['shape']
+            table.cell(row, 3).text = lines[row]['length']
+            print(functions.ts())
+        doc.save(file_name)
+        output_file = configs.reports_dir+'report_output\\'+os.path.basename(file_name).replace('docx', 'pdf')
+        print(functions.ts())
+        convert(file_name, output_file, pythoncom.CoInitialize())
+        return output_file
     # def convert_

@@ -10,16 +10,21 @@
     <link href="/static/css/bootstrap.css" rel="stylesheet">
 </head>
 <body>
-<table class="table table-striped" dir="rtl" align="center">
-    <tr>
-        <td></td>
-    </tr>
+{{printer}}
+{% if printer_list %}
     <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}" autocomplete="off" onsubmit="refreshWindow();input_form.disabled = true; return true;">
-    {% if printer_list %}
+    {% else %}
+    <form name="choose_printer" id="choose_printer" method=POST action="{{ url_for('choose_printer') }}" autocomplete="off" onsubmit="input_form.disabled = true; return true;">
+    {% endif %}
+    <table class="table table-striped" dir="rtl" align="center">
+        <tr>
+            <td></td>
+        </tr>
+        {% if printer_list %}
         <tr><td>בחר מדפסת</td></tr>
-        <td>
-            <select list="printer" type="text" class="form-control" name="printer" placeholder="Choose printer" autofocus="autofocus" required>
-                <datalist id="printer">
+        <tr>
+            <td>
+                <select class="form-control" name="printer" autofocus="autofocus" required>
                 {% for printer in printer_list %}
                     {% if printer == defaults.printer %}
                     <option value="{{ printer }}" selected>{{ printer }}: {{ printer_list[printer] }}</option>
@@ -27,8 +32,9 @@
                     <option value="{{ printer }}">{{ printer }}: {{ printer_list[printer] }}</option>
                     {% endif %}
                 {% endfor %}
-                </datalist>
-        </td>
+                </select>
+            </td>
+        </tr>
         <tr><td>כמות העתקים</td></tr>
         <tr><td><input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים"></td></tr>
         {% else %}
@@ -48,12 +54,12 @@
 
         </td></tr>
         {% endif %}
-        <input type="hidden" name="sub_type" value="{{sub_type}}">
-        <tr><td><button class="w-100 btn btn-lg btn-primary" id="submit" type="submit">אישור</button></td></tr>
+        <tr><td><button class="w-100 btn btn-lg btn-primary" id="submit" type="submit">אישור</button>
+        <input type="hidden" name="sub_type" value="{{sub_type}}"></td></tr>
         <tr><td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button></td></tr>
         <tr><td><input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label></td></tr>
-    </form>
-</table>
+    </table>
+</form>
 <script src="\static\js\shapes.js" ></script>
 </body>
 </html>

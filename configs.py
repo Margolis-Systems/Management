@@ -34,6 +34,7 @@ girders_catalog = mongo.read_collection_one("data_lists", {"name": "girders_cata
 print_dict = mongo.read_collection_one('data_lists', {'name': 'bartender_dict'})['data']
 bartender_formats = mongo.read_collection_one('data_lists', {'name': 'bartender_formats'})['data']
 # todo: read from mongo
+reports_dir = os.getcwd()+'\\reports\\'
 print_dicts = {'regular': {}, 'rebar': {}, 'pile': {}, 'girders': {}}
 
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
