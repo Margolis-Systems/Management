@@ -1,3 +1,6 @@
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_PARAGRAPH_ALIGNMENT
+from docx.oxml import OxmlElement
+
 import main
 import orders
 import functions
@@ -72,7 +75,7 @@ class Images:
         font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
         if shape.isdigit():
             _positions = configs.shapes[shape]['draw_positions']
-            im = Image.new('RGB', size, 'white')
+            im = Image.new('RGBA', size, 'white')
         else:
             im = Image.open(os.getcwd()+'\\static\\images\\specials\\girders.png')
             _positions = [[0, 25], [200, 25]]
@@ -512,10 +515,11 @@ class Bartender:
 class Docs:
     from docx.enum.table import WD_TABLE_DIRECTION
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+
 
     @staticmethod
     def print_doc(order_id, disable_weight=False, select_jobs='', split=''):
-        print(functions.ts())
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
         info['order_id'] = order_id
         if select_jobs:
@@ -539,15 +543,17 @@ class Docs:
                 if 'weight' in i:
                     info[i] = ''
         file_name = Docs.fill_template(configs.reports_dir+'reports_templates\\default.docx', info)
-        print(functions.ts())
         output_file = Docs.format_tables_data(file_name, order_type, rows)
-        print(functions.ts())
         return output_file
+
+    @staticmethod
+    def add_summary(temp_dir, temp_dict):
+        print()
 
     @staticmethod
     def fill_template(temp_dir, temp_dict):
         # Create timestamp
-        temp_dict['print_date'] = datetime.strftime(datetime.now(), '%d%m%Y %H:%M:%S')
+        temp_dict['print_date'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         # Merge data
         doc = MailMerge(temp_dir)
         doc.merge(**temp_dict)
@@ -558,20 +564,23 @@ class Docs:
 
     @staticmethod
     def format_tables_data(file_name, order_type, rows):
-        dic = ['order_id', 'job_id', 'shape', 'length']
-        lines = []
+        # dic = ['job_id', 'element', 'inner_id', 'diam', 'quantity', 'weight', 'shape', 'length', 'shape_data']
+        lines = rows
         import pythoncom
 
         # for t in configs.print_dicts:
         #     if t in order_type:
         #         dic = configs.print_dicts[t]
-        for r in rows:
-            new_line = {}
-            for i in dic:
-                if i in r:
-                    new_line[i] = r[i]
-            lines.append(new_line)
+        # for r in rows:
+        #     new_line = {}
+        #     for i in dic:
+        #         if i in r:
+        #             new_line[i] = r[i]
+        #         else:
+        #             new_line[i] = ''
+        #     lines.append(new_line)
         doc = docx.Document(file_name)
+        Docs.prevent_document_break(doc)
         # align = WD_ALIGN_PARAGRAPH.RIGHT
         # if page_break:
         #     doc.add_page_break()
@@ -583,24 +592,157 @@ class Docs:
         #     p.add_run(table_header).underline = True
         #     p.alignment = align
         # Table params
-        table = doc.add_table(len(lines), len(lines[0]))
-        # if conf.rtl:
-        #     table.direction = WD_TABLE_DIRECTION.RTL
+        tb_rows = len(lines)
+        tb_cells = 4
+        table = doc.add_table(tb_rows, tb_cells)
+        table.direction = WD_TABLE_DIRECTION.RTL
         table.style = 'Table Grid'
         table.allow_autofit = True
         # Add data to table
         for row in range(len(lines)):  # Table data
-            # for cell in range(len(lines[0])):
-            #     keys = list(lines[0].keys())
-            #     table.cell(row, cell).text = lines[row][keys[cell]]
-            table.cell(row, 0).text = lines[row]['order_id']
-            table.cell(row, 1).text = lines[row]['job_id']
-            table.cell(row, 2).text = lines[row]['shape']
-            table.cell(row, 3).text = lines[row]['length']
-            print(functions.ts())
+            if order_type == 'regular':
+                element = ''
+                inner_id = ''
+                if 'element' in lines[row]:
+                    element = lines[row]['element']
+                if 'inner_id' in lines[row]:
+                    inner_id = lines[row]['inner_id']
+                table.cell(row, 3).text = 'מספר שורה: {}\nאלמנט: {}\nמס.ברזל: {}\nקוטר: {}\nכמות: {}'\
+                    .format(lines[row]['job_id'], element, inner_id,
+                            lines[row]['diam'], lines[row]['quantity'])
+                table.cell(row, 2).text = 'אורך חיתוך: {}\nמשקל ק"ג: {}\nמס.צורה: {}\nחישוק: {}'\
+                    .format(lines[row]['length'], lines[row]['weight'], lines[row]['shape'], '')
+
+                img_dir = Images.gen_pdf417(rows[row])
+                paragraph = table.cell(row, 1).paragraphs[0]
+                paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                run = paragraph.add_run()
+                run.add_picture(img_dir, width=1800000, height=600000)
+
+                img_dir = Images.create_shape_plot(lines[row]['shape'], lines[row]['shape_data'])
+                paragraph = table.cell(row, 0).paragraphs[0]
+                paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                run = paragraph.add_run()
+                run.add_picture(img_dir, width=1800000, height=600000)
+
+                print(functions.ts())
+                summary_data, special_sum = Docs.gen_summary_data(rows, False)
+                for key in summary_data:
+                    doc.add_page_break()
+                    tb_data = special_sum
+                    print(tb_data)
+                    tb_rows = len(tb_data)
+                    tb_cells = len(tb_data[0])
+                    table = doc.add_table(tb_rows, tb_cells)
+                    table.direction = WD_TABLE_DIRECTION.RTL
+                    table.style = 'Table Grid'
+                    table.allow_autofit = True
+                    # Add data to table
+                    # for row in range(len(lines)):  # Table data
+
+        # todo: if summary_datav->
+        #  page break
+        #  table
         doc.save(file_name)
         output_file = configs.reports_dir+'report_output\\'+os.path.basename(file_name).replace('docx', 'pdf')
         print(functions.ts())
         convert(file_name, output_file, pythoncom.CoInitialize())
         return output_file
-    # def convert_
+
+    @staticmethod
+    def prevent_document_break(document):
+        tags = document.element.xpath('//w:tr')
+        rows = len(tags)
+        for row in range(0, rows):
+            tag = tags[row]  # Specify which <w:r> tag you want
+            child = OxmlElement('w:cantSplit')  # Create arbitrary tag
+            tag.append(child)  # Append in the new tag
+
+    @staticmethod
+    def gen_summary_data(rows, disable_weight):
+        table_data = {}
+        spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
+               'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
+        special_sum = {}
+        for i in spec_keys:
+            special_sum[i] = {'qnt': 0, 'weight': 0}
+        total_weight = 0
+        for row in rows:
+            total_weight += row['weight']
+            row['length'] = int(float(row['length']))
+            if 'bar_type' not in row:
+                row['bar_type'] = "מצולע"
+            # Summary data
+            quantity = int(row['quantity'])
+            if row['diam'] in table_data.keys():
+                table_data[row['diam']]['weight'] += row['weight']
+                table_data[row['diam']]['length'] += int(row['length']) * quantity
+            else:
+                table_data[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
+                                           'weight_per_M': configs.weights[row['diam']], 'type': row['bar_type']}
+            # Special summary data
+            if row['shape'] not in ["905"]:
+                if 'חיתוך' not in special_sum.keys():
+                    special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
+                special_sum['חיתוך']['qnt'] += quantity
+                special_sum['חיתוך']['weight'] += row['weight']
+            if row['shape'] not in ["1", "905"]:
+                if 'כיפוף' not in special_sum.keys():
+                    special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
+                special_sum['כיפוף']['qnt'] += quantity
+                special_sum['כיפוף']['weight'] += row['weight']
+            if row['shape'] in ['332']:
+                if 'ספירלים' not in special_sum.keys():
+                    special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
+                special_sum['ספירלים']['qnt'] += quantity
+                special_sum['ספירלים']['weight'] += row['weight']
+            elif row['shape'] in ['49','59']:
+                if 'ספסלים' not in special_sum.keys():
+                    special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
+                special_sum['ספסלים']['qnt'] += quantity
+                special_sum['ספסלים']['weight'] += row['weight']
+            elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                    or row['shape'] in configs.circle:
+                if 'חישוק' not in special_sum.keys():
+                    special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
+                special_sum['חישוק']['qnt'] += quantity
+                special_sum['חישוק']['weight'] += row['weight']
+            if int(row['length']) > 1600:
+                if 'ברזל_ארוך' not in special_sum.keys():
+                    special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
+                special_sum['ברזל_ארוך']['qnt'] += quantity
+                special_sum['ברזל_ארוך']['weight'] += row['weight']
+            if float(row['diam']) >= 28:
+                if 'תוספת_ברזל_28_ממ_ומעלה' not in special_sum.keys():
+                    special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
+                special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
+                special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
+            if row['bar_type'] == 'חלק':
+                if int(row['diam']) <= 12:
+                    if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
+                        special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
+                    special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
+                    special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
+                elif int(row['diam']) >= 14:
+                    if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
+                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
+                    special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
+                    special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
+            # Reorder diam summary list
+            sort_keys = list(map(float, list(table_data.keys())))
+            sort_keys.sort()
+            temp = {}
+            for k in sort_keys:
+                key = str(k).replace('.0','')
+                temp[key] = table_data[key]
+            table_data = temp
+            special_sum_keys = list(special_sum.keys())
+            for key in special_sum_keys:
+                if special_sum[key]['qnt'] == 0:
+                    del special_sum[key]
+        return table_data, special_sum
+
+
+if __name__ == '__main__':
+    orderr = main.mongo.read_collection_one('orders', {'order_id':'1605'})
+    print(Docs.gen_summary_data(orderr['rows'], False))

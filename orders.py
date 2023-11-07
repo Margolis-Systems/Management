@@ -17,8 +17,9 @@ def orders():
     if 'order_id' in main.session.keys():
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
-    query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}}
-    defaults = {'from': functions.ts('html_date', 14), 'to': functions.ts('html_date')}
+    query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'},
+             'info.date_created': {'$gte': functions.ts('html_date', 60), '$lte': functions.ts('html_date') + 'T23:59:59'}}
+    defaults = {'from': functions.ts('html_date', 60), 'to': functions.ts('html_date')}
     if 'user_config' in main.session:
         if 'search' in main.session['user_config']:
             if main.session['user_config']['search']:
@@ -45,13 +46,19 @@ def orders():
         main.session.modified = True
         return main.redirect('/orders')
     # Read all orders data with Info, mean that it's not including order rows
+    print(query)
     orders_data = main.mongo.read_collection_list('orders', query)#, limit=800)
-    dictionary = pages.get_dictionary(main.session['username'])
+    dictionary = pages.get_dictionary()
     orders_info = []
     for order in orders_data:
         row = order['info'].copy()
         row['order_id'] = order['order_id']
         row['status'] = 'order_status_' + row['status']
+        finished_cntr = 0
+        for r in order['rows']:
+            if r['status'] not in ['NEW', 'Processed', 'Production', 'InProduction']:
+                finished_cntr += 1
+        row['finished'] = finished_cntr
         if 'linked_orders' in row:
             temp = row['linked_orders'].copy()
             row['linked_orders'] = ''
@@ -340,7 +347,7 @@ def new_order_id():
 
 
 def edit_order_data():
-    order_id, username = main.session['order_id'], main.session['username']
+    order_id = main.session['order_id']
     job_id = ""
     if 'job_id' in main.session.keys():
         job_id = main.session['job_id']
@@ -364,7 +371,7 @@ def edit_order_data():
         order_data['dtd_order'].extend(
             ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
     lists, patterns = pages.gen_patterns(info['type'])
-    dictionary = pages.get_dictionary(username)
+    dictionary = pages.get_dictionary()
     if 'total_weight' not in info:
         info['total_weight'] = 0
     return order_data, [lists, patterns, dictionary]
@@ -407,14 +414,11 @@ def change_order_status():
     elif user_group < 70:
         return '', 204
     req_vals = dict(main.request.values)
+    job_id = ''
     if main.request.form:
-        if '|' in main.request.form['order_id']:
-            temp = main.request.form['order_id'].split('|')
-            order_id = temp[0]
-            job_id = temp[1]
-        else:
-            order_id = main.request.form['order_id']
-            job_id = ''
+        order_id = main.request.form['order_id']
+        if 'job_id' in req_vals:
+            job_id = main.request.form['job_id']
         update_order_status(main.request.form['status'], order_id, job_id)
         return '', 204
     if req_vals:
@@ -423,10 +427,11 @@ def change_order_status():
         else:
             order_id = main.session['order_id']
         if 'job_id' in req_vals:
-            order_id += '|' + req_vals['job_id']
+            job_id = req_vals['job_id']
     else:
         order_id = main.session['order_id']
-    return main.render_template('change_order_status.html', order_id=order_id)
+    return main.render_template('change_order_status.html', order_id=order_id, job_id=job_id,
+                                status_history=get_status_history(order_id, job_id), dictionary=pages.get_dictionary())
 
 
 def cancel_order():
@@ -462,9 +467,10 @@ def update_order_status(new_status, order_id, job_id="", force=False):
             order['info']['status'] = new_status
     else:
         order['info']['status'] = new_status
-        for i in range(len(order['rows'])):
-            if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production'] or force:
-                order['rows'][i]['status'] = new_status
+        if new_status in ['NEW', 'Processed', 'Production'] or force:
+            for i in range(len(order['rows'])):
+                if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production'] or force:
+                    order['rows'][i]['status'] = new_status
         if not force:
             if 'reason' in main.request.form:
                 functions.log('cancel_order', main.request.form['reason'])
@@ -647,3 +653,16 @@ def link_order():
     if 'linked_orders' in order_info:
         linked_orders = order_info['linked_orders']
     return main.render_template('/link_order.html', linked_orders=linked_orders, cur_order=main.session['order_id'])
+
+
+def get_status_history(order_id, job_id):
+    query = {'title': 'order_status_change', 'operation.order_id': order_id}
+    if job_id:
+        query['title'] = 'job_status_change'
+        query['operation.job_id'] = job_id
+    hist = main.mongo.read_collection_list('logs', query)
+    ret = []
+    if hist:
+        for i in hist:
+            ret.append({'username': i['username'], 'timestamp': i['timestamp'], 'status': i['operation']['status']})
+    return ret

@@ -10,8 +10,8 @@
     <link href="/static/css/bootstrap.css" rel="stylesheet">
 </head>
 <body>
+<form name="change_status" id="change_status" method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
 <table class="table form-floating">
-    <form name="change_status" id="change_status" method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
     <tr>
         <td>
             <select class="form-control" name="status" autofocus="autofocus" required>
@@ -24,7 +24,9 @@
                     <option value="PartlyDelivered">סופקה חלקית</option>
                     <option value="PartlyDeliveredClosed">סופקה חלקית ונסגרה</option>
                     <option value="Outsource">הזמנה ממקור חוץ</option>
-            <input type="hidden" name="order_id" value="{{order_id}}">
+                </select>
+                <input type="hidden" name="order_id" value="{{order_id}}">
+                <input type="hidden" name="job_id" value="{{job_id}}">
         </td>
     </tr>
     <tr>
@@ -37,7 +39,31 @@
         <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
         </td>
     </tr>
-    </form>
+</table>
+</form>
+<table class="table form-floating">
+    <tr>
+        <td colspan="3" class="text-center">
+            <b>היסטורית שינויים. הזמנה: {{order_id}}
+            {% if job_id %}
+            שורה: {{job_id}}
+            {% endif %}
+            </b>
+        </td>
+    </tr>
+{% for h in status_history %}
+    <tr>
+        {% for item in h %}
+        <td>
+            {% if item == 'status' %}
+            {{dictionary['order_status_'+h[item]]}}
+            {% else %}
+            {{h[item]}}
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+{% endfor %}
 </table>
 <script src="\static\js\shapes.js" ></script>
 </body>

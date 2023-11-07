@@ -10,8 +10,8 @@ from operator import itemgetter
 from datetime import datetime
 
 
-def get_dictionary(username):
-    # all_dicts = main.mongo.read_collection_one('data_lists', {'name': 'dictionary'})['data']
+def get_dictionary():
+    username = main.session['username']
     main_dir = "C:\\Server\\"
     if not os.path.exists(main_dir):
         main_dir = "C:\\projects\\Tzomet\\Management\\"
@@ -237,12 +237,13 @@ def scan():
     if not machine:
         msg = 'לא הוקצתה מכונה למפעיל'
     order = main.mongo.read_collection_one('orders', {'rows': {'$elemMatch': {'status': 'Start',
-                                           'status_updated_by': main.session['username']}}})
+                                           'status_updated_by': {'$regex': main.session['username']}}}})
     if order:
         order_id = order['order_id']
         for r in order['rows']:
-            if r['status'] == 'Start' and r['status_updated_by'] == main.session['username']:
-                job_id = r['job_id']
+            if 'status_updated_by' in r:
+                if r['status'] == 'Start' and main.session['username'] in r['status_updated_by']:
+                    job_id = r['job_id']
     req_form = dict(main.request.form)
     if 'scan' in req_form.keys():
         decode = reports.Images.decode_qr(req_form['scan'])
@@ -275,32 +276,31 @@ def scan():
             for r in order['rows']:
                 if r['job_id'] == job_id:
                     row = r
-        for i in range(len(order['rows'])):
-            if order['rows'][i]['job_id'] == row['job_id']:
-                order['rows'].pop(i)
-                break
-        order['rows'].append(row)
+        # for i in range(len(order['rows'])):
+        #     if order['rows'][i]['job_id'] == row['job_id']:
+        #         order['rows'].pop(i)
+        #         break
+        # order['rows'].append(row)
         if 'status' in row:
             row['status'] = row['status'].replace('order_status_', '')
             if row['status'] == 'Production':
+                orders.update_order_status('InProduction', order_id)
+                status = "Start"
+            elif row['status'] == 'InProduction':
                 status = "Start"
             elif row['status'] == "Start":
                 status = "Finished"
             elif row['status'] == "Processed":
-                orders.update_order_status('Production', order_id)
+                orders.update_order_status('InProduction', order_id)
                 status = "Start"
             else:
-                # print(order['rows'][i])
-                if main.session['username'] == 'operator34' and row['status'] == "Finished" \
-                        :#and order['rows'][i]['status_updated_by'] != 'operator34':
+                if main.session['username'] == 'operator34' and row['status'] == "Finished":
                     status = "Start"
                 else:
                     msg = row['status']
                     order_id = ''
-        # print(order_id, order)
-        main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
-                                dictionary=get_dictionary(main.session['username']), user={'name': user, 'lang': user_data['lang']})
+                                dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']})
 
 
 def get_defaults():
@@ -502,21 +502,21 @@ def reports_page():
             if report == 'orders':
                 query = {'info.date_created': {'$gte': report_date['from'] + ' 00:00:00', '$lte': report_date['to'] + ' 23:59:59'},
                          'info.status': {'$ne': 'canceled'}, 'info.type': {'$ne': 'integration'},
-                         'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל']}}
+                         'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
                 if 'client_name' in req_vals.keys():
                     query['client_name'] = req_vals['client_name']
                 if 'username' in req_vals.keys():
                     query['username'] = req_vals['username']
             elif report == 'status':
                 query = {'info.status': 'Processed', 'info.type': 'regular',
-                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל']}}
+                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
                 if 'client_name' in req_vals.keys():
                     query['client_name'] = req_vals['client_name']
                 if 'username' in req_vals.keys():
                     query['username'] = req_vals['username']
             elif report == 'open_orders':
                 query = {'info.status': {'$nin': ['Delivered', 'canceled']}, 'info.type': {'$ne': 'integration'},
-                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל']},
+                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']},
                          'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             # Read all orders data with Info, mean that it's not including order rows
             all_orders = list(main.mongo.read_collection_list('orders', query))
@@ -574,7 +574,7 @@ def reports_page():
             template_row['total_weight'] = round(total_weight['global'], 2)
             report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
-                                dictionary=get_dictionary(main.session['username']), data_to_display=data_to_display)
+                                dictionary=get_dictionary(), data_to_display=data_to_display)
 
 
 def machines_page():
@@ -623,6 +623,8 @@ def production_log(form_data):
     job_data, info = orders.get_order_data(log['order_id'], log['job_id'])
     keys_to_log = ['weight', 'length', 'quantity', 'diam']
     machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
+    if not machine_data:
+        return
     for item in keys_to_log:
         if item in job_data[0]:
             log[item] = job_data[0][item]

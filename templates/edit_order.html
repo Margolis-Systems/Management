@@ -65,8 +65,8 @@ div {
     <tr>
         <td><button onclick="cmnt_form.submit();location.href='\close'" type="button" class="btn btn-success btn-block" >שמור וסגור</button></td>
         <td><button onclick='openNewWindow("\choose_printer?test_page")' type="button" class="btn btn-primary btn-block">הדפס דוגמה</button></td>
-        <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
         <td><button onclick='openNewWindow("\choose_printer?pdf")' type="button" class="btn btn-primary btn-block">הדפס PDF</button></td>
+        <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
         {% if order_data.info.status == "order_status_NEW" %}
         <td><button onclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
         {% else %}

@@ -29,6 +29,7 @@ def main_page():
             cur_scale = []
         else:
             cur_scale = cur_scale['lines']
+        print('hi')
         # Add new line to report
         if 'product' in req_form:
             weight = calc_weight(req_form)
@@ -46,10 +47,10 @@ def main_page():
                 new_line['barcode'] = ''
                 doc = {'order_id': ''}
                 if req_form['barcode']:
-                    decoded = reports.Images.decode_qr(req_form['barcode'])
-                    if decoded:
-                        doc['order_id'] = decoded['order_id']
-                        new_line['barcode'] = 'Order: ' + decoded['order_id'] + '   Job: ' + decoded['job_id']
+                    decode = reports.Images.decode_qr(req_form['barcode'])
+                    if decode:
+                        doc['order_id'] = decode['order_id']
+                        new_line['barcode'] = '{} [ {} ] : {}KG'.format(decode['order_id'], decode['job_id'], decode['weight'])
                 cur_scale.append(new_line)
                 for item in cur:
                     if isinstance(cur[item], str):
@@ -81,35 +82,36 @@ def main_page():
         doc_list.sort(key=itemgetter('doc_id'), reverse=True)
     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
     return main.render_template('/scaling.html', info=info, user=main.session['username'], sites=sites, defaults={},
-                                dictionary=pages.get_dictionary(main.session['username']), doc_list=doc_list, perm=perm)
+                                dictionary=pages.get_dictionary(), doc_list=doc_list, perm=perm)
 
 
 def get_weight(site_info):
-    crr, sensors = site_info['crr'], site_info['sensors']
-    crr_data = main.mongo.read_collection_one('weights', db_name='Scaling',
-                                              query={'CRR_ID': crr, 'error': {'$exists': False}})
-    ret = ['', '', '', '']
-    for sensor in range(len(sensors)):
-        if sensors[sensor] in crr_data:
-            cur_sense = crr_data[sensors[sensor]]
-            # Compare last update timestamp with current time - tolerance
-            last_update = datetime.strptime(cur_sense['last_update'], '%d-%m-%Y_%H-%M-%S-%f')
-            delta = datetime.now() - timedelta(seconds=30)
-            # Validate the stability of the read values
-            avg = sum(cur_sense['collector'][0]) / len(cur_sense['collector'][0])
-            act = cur_sense['actual']
-            tolerance = 0.03
-            if not act * (1 - tolerance) < avg < act * (1 + tolerance):
-                ret[sensor * 2] = "Not stable"
-            elif delta > last_update:
-                ret[sensor * 2] = "COMMUNICATION ERROR"
+    ret = ['', '0', '', '0']
+    if 'crr' in site_info:
+        crr, sensors = site_info['crr'], site_info['sensors']
+        crr_data = main.mongo.read_collection_one('weights', db_name='Scaling',
+                                                  query={'CRR_ID': crr, 'error': {'$exists': False}})
+        for sensor in range(len(sensors)):
+            if sensors[sensor] in crr_data:
+                cur_sense = crr_data[sensors[sensor]]
+                # Compare last update timestamp with current time - tolerance
+                last_update = datetime.strptime(cur_sense['last_update'], '%d-%m-%Y_%H-%M-%S-%f')
+                delta = datetime.now() - timedelta(seconds=30)
+                # Validate the stability of the read values
+                avg = sum(cur_sense['collector'][0]) / len(cur_sense['collector'][0])
+                act = cur_sense['actual']
+                tolerance = 0.03
+                if not act * (1 - tolerance) < avg < act * (1 + tolerance):
+                    ret[sensor * 2] = "Not stable"
+                elif delta > last_update:
+                    ret[sensor * 2] = "COMMUNICATION ERROR"
+                else:
+                    ret[sensor * 2] = last_update.strftime('%d/%m/%Y %H:%M:%S')
+                    ret[sensor * 2 + 1] = round((act - float(cur_sense['tare'])) * 1000)
+                    if ret[sensor * 2 + 1] < 0:
+                        ret[sensor * 2 + 1] = 0
             else:
-                ret[sensor * 2] = last_update.strftime('%d/%m/%Y %H:%M:%S')
-                ret[sensor * 2 + 1] = round((act - float(cur_sense['tare'])) * 1000)
-                if ret[sensor * 2 + 1] < 0:
-                    ret[sensor * 2 + 1] = 0
-        else:
-            print("No data from Sensor:", sensors[sensor])
+                print("No data from Sensor:", sensors[sensor])
     return ret
 
 
@@ -123,11 +125,10 @@ def form_request(req_form):
                 return {}
             scale_data['site'] = site['data'][req_form['site']]
         elif 'BF2D@Hj ' in req_form[item]:
-            order_id = reports.Images.decode_qr(req_form[item])['order_id']
-            order_info = main.mongo.read_collection_one('orders',
-                                                        {'order_id': order_id, 'info': {'$exists': True}})['info']
-            if item in order_info:
-                scale_data[item] = order_info[item]
+            decode = reports.Images.decode_qr(req_form[item])
+            print(decode)
+            if decode:
+                scale_data[item] = '{} [ {} ] : {}KG'.format(decode['order_id'], decode['job_id'], decode['weight'])
             else:
                 return {}
         else:
@@ -201,7 +202,7 @@ def calc_weight(req):
     error_msg = ['Not stable', 'COMMUNICATION ERROR']
     if cur_weight[0] in error_msg or cur_weight[2] in error_msg:
         return {}
-    ret = {'ts': '', 'weight': 0}
+    ret = {'ts': datetime.now().strftime('%d-%m-%Y %H-%M-%S'), 'weight': 0}
     if cur_weight[1]:
         ret['weight'] += cur_weight[1]
         if not ret['ts']:
@@ -260,7 +261,7 @@ def scale_report():
     for line in doc['lines']:
         total_weight += float(line['weight'])
     return main.render_template('/scale_report.html', doc=doc['lines'], info=info, total=int(total_weight),
-                                dictionary=pages.get_dictionary(main.session['username']))
+                                dictionary=pages.get_dictionary())
 
 
 def delete_report_row(index=-1):

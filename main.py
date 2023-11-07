@@ -273,8 +273,6 @@ def plot_editor():
 
 @app.route('/user_config', methods=['POST', 'GET'])
 def user_config():
-    if users.validate_user() < 99:
-        return '', 204
     return users.user_configs()
 
 
@@ -313,7 +311,7 @@ def integration_orders():
     intg_orders = sorted(intg_orders, key=lambda x: int(x['order_id']))
     dtd = ['order_id', 'job_id', 'status', 'machine_id', 'machine_name', 'username', 'operator', 'diam', 'length',
            'quantity', 'weight', 'Start_ts', 'Finished_ts']
-    return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary(session['username']))
+    return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary())
 
 
 production = False

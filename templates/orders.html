@@ -76,6 +76,10 @@
         {% else %}
             {{ order[item] }}
         {% endif %}
+            <!--  and order['rows']|int > order['finished'] -->
+        {% if item == 'rows' and order['finished'] > 0 %}
+        ( {{order['finished']}} )
+        {% endif %}
         </td>
         {% endfor %}
         <td height="50" style="outline: thin solid;text-align: center">

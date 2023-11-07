@@ -12,7 +12,7 @@ def clients():
                 query[item] = {'$regex': req_form[item]}
     clients_list = main.mongo.read_collection_df('costumers', query=query).to_dict('index')
     display_those_keys = ['name', 'id']
-    dictionary = pages.get_dictionary(main.session['username'])
+    dictionary = pages.get_dictionary()
     return main.render_template('clients.html', clients=clients_list, display_items=display_those_keys,
                                 dictionary=dictionary)
 
