@@ -46,7 +46,6 @@ def orders():
         main.session.modified = True
         return main.redirect('/orders')
     # Read all orders data with Info, mean that it's not including order rows
-    print(query)
     orders_data = main.mongo.read_collection_list('orders', query)#, limit=800)
     dictionary = pages.get_dictionary()
     orders_info = []
@@ -327,7 +326,6 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
             row['diam'] = row['diam_x']
             row['pitch'] = row['x_pitch']
     info['status'] = 'order_status_' + info['status']
-    # print(round(total_weight), info)
     order_data.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return order_data.copy(), info
 
@@ -392,7 +390,6 @@ def edit_row():
             if 'addbefore' in req_vals:
                 defaults['addbefore'] = req_vals['addbefore']
             else:
-                # print(order_data['order_rows'])
                 defaults.update(order_data['order_rows'][0])
                 spec_ = ['x_length', 'x_pitch', 'y_length', 'y_pitch']
                 for item in spec_:
@@ -501,7 +498,6 @@ def close_order():
             indx_to_del = None
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
-                # print(order['rows'][i]['job_id'] ,main.session['job_id'])
                 order['info']['total_weight'] += order['rows'][i]['weight']
                 if int(order['rows'][i]['job_id']) > int(main.session['job_id']) and 'R' not in order_id:
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)

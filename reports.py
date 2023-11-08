@@ -599,8 +599,8 @@ class Docs:
         table.style = 'Table Grid'
         table.allow_autofit = True
         # Add data to table
-        for row in range(len(lines)):  # Table data
-            if order_type == 'regular':
+        if order_type == 'regular':
+            for row in range(len(lines)):  # Table data
                 element = ''
                 inner_id = ''
                 if 'element' in lines[row]:
@@ -625,21 +625,40 @@ class Docs:
                 run = paragraph.add_run()
                 run.add_picture(img_dir, width=1800000, height=600000)
 
-                print(functions.ts())
-                summary_data, special_sum = Docs.gen_summary_data(rows, False)
-                for key in summary_data:
-                    doc.add_page_break()
-                    tb_data = special_sum
-                    print(tb_data)
-                    tb_rows = len(tb_data)
-                    tb_cells = len(tb_data[0])
-                    table = doc.add_table(tb_rows, tb_cells)
-                    table.direction = WD_TABLE_DIRECTION.RTL
-                    table.style = 'Table Grid'
-                    table.allow_autofit = True
-                    # Add data to table
-                    # for row in range(len(lines)):  # Table data
-
+            summary_data = Docs.gen_summary_data(rows, False)
+            doc.add_page_break()
+            tb_dictionary = {'weight': 'משקל', 'weight_per_M': 'משקל למטר', 'length': 'סה"כ אורך', 'type': 'סוג ברזל',
+                             'qnt': 'כמות', 'description': 'תיאור'}
+            for dt in summary_data:
+                tb_data = []
+                # Add header above table
+                table_header = 'סיכום משקל ברזל'  # todo: <---
+                if table_header:
+                    p = doc.add_paragraph()
+                    p.add_run(table_header).underline = True
+                    p.bold = True
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for k in dt:
+                    # if not tb_data:
+                    #     tb_header = {}
+                    #     for item in k:
+                    #         tb_header[item] = tb_dictionary[item]
+                    #     tb_data.append(tb_header)
+                    temp = {'description': k}
+                    temp.update(dt[k])
+                    tb_data.append(temp)
+                tb_rows = len(tb_data)
+                tb_cells = len(tb_data[0])
+                table = doc.add_table(tb_rows, tb_cells)
+                table.direction = WD_TABLE_DIRECTION.RTL
+                table.style = 'Table Grid'
+                table.allow_autofit = True
+                # Add data to table
+                row_keys = list(tb_data[0].keys())
+                for tbi in range(tb_rows):
+                    for tbx in range(tb_cells):
+                        print(tbi, tbx)
+                        table.cell(tbi, tbx).text = str(tb_data[tbi][row_keys[tbx]])
         # todo: if summary_datav->
         #  page break
         #  table

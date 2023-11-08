@@ -16,8 +16,8 @@ def get_dictionary():
     if not os.path.exists(main_dir):
         main_dir = "C:\\projects\\Tzomet\\Management\\"
 
-    with open(main_dir+'lists\\dictionary.json', encoding='utf-8') as shapes_file:
-        all_dicts = json.load(shapes_file)
+    with open(main_dir+'lists\\dictionary.json', encoding='utf-8') as dicts_file:
+        all_dicts = json.load(dicts_file)
     lang = main.mongo.read_collection_one('users', {'name': username})['lang']
     dictionary = all_dicts[lang]
     dictionary.update(all_dicts['default'])
@@ -25,6 +25,7 @@ def get_dictionary():
 
 
 def gen_patterns(order_type='regular'):
+    from collections import OrderedDict
     lists = {}
     patterns = {}
     if order_type == 'rebar':
