@@ -204,3 +204,20 @@ try{
     window.alert("Client Error", error);
 }
 };
+
+function delete_rows(){
+    let selected = []
+    select = document.getElementsByClassName('select');
+    for(i=0;i<select.length;i++){
+        item = select[i];
+        if (item.checked) {
+            selected.push(item.value)
+        }
+    }
+    if(selected.length > 0){
+        document.getElementById('delete_rows_btn').disabled = true;
+        form = document.getElementById('input_form');
+        form.action = location.href='\\delete_rows'
+        form.submit();
+    }
+}

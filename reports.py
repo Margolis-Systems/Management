@@ -564,21 +564,7 @@ class Docs:
 
     @staticmethod
     def format_tables_data(file_name, order_type, rows):
-        # dic = ['job_id', 'element', 'inner_id', 'diam', 'quantity', 'weight', 'shape', 'length', 'shape_data']
-        lines = rows
         import pythoncom
-
-        # for t in configs.print_dicts:
-        #     if t in order_type:
-        #         dic = configs.print_dicts[t]
-        # for r in rows:
-        #     new_line = {}
-        #     for i in dic:
-        #         if i in r:
-        #             new_line[i] = r[i]
-        #         else:
-        #             new_line[i] = ''
-        #     lines.append(new_line)
         doc = docx.Document(file_name)
         Docs.prevent_document_break(doc)
         # align = WD_ALIGN_PARAGRAPH.RIGHT
@@ -592,7 +578,7 @@ class Docs:
         #     p.add_run(table_header).underline = True
         #     p.alignment = align
         # Table params
-        tb_rows = len(lines)
+        tb_rows = len(rows)
         tb_cells = 4
         table = doc.add_table(tb_rows, tb_cells)
         table.direction = WD_TABLE_DIRECTION.RTL
@@ -600,18 +586,18 @@ class Docs:
         table.allow_autofit = True
         # Add data to table
         if order_type == 'regular':
-            for row in range(len(lines)):  # Table data
+            for row in range(len(rows)):  # Table data
                 element = ''
                 inner_id = ''
-                if 'element' in lines[row]:
-                    element = lines[row]['element']
-                if 'inner_id' in lines[row]:
-                    inner_id = lines[row]['inner_id']
+                if 'element' in rows[row]:
+                    element = rows[row]['element']
+                if 'inner_id' in rows[row]:
+                    inner_id = rows[row]['inner_id']
                 table.cell(row, 3).text = 'מספר שורה: {}\nאלמנט: {}\nמס.ברזל: {}\nקוטר: {}\nכמות: {}'\
-                    .format(lines[row]['job_id'], element, inner_id,
-                            lines[row]['diam'], lines[row]['quantity'])
+                    .format(rows[row]['job_id'], element, inner_id,
+                            rows[row]['diam'], rows[row]['quantity'])
                 table.cell(row, 2).text = 'אורך חיתוך: {}\nמשקל ק"ג: {}\nמס.צורה: {}\nחישוק: {}'\
-                    .format(lines[row]['length'], lines[row]['weight'], lines[row]['shape'], '')
+                    .format(rows[row]['length'], rows[row]['weight'], rows[row]['shape'], '')
 
                 img_dir = Images.gen_pdf417(rows[row])
                 paragraph = table.cell(row, 1).paragraphs[0]
@@ -619,7 +605,7 @@ class Docs:
                 run = paragraph.add_run()
                 run.add_picture(img_dir, width=1800000, height=600000)
 
-                img_dir = Images.create_shape_plot(lines[row]['shape'], lines[row]['shape_data'])
+                img_dir = Images.create_shape_plot(rows[row]['shape'], rows[row]['shape_data'])
                 paragraph = table.cell(row, 0).paragraphs[0]
                 paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                 run = paragraph.add_run()

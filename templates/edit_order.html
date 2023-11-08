@@ -75,7 +75,8 @@ div {
     </tr>
     <tr>
         <td><button type=button class="btn btn-primary btn-block" name="input_form" onclick="formSubmit()">שורה חדשה</button></td>
-        <td colspan="2"><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
+        <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
+        <td> <button onclick="delete_rows();" type="button"  class="btn btn-danger btn-block" id="delete_rows_btn">מחק שורות</button></td>
         <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
         <td> <button onclick='openNewWindow("\split_order")' type="button" class="btn btn-warning btn-block">פיצול הזמנה</button></td>
         <td> <button onclick='openNewWindow("\link_order")' type="button" class="btn btn-warning btn-block">קישור הזמנה</button></td>
@@ -91,7 +92,9 @@ div {
 <table class="table table-striped" dir="rtl" align="center">
 {% endif %}
     <tr>
-        <td></td>
+        {% if order_data.info.status == "order_status_NEW" %}
+        <td colspan="2"></td>
+        {% endif %}
         {% for item in order_data.data_to_display %}
         {% if dictionary[item] %}
         {% set name = dictionary[item] %}
@@ -105,7 +108,7 @@ div {
     </tr>
     {% if order_data.info.status == "order_status_NEW" %}
     <tr>
-        <td></td>
+        <td colspan="2"></td>
         {% include 'input_types.html'%}
     </tr>
     {% endif %}
@@ -116,7 +119,10 @@ div {
     {% else %}
     <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")' title="אורכים: {{row.shape_data}}">
     {% endif %}
-        <td>{% if order_data.info.status == "order_status_NEW" %}<button type="button" onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button>{% endif %}</td>
+    {% if order_data.info.status == "order_status_NEW" %}
+        <td><button type="button" onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button></td>
+        <td><input type="checkbox" name="select_{{row['job_id']}}_hid" class="select" value="{{row['job_id']}}"></td>
+    {% endif %}
         {% for item in order_data.data_to_display %}
         <td>
             {% if item in row %}

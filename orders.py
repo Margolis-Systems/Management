@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta
 import configs
 import functions
@@ -130,6 +131,7 @@ def new_order_row():
     if 'R' in order_id:
         return
     req_form_data = dict(main.request.form)
+    print(req_form_data)
     req_vals = dict(main.request.values)
     order = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
     if 'rows' not in order:
@@ -662,3 +664,28 @@ def get_status_history(order_id, job_id):
         for i in hist:
             ret.append({'username': i['username'], 'timestamp': i['timestamp'], 'status': i['operation']['status']})
     return ret
+
+
+def delete_rows():
+    if 'order_id' not in main.session:
+        return '', 204
+    req_form = dict(main.request.form)
+    if req_form:
+        order_id = main.session['order_id']
+        ids = []
+        for item in req_form:
+            if 'select_' in item:
+                ids.append(req_form[item])
+        order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+        to_del = []
+        for r in range(len(order['rows'])):
+            row = order['rows'][r]
+            if row['job_id'] in ids:
+                to_del.append(r)
+            else:
+                row['job_id'] = str(int(row['job_id'])-len(to_del))
+        to_del.reverse()
+        for i in to_del:
+            order['rows'].pop(i)
+        main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
+    return main.redirect('/orders')

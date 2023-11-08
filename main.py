@@ -98,6 +98,11 @@ def close_order():
     return orders.close_order()
 
 
+@app.route('/delete_rows', methods=['POST'])
+def delete_rows():
+    return orders.delete_rows()
+
+
 @app.route('/scan', methods=['POST', 'GET'])
 def scan():
     return pages.scan()
