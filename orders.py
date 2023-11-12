@@ -131,7 +131,7 @@ def new_order_row():
     if 'R' in order_id:
         return
     req_form_data = dict(main.request.form)
-    print(req_form_data)
+    # print(req_form_data)
     req_vals = dict(main.request.values)
     order = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
     if 'rows' not in order:

@@ -630,6 +630,10 @@ def production_log(form_data):
     machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
     if not machine_data:
         return
+    if not job_data:
+        print(job_data)
+        print(form_data)
+        return
     for item in keys_to_log:
         if item in job_data[0]:
             log[item] = job_data[0][item]
