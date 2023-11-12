@@ -255,7 +255,7 @@ def scan():
     elif 'order_id' in req_form.keys() and 'close' not in req_form.keys():
         order_id = req_form['order_id']
         job_id = req_form['job_id']
-        status = req_form['status']
+        status = req_form['status'].replace('order_status_', '')
         orders.update_order_status(status, order_id, job_id)
         production_log(req_form)
         return main.redirect('/scan')
@@ -284,22 +284,26 @@ def scan():
         # order['rows'].append(row)
         if 'status' in row:
             row['status'] = row['status'].replace('order_status_', '')
-            if row['status'] == 'Production':
+            if 'InProduction' in row['status']:
+                status = "Start"
+            elif 'Production' in row['status']:
                 orders.update_order_status('InProduction', order_id)
                 status = "Start"
-            elif row['status'] == 'InProduction':
-                status = "Start"
-            elif row['status'] == "Start":
+            elif "Start" in row['status']:
                 status = "Finished"
-            elif row['status'] == "Processed":
+            elif "Processed" in row['status']:
                 orders.update_order_status('InProduction', order_id)
                 status = "Start"
-            else:
-                if main.session['username'] == 'operator34' and row['status'] == "Finished":
+            elif main.session['username'] == 'operator34' and "Finished" in row['status']:
+                if 'operator34' not in row['status_updated_by']:
+                # if main.session['username'] == 'operator34' and "Finished" in row['status']:
                     status = "Start"
                 else:
                     msg = row['status']
                     order_id = ''
+            else:
+                msg = row['status']
+                order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
                                 dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']})
 

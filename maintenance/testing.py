@@ -43,4 +43,9 @@ def validate_log():
             if logg[-1]['operation']['status'] != order['info']['status']:
                 print(order['order_id'],order['info']['status'],logg[-1]['operation']['status'])
 
-validate_log()
+
+for i in all_orders:
+    if i['order_id'] == '1609':
+        ordr = i
+        break
+fix_status(all_orders)
