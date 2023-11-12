@@ -671,21 +671,25 @@ def delete_rows():
         return '', 204
     req_form = dict(main.request.form)
     if req_form:
+        total_weight = 0
         order_id = main.session['order_id']
         ids = []
         for item in req_form:
             if 'select_' in item:
                 ids.append(req_form[item])
-        order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+        # order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+        rows, info = get_order_data(order_id, reverse=False)
         to_del = []
-        for r in range(len(order['rows'])):
-            row = order['rows'][r]
+        for r in range(len(rows)):
+            row = rows[r]
             if row['job_id'] in ids:
                 to_del.append(r)
             else:
+                total_weight += row['weight']
                 row['job_id'] = str(int(row['job_id'])-len(to_del))
         to_del.reverse()
         for i in to_del:
-            order['rows'].pop(i)
-        main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
+            rows.pop(i)
+        main.mongo.update_one('orders', {'order_id': order_id}, {'rows': rows, 'info.rows': len(rows),
+                                                                 'info.total_weight': total_weight}, '$set')
     return main.redirect('/orders')
