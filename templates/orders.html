@@ -41,15 +41,29 @@
             <button type="button" onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
         </td>
         </form>
-        <td>סינון לפי סוג:</td>
+        <td>סינון:</td>
         <td>
-            <select onchange="location.href='/user_config?filter='+this.value;refresh();" >
+            <select onchange="location.href='/user_config?type='+this.value;refresh();" >
                 <option style="display:none" selected>בחר סוג</option>
-                <option value="regular">ברזל</option>
-                <option value="rebar">רשת</option>
-                <option value="R">ייצור רשת</option>
-                <option value="girders">מסבכונים</option>
-                <option value="piles">כלונסאות</option>
+                {% for opt in order_types %}
+                {% if opt in search['type'] %}
+                <option value="{{opt}}" selected>{{dictionary[opt]}}</option>
+                {% else %}
+                <option value="{{opt}}">{{dictionary[opt]}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <select onchange="location.href='/user_config?status='+this.value;refresh();" >
+                <option style="display:none" selected>סטטוס</option>
+                {% for opt in order_statuses %}
+                {% if opt in search['type'] %}
+                <option value="{{opt}}" selected>{{dictionary['order_status_'+opt]}}</option>
+                {% else %}
+                <option value="{{opt}}">{{dictionary['order_status_'+opt]}}</option>
+                {% endif %}
+                {% endfor %}
             </select>
         </td>
         <td colspan="5">

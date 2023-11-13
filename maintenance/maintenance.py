@@ -149,12 +149,12 @@ def fix_job_id():
 
 
 if __name__ == '__main__':
-    mongo_backup()
+    # mongo_backup()
     # fix_weight_integ_ord()
     # add_ang()
     # update_orders_total_weight()
     # mongo_restore("C:\\DB_backup\\25-10-2023_12-01-38-045340")
-    # mongo_restore("C:\\Projects\\Tzomet\\old ver\\11-11-2023_20-00-04-917085")
+    mongo_restore("C:\\Projects\\Tzomet\\old ver\\11-11-2023_20-00-04-917085")
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()

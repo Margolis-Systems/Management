@@ -90,10 +90,16 @@ def clear():
 def user_configs():
     req_vals = dict(main.request.values)
     if req_vals:
-        if 'filter' in req_vals:
-            main.session['user_config']['filter'] = req_vals['filter']
+        if 'type' in req_vals:
+            main.session['user_config']['type'] = req_vals['type']
             main.session['user_config']['search'] = {}
-            main.session.modified = True
+        elif 'status' in req_vals:
+            main.session['user_config']['status'] = req_vals['status']
+            main.session['user_config']['search'] = {}
+        else:
+            main.session['user_config'] = {}
+            main.session['user_config']['search'] = {}
+        main.session.modified = True
     return '', 204
 
 
