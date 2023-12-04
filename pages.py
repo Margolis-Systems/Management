@@ -520,7 +520,7 @@ def reports_page():
                 if 'username' in req_vals.keys():
                     query['username'] = req_vals['username']
             elif report == 'open_orders':
-                query = {'info.status': {'$nin': ['Delivered', 'canceled']}, 'info.type': {'$ne': 'integration'},
+                query = {'info.status': {'$nin': ['Delivered', 'canceled','PartlyDeliveredClosed']}, 'info.type': {'$ne': 'integration'},
                          'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']},
                          'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             # Read all orders data with Info, mean that it's not including order rows
@@ -529,6 +529,8 @@ def reports_page():
             # global_total_weight = 0
             total_weight = {'global': 0, 'temp': 0}
             for order in all_orders:
+                if 'order_id' in order['info']:
+                    del order['info']['order_id']
                 # order['total_weight'] = round(float(order['total_weight'] / 1000))
                 new_row = {'order_id': order['order_id']}
                 new_row.update(order['info'])
@@ -630,10 +632,10 @@ def production_log(form_data):
     machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
     if not machine_data:
         return
-    if not job_data:
-        print(job_data)
-        print(form_data)
-        return
+    # if not job_data:
+    #     print(job_data)
+    #     print(form_data)
+    #     return
     for item in keys_to_log:
         if item in job_data[0]:
             log[item] = job_data[0][item]

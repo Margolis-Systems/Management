@@ -164,7 +164,6 @@ def new_order_row():
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
             else:
                 new_row[item] = req_form_data[item]
-    print(new_row)
     # Order data handling
     if 'diam_x' in new_row:
         new_row['mkt'] = "2005020000"
@@ -183,12 +182,12 @@ def new_order_row():
             new_row['trim_x_end'] = 5
             new_row['x_length'][0] = int(new_row['x_length'][0]) - 5
         for i in range(len(new_row['x_length'])):
-            if new_row['x_pitch'][i] != "0":
+            if new_row['y_pitch'][i] != "0":
                 new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
-                                            int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])).replace('.0', '')
+                                            int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])).replace('.0', '')
                 new_row['x_length'][i] = str(
-                    int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])))
-                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['x_pitch'][i]))
+                    int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])))
+                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['y_pitch'][i]))
             else:
                 bars_y += 1
         new_row['length'] = sum(list(map(int, new_row['y_length'])))
@@ -196,12 +195,12 @@ def new_order_row():
         new_row['length'] += int(float(new_row['trim_y_start']) + float(new_row['trim_y_end']))
         new_row['width'] += int(float(new_row['trim_x_start']) + float(new_row['trim_x_end']))
         for i in range(len(new_row['y_length'])):
-            if new_row['y_pitch'][i] != "0":
+            if new_row['x_pitch'][i] != "0":
                 new_row['trim_y_end'] = str(float(new_row['trim_y_end']) +
-                                            int(new_row['y_length'][i]) % int(new_row['y_pitch'][i]))
+                                            int(new_row['y_length'][i]) % int(new_row['x_pitch'][i]))
                 new_row['y_length'][i] = str(
-                    int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['y_pitch'][i])))
-                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['y_pitch'][i]))
+                    int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['x_pitch'][i])))
+                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['x_pitch'][i]))
             else:
                 bars_x += 1
         x_pitch = '(' + ')('.join(new_row['x_pitch']) + ')'
@@ -454,6 +453,7 @@ def cancel_order():
 
 def update_order_status(new_status, order_id, job_id="", force=False):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+    import re
     # ---------- over protection ------------------------
     while 'order_status_' in new_status:
         new_status = new_status.replace('order_status_', '')
@@ -475,9 +475,11 @@ def update_order_status(new_status, order_id, job_id="", force=False):
             order['info']['status'] = new_status
     else:
         order['info']['status'] = new_status
-        if new_status in ['NEW', 'Processed', 'Production'] or force:
+        # if new_status in ['NEW', 'Processed', 'Production'] or force:
+        if re.search('NEW|Processed|Production', new_status):
             for i in range(len(order['rows'])):
-                if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production'] or force:
+                if re.search('NEW|Processed|Production', order['rows'][i]['status']) or force:
+                # if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production'] or force:
                     order['rows'][i]['status'] = new_status
         if not force:
             if 'reason' in main.request.form:

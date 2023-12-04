@@ -44,8 +44,8 @@ def validate_log():
                 print(order['order_id'],order['info']['status'],logg[-1]['operation']['status'])
 
 
-for i in all_orders:
-    if i['order_id'] == '1609':
-        ordr = i
-        break
-fix_status(all_orders)
+for order in list(all_orders):
+    for r in order['rows']:
+        if 'status_updated_by' in r:
+            if 'operator1 : 2023-11-12' in r['status_updated_by']:
+                print(r['order_id'], r['job_id'])
