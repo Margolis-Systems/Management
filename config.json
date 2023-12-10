@@ -3,6 +3,7 @@
   "_server": "127.0.0.1",
   "server": "0.0.0.0",
   "server_port": 10770,
+  "_mongo_adr": "mongodb://10.0.0.25:27017",
   "mongo_adr": "mongodb://localhost:27017",
   "db_users": "users",
   "db_main": "ERP",

@@ -1,5 +1,7 @@
 import base64
 import json
+
+import configs
 import functions
 import main
 import users
@@ -385,6 +387,7 @@ def reports_page():
         report_date = main.session['report_date']
     report_data = []
     data_to_display = []
+    statuses = []
     report = ''
     mid = ''
     req_vals = dict(main.request.values)
@@ -513,8 +516,16 @@ def reports_page():
                 if 'username' in req_vals.keys():
                     query['username'] = req_vals['username']
             elif report == 'status':
+                statuses = list(configs.order_statuses)
+                print(req_form)
                 query = {'info.status': 'Processed', 'info.type': 'regular',
                          'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
+                status = []
+                for k in req_form:
+                    if 'status' in k:
+                        status.append(req_form[k])
+                if status:
+                    query['info.status'] = {'$in': status}
                 if 'client_name' in req_vals.keys():
                     query['client_name'] = req_vals['client_name']
                 if 'username' in req_vals.keys():
@@ -581,7 +592,7 @@ def reports_page():
             template_row['total_weight'] = round(total_weight['global'], 2)
             report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
-                                dictionary=get_dictionary(), data_to_display=data_to_display)
+                                dictionary=get_dictionary(), data_to_display=data_to_display, statuses=statuses)
 
 
 def machines_page():

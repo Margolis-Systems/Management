@@ -6,6 +6,39 @@
     font-size: 10px;
   }
 }
+.multiselect {
+  width: 200px;
+}
+
+.selectBox {
+  position: relative;
+}
+
+.selectBox select {
+  width: 100%;
+  font-weight: bold;
+}
+
+.overSelect {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+#checkboxes {
+  display: none;
+  border: 1px #dadada solid;
+}
+
+#checkboxes label {
+  display: block;
+}
+
+#checkboxes label:hover {
+  background-color: #1e90ff;
+}
 </style>
 <table class="table table-sm" align="center" dir="rtl">
     <tr class="d-print-none">
@@ -29,6 +62,25 @@
             <label>עד יום
             <input type="date" name="date_to" value="{{date.to}}" onchange="formSubmit('date_form');"></label>
         </td>
+            {% if statuses %}
+        <td>
+          <div class="multiselect">
+            <div class="selectBox" onclick="showCheckboxes()">
+              <select>
+                <option>בחירת סטטוסים</option>
+              </select>
+              <div class="overSelect"></div>
+            </div>
+            <div id="checkboxes">
+                {% for status in statuses %}
+              <label for="status{{loop.index}}">
+                <input type="checkbox" id="status{{loop.index}}" name="status{{loop.index}}" value="{{status}}" />{{dictionary['order_status_'+status]}}</label>
+                {% endfor %}
+              <button>ok</button>
+                </div>
+             </div>
+            </td>
+            {% endif %}
         </form>
         <td colspan="2">
         {% if report_data %}<button onclick="window.print();" type="button" class="btn btn-success btn-block d-print-none">הדפס</button>

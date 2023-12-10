@@ -150,6 +150,7 @@ def new_order_row():
     elif 'job_id' in main.session:
         if main.session['job_id']:
             job_id = main.session['job_id']
+
     new_row = {'order_id': order_id, 'job_id': job_id, 'status': 'NEW', 'date_created': ts()}
     if 'x_length' in req_form_data.keys():
         new_row['x_length'] = []
@@ -181,7 +182,7 @@ def new_order_row():
         if 'trim_x_end' not in new_row:
             new_row['trim_x_end'] = 5
             new_row['x_length'][0] = int(new_row['x_length'][0]) - 5
-        for i in range(len(new_row['x_length'])):
+        for i in range(len(new_row['x_length'])):  # todo: !!!!!!!!!!!!!!!!!!!!!!!!!!
             if new_row['y_pitch'][i] != "0":
                 new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
                                             int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])).replace('.0', '')
@@ -194,7 +195,7 @@ def new_order_row():
         new_row['width'] = sum(list(map(int, new_row['x_length'])))
         new_row['length'] += int(float(new_row['trim_y_start']) + float(new_row['trim_y_end']))
         new_row['width'] += int(float(new_row['trim_x_start']) + float(new_row['trim_x_end']))
-        for i in range(len(new_row['y_length'])):
+        for i in range(len(new_row['y_length'])):  # todo: !!!!!!!!!!!!!!!!!!!!!!!!!!
             if new_row['x_pitch'][i] != "0":
                 new_row['trim_y_end'] = str(float(new_row['trim_y_end']) +
                                             int(new_row['y_length'][i]) % int(new_row['x_pitch'][i]))
@@ -254,7 +255,7 @@ def new_order_row():
             order['info']['date_delivery'] = req_form_data['date_delivery_hid']
         main.mongo.update_one('orders', {'order_id': new_row['order_id']}, order, '$set')
         return
-    # Takes to manual input for weight
+    # Takes to manual input for weightNYDESK
     if 'weight' in req_form_data:
         if req_form_data['weight'].replace('.', '').isdigit():
             new_row['weight'] = float(req_form_data['weight'])

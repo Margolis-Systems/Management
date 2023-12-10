@@ -14,7 +14,7 @@ div {
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
     {% for item in order_data.info %}
-    {% if item != 'comment' %}
+    {% if item not in ['comment','date_delivery', 'linked_orders'] %}
         <td>
             <b>
                 {% if dictionary[item] %}
@@ -23,6 +23,18 @@ div {
                 {{ item }}
                 {% endif %}:
             </b>
+        </td>
+    {% endif %}
+    {% endfor %}
+    </tr>
+    <tr>
+    {% for item in order_data.info %}
+    {% if item not in ['comment','date_delivery', 'linked_orders'] %}
+        {% if item in ['costumer_name', 'costumer_site'] %}
+        <td ondblclick='openNewWindow("/new_order?{{order_data.info.order_id}}")'>
+        {% else %}
+        <td>
+        {% endif %}
             {% if dictionary[order_data.info[item]] %}
             {{dictionary[order_data.info[item]]}}
             {% else %}
