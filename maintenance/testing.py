@@ -49,3 +49,7 @@ for order in list(all_orders):
         if 'status_updated_by' in r:
             if 'operator1 : 2023-11-12' in r['status_updated_by']:
                 print(r['order_id'], r['job_id'])
+
+
+query = {'rows': {'$in': {'status':'loaded'}}}
+deliv = list(mongo.read_collection_list('orders', query))

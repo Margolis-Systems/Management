@@ -20,7 +20,7 @@
                         {% set focus_index = focus_index + 1 %}
                         {% for item in defaults %}
                         {% if "x_length_" in item %}
-                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="רוחב" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                         {% endif %}
                         {% endfor %}
@@ -75,7 +75,7 @@
                         {% set focus_index = focus_index + 1 %}
                         {% for item in defaults %}
                         {% if "y_length_" in item %}
-                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="פסיעה" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="אורך" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                         {% endif %}
                         {% endfor %}

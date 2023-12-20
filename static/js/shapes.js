@@ -100,6 +100,14 @@ function addInput(div_id, val){
     container.appendChild(input);
 }
 
+function _addInput(table_id, val){
+    var table = document.getElementById(table_id);
+    var row = table.insertRow(14);
+    var cell1 = row.insertCell(0);
+    row.cells[0].className = 'input-group';
+    row.cells[0].innerHTML = "<span class='input-group-text'>נפח</span><input type='number' name='' id='hh' placeholder='נפח' class='form-control' autofocus required><button type='button' onclick=''>-</button>";
+}
+
 function copyLastRow(dict, dataToDisplay){
     dataToDisplay['shape_data'] = 1;
     dataToDisplay['length'] = 1;

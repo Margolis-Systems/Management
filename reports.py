@@ -188,6 +188,10 @@ class Bartender:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
                             template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
+                    if 'bend1' in row or 'bend2' in row or 'bend3' in row:
+                        template_row["tb" + str(3 + i)] += ' + כיפוף'
+                    if 'חיתוך' in row:
+                        template_row["tb" + str(3 + i)] += ' + חיתוך'
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -567,17 +571,6 @@ class Docs:
         import pythoncom
         doc = docx.Document(file_name)
         Docs.prevent_document_break(doc)
-        # align = WD_ALIGN_PARAGRAPH.RIGHT
-        # if page_break:
-        #     doc.add_page_break()
-        #     p = doc.add_paragraph('Report number: XXXXXX')
-        #     p.alignment = align
-        # # Add header above table
-        # if table_header:
-        #     p = doc.add_paragraph()
-        #     p.add_run(table_header).underline = True
-        #     p.alignment = align
-        # Table params
         tb_rows = len(rows)
         tb_cells = 4
         table = doc.add_table(tb_rows, tb_cells)
@@ -616,6 +609,8 @@ class Docs:
             tb_dictionary = {'weight': 'משקל', 'weight_per_M': 'משקל למטר', 'length': 'סה"כ אורך', 'type': 'סוג ברזל',
                              'qnt': 'כמות', 'description': 'תיאור'}
             for dt in summary_data:
+                print(dt)
+                header = []
                 tb_data = []
                 # Add header above table
                 table_header = 'סיכום משקל ברזל'  # todo: <---
@@ -625,26 +620,27 @@ class Docs:
                     p.bold = True
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 for k in dt:
-                    # if not tb_data:
-                    #     tb_header = {}
-                    #     for item in k:
-                    #         tb_header[item] = tb_dictionary[item]
-                    #     tb_data.append(tb_header)
                     temp = {'description': k}
-                    temp.update(dt[k])
+                    header.append(k)
+                    order_by = ['type', 'qnt', 'length', 'weight_per_M', 'weight']
+                    for o in order_by:
+                        if o in dt[k]:
+                            temp[o] = dt[k][o]
+                            header.append(o)
                     tb_data.append(temp)
                 tb_rows = len(tb_data)
                 tb_cells = len(tb_data[0])
-                table = doc.add_table(tb_rows, tb_cells)
+                table = doc.add_table(tb_rows+1, tb_cells)
                 table.direction = WD_TABLE_DIRECTION.RTL
                 table.style = 'Table Grid'
                 table.allow_autofit = True
                 # Add data to table
                 row_keys = list(tb_data[0].keys())
+                for tbx in range(tb_cells):
+                    table.cell(0, tb_cells-tbx-1).text = header[tbx]
                 for tbi in range(tb_rows):
                     for tbx in range(tb_cells):
-                        print(tbi, tbx)
-                        table.cell(tbi, tbx).text = str(tb_data[tbi][row_keys[tbx]])
+                        table.cell(tbi+1, tb_cells-tbx-1).text = str(tb_data[tbi][row_keys[tbx]])
         # todo: if summary_datav->
         #  page break
         #  table

@@ -59,6 +59,12 @@ def gen_patterns(order_type='regular'):
                  'mkt': list(main.configs.rebar_catalog.keys())}
     elif order_type == 'girders':
         lists['mkt'] = list(main.configs.girders_catalog.keys())
+    elif order_type == 'piles':
+        diam = list(main.configs.weights.keys())
+        diam.sort(key=lambda k: float(k))
+        bend = ['חוץ', 'פנים', 'שושנה']
+        lists = {'spiral_diam': diam, 'bend': bend}
+        patterns = {'spiral_diam': '|'.join(diam), 'bend': '|'.join(bend)}
     else:
         shapes_list = main.configs.shapes.keys()
         diam = list(main.configs.weights.keys())
@@ -303,6 +309,8 @@ def scan():
                 else:
                     msg = row['status']
                     order_id = ''
+            elif row['status'] == 'Finished' and 'amasa' in main.session['username']:
+                status = 'Loaded'
             else:
                 msg = row['status']
                 order_id = ''
@@ -517,7 +525,6 @@ def reports_page():
                     query['username'] = req_vals['username']
             elif report == 'status':
                 statuses = list(configs.order_statuses)
-                print(req_form)
                 query = {'info.status': 'Processed', 'info.type': 'regular',
                          'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
                 status = []

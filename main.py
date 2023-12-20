@@ -36,6 +36,8 @@ def index():
             return render_template('main.html', user=user)
         elif login_user['group'] == 2:
             return redirect('/scale')
+        elif login_user['group'] == 3:
+            return redirect('/scaleov')
         else:
             return redirect('/scan')
     return render_template('login.html')
@@ -215,11 +217,21 @@ def scaling():
     return scale.main_page()
 
 
+@app.route('/scaleov', methods=['POST', 'GET'])
+def scale_overview():
+    return scale.overview()
+
+
 @app.route('/scaling_weight', methods=['POST', 'GET'])
 def scaling_weight():
     if 'scale' not in session:
-        return {}
+        session['scale'] = {'site': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
+        # return {}
+    elif 'site' not in session['scale']:
+        session['scale'] = {'site': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
+        # return {}
     cur_weight = scale.get_weight(session['scale']['site'])
+    print(cur_weight)
     return {'ts1': cur_weight[0], 'weight1': cur_weight[1], 'ts2': cur_weight[2], 'weight2': cur_weight[3]}
 
 
@@ -323,6 +335,6 @@ production = False
 if __name__ == '__main__':
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
-        serve(app, host=configs.server, port=configs.server_port, threads=6)
+        serve(app, host=configs.server, port=configs.server_port, threads=50)
     else:
         app.run(debug=True, host=configs.server, port=configs.server_port)

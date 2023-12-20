@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import configs
 import functions
 import main
+import piles
 import users
 import clients
 import pandas as pd
@@ -247,6 +248,10 @@ def new_order_row():
         new_row['shape_data'] = req_form_data['shape_hid'].split(',')
         new_row['shape_ang'] = configs.shapes[new_row['shape']]['ang']
         new_row['weight'] = calc_weight(new_row['diam'], new_row['length'], new_row['quantity'])
+    elif 'spiral' in new_row:
+        weight, new_row['length'] = piles.calc_weight(new_row)
+        new_row['weight'] = weight['total']
+        # return
     else:
         # Order comment
         if 'comment_hid' in req_form_data:
@@ -264,7 +269,7 @@ def new_order_row():
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
-    order['info']['total_weight'] = new_row['weight']
+    order['info']['total_weight'] = new_row['weight'] # todo: ????
     for i in range(len(order['rows'])):
         if i >= len(order['rows']):
             break
@@ -377,6 +382,10 @@ def edit_order_data():
     #     order_data['include_data'] = additional
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
+        order_data['dtd_order'].extend(
+            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
+    elif info['type'] == 'piles':
+        order_data['include'] = 'piles_editor.html'
         order_data['dtd_order'].extend(
             ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
     lists, patterns = pages.gen_patterns(info['type'])

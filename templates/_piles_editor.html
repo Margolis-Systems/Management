@@ -1,0 +1,105 @@
+<table dir="rtl" align="center">
+    <tr>
+        <td>
+            <table class="table table-striped" dir="rtl" align="center">
+                <tr>
+                {% set focus_index = order_data.data_to_display|length %}
+                    <td id="spiral_container">
+                        מקטעי ליפוף
+                        <input type="number" name="spiral" id="spiral" class="form-control" placeholder="אורך" value="{{defaults['spiral']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        {% set focus_index = focus_index + 1 %}
+                        {% for item in defaults %}
+                        {% if "spiral_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="אורך" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        {% set focus_index = focus_index + 1 %}
+                        {% endif %}
+                        {% endfor %}
+                        </td>
+                    <td id="pitch_container">
+                        מרווח
+                        <input type="number" name="pitch" id="pitch" class="form-control" placeholder="מרווח" value="{{defaults['pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        {% set focus_index = focus_index + 1 %}
+                        {% for item in defaults %}
+                        {% if "pitch_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="מרווח" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        {% set focus_index = focus_index + 1 %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <button type="button" onclick="addInput('spiral_container');addInput('pitch_container');">הוסף</button>
+                    </td>
+                </tr>
+                {% if order_data.include_data %}
+                {% for item in order_data.include_data.pitch %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <label class="amount_x">{{order_data.include_data.length[loop.index0]}}</label>
+                    </td>
+                    <td>
+                        <lable>{{order_data.include_data.pitch[loop.index0]}}</lable>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </table>
+        </td>
+        <td width="80"></td>
+        <td>
+            <table class="table table-striped" dir="rtl" align="center">
+                <tr>
+                    <td id="bars_len_container">
+                        חוטי אורך
+                        <input type="number" name="bars" id="bars"  class="form-control" placeholder="כמות" value="{{defaults['bars']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        {% set focus_index = focus_index + 1 %}
+                        {% for item in defaults %}
+                        {% if "bars_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="אורך" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        {% set focus_index = focus_index + 1 %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td id="bars_diam_container">
+                        קוטר
+                        <input type="number" name="bars_diam" id="bars_diam" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        {% set focus_index = focus_index + 1 %}
+                        {% for item in defaults %}
+                        {% if "bars_diam_" in item %}
+                        <input type="number" name="{{ item }}" id="{{ item }}" class="form-control" placeholder="קוטר" value="{{defaults[item]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        {% set focus_index = focus_index + 1 %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <button type="button" onclick="addInput('bars_len_container');addInput('bars_diam_container');">הוסף</button>
+                    </td>
+                </tr>
+                {% if order_data.include_data %}
+                {% for item in order_data.include_data.y_pitch %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <label class="amount_y">{{order_data.include_data.y_length[loop.index0]}}</label>
+                    </td>
+                    <td>
+                        <lable>{{order_data.include_data.y_pitch[loop.index0]}}</lable>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </table>
+        </td>
+        <td>
+            <label>טבעות</label>
+            <input class="form-control" name="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';">
+            <input class="form-control" name="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';">
+        </td>
+        <td>
+            <label>צינור</label>
+            <input class="form-control" name="pipe_diam" placeholder="{{dictionary['pipe_diam']}}" value="{{defaults['pipe_diam']}}" onkeydown="return event.key != 'Enter';">
+            <input class="form-control" name="pipe_len" placeholder="{{dictionary['pipe_len']}}" value="{{defaults['pipe_len']}}" onkeydown="return event.key != 'Enter';">
+            <input class="form-control" name="pipe_thick" placeholder="{{dictionary['pipe_thick']}}" value="{{defaults['pipe_thick']}}" onkeydown="return event.key != 'Enter';">
+        </td>
+    </tr>
+</table>

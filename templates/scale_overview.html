@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+<body>
+<table class="table table-striped" dir="rtl" align="center">
+    <tr>
+        <td class="input-group input-group-lg"><span class="input-group-text fs-1">(KG)</span><input name="weight1" id="weight1" class="form-control fs-0" value="{{ weights[0] }}"  aria-describedby="inputGroup-sizing-lg"readonly><input name="weight2" id="weight2" class="form-control fs-0" value="{{ weights[1] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
+    </tr>
+    <tr>
+    <tr>
+        <td class="input-group input-group-lg"><span class="input-group-text fs-1">(KG)</span><input name="weight3" id="weight3" class="form-control fs-0" value="{{ weights[2] }}"  aria-describedby="inputGroup-sizing-lg"readonly></td>
+    </tr>
+    <tr>
+        <td>
+            <button type="button" onclick="document.documentElement.requestFullscreen();">FullScreen</button>
+            <button type="button" onclick="document.exitFullscreen();"> Exit FullScreen</button>
+            {{ site }}
+        </td>
+    </tr>
+</table>
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script>
+  var intervalID = setInterval(update_values,2000);
+  const isObjectEmpty = (objectName) => {
+  return (
+    objectName &&
+    Object.keys(objectName).length === 0 &&
+    objectName.constructor === Object
+  );
+};
+  function update_values() {
+  var data
+        $.getJSON('/scaling_weight', function(data) {
+        $('#result').text(data);
+        w1 = document.getElementById('weight1');
+        w2 = document.getElementById('weight2');
+        w3 = document.getElementById('weight3');
+        w1.value = data.weight1;
+        w2.value = data.weight2;
+        w3.value = parseInt(data.weight1)+parseInt(data.weight2);
+      });
+    };
+    function stopTextColor() {
+      clearInterval(intervalID);
+    }
+    function refreshPage() {
+        setTimeout('window.location.reload()',1000);
+    }
+</script>
+</body>
+</html>

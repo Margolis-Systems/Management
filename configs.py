@@ -40,5 +40,5 @@ print_dicts = {'regular': {}, 'rebar': {}, 'pile': {}, 'girders': {}}
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
 circle = ['925', '966', '215', '216', '78', '79', '119', '68', '36', '44', '16', '6', '331']
 order_types = {'regular', 'rebar', 'R', 'girders', 'piles'}
-order_statuses = {'NEW', 'Processed', 'Production', 'Finished', 'Loading', 'Delivered', 'PartlyDelivered',
+order_statuses = {'NEW', 'Processed', 'Production', 'Finished', 'Loaded', 'Delivered', 'PartlyDelivered',
                   'PartlyDeliveredClosed', 'Outsource'}

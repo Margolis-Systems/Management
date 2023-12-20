@@ -13,7 +13,7 @@
             <input type="hidden" name="order_id" value="{{order}}">
             <input type="hidden" name="job_id" value="{{job}}">
             {% if status and job %}
-            <button type="submit" class="btn btn-success btn-block btn-lg" name="status" value="{{status}}">{{status}}</button>
+            <button type="submit" class="btn btn-success btn-block btn-lg" name="status" value="{{status}}">{{dictionary['order_status_'+status]}}</button>
             {% endif %}
             <button type="button" class="btn btn-danger btn-block btn-lg" onclick="location.href='/scan'">{{dictionary['cancel']}}</button>
             {% else %}
