@@ -91,7 +91,6 @@ def overview():
     site = 'MIFAL'
     site_info = {'MIFAL': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
     _weights = get_weight(site_info[site])
-    print(_weights)
     w1 = round(float(_weights[1]))
     w2 = round(float(_weights[3]))
     weights = [w1, w2, round(w1+w2)]
@@ -139,7 +138,6 @@ def form_request(req_form):
             scale_data['site'] = site['data'][req_form['site']]
         elif 'BF2D@Hj ' in req_form[item]:
             decode = reports.Images.decode_qr(req_form[item])
-            print(decode)
             if decode:
                 scale_data[item] = '{} [ {} ] : {}KG'.format(decode['order_id'], decode['job_id'], decode['weight'])
             else:

@@ -14,7 +14,7 @@
                     </td>
                     <td id="pitch_container">
                         מרווח
-                        <input type="number" name="pitch" id="pitch" class="form-control" placeholder="מרווח" value="{{defaults['pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="pitch" id="pitch" class="form-control" placeholder="מרווח" value="{{defaults['pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         <input type="number" name="pitch_1" id="pitch_1" class="form-control" placeholder="מרווח" value="{{defaults['pitch_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
                         <input type="number" name="pitch_2" id="pitch_2" class="form-control" placeholder="מרווח" value="{{defaults['pitch_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
                         <input type="number" name="pitch_3" id="pitch_3" class="form-control" placeholder="מרווח" value="{{defaults['pitch_3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
@@ -39,16 +39,21 @@
                 </tr>
             </table>
         </td>
+        <td width="80"></td>
         <td>
             <label>טבעות</label>
             <input class="form-control" name="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';">
             <input class="form-control" name="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';">
         </td>
+        <td width="80"></td>
         <td>
             <label>צינור</label>
+            <input class="form-control" name="pipes" placeholder="כמות" value="{{defaults['pipes']}}" onkeydown="return event.key != 'Enter';">
             <input class="form-control" name="pipe_diam" placeholder="{{dictionary['pipe_diam']}}" value="{{defaults['pipe_diam']}}" onkeydown="return event.key != 'Enter';">
             <input class="form-control" name="pipe_len" placeholder="{{dictionary['pipe_length']}}" value="{{defaults['pipe_len']}}" onkeydown="return event.key != 'Enter';">
             <input class="form-control" name="pipe_thick" placeholder="{{dictionary['pipe_thick']}}" value="{{defaults['pipe_thick']}}" onkeydown="return event.key != 'Enter';">
         </td>
+        <td width="80"></td>
+        <td><label>הערות</label><textarea class="form-control" name="pile_comment" rows="6">{{defaults['comment']}}</textarea> </td>
     </tr>
 </table>

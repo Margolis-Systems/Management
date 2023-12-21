@@ -41,6 +41,18 @@
         {% endif %}
         {% endfor %}
     {% else %}
+    {% if order_data.data_to_display[item] == 3.3 %} <!-- Data list - Must have a list with the item name -->
+    <td>
+    <select id="{{ item }}" class="form-control" name="{{ item }}" autofocus="autofocus" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})'>
+            <option selected></option>
+        {% for optn in lists[item] %}
+        {% if defaults[item] == optn %}
+            <option value="{{ optn }}" selected>{{ optn }} {{dictionary[optn]}}</option>
+        {% else %}
+            <option value="{{ optn }}">{{ optn }} {{dictionary[optn]}}</option>
+        {% endif %}
+        {% endfor %}
+    {% else %}
     {% if order_data.data_to_display[item] == 3.1 %} <!-- Data list - Must have a list with the item name -->
     <td>
     <input list="{{ item }}_l" type="number" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" ondblclick='openEditWindow("{{ dictionary["editor_" + item] }}")' onchange='getElementById("{{item}}_data").value="";openEditWindow("{{ dictionary["editor_" + item] }}");' name="{{ item }}" placeholder="{{ name }}" autofocus="autofocus" pattern="{{ patterns[item] }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
@@ -70,6 +82,7 @@
     {% else %}
     <td>
     ----
+    {% endif %}
     {% endif %}
     {% endif %}
     {% endif %}

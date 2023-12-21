@@ -121,7 +121,8 @@
 	  "rings_diam":"קוטר טבעות",
 	  "pipe_diam":"קוטר צינור",
 	  "pipe_length":"אורך צינור",
-	  "pipe_thick":"עובי דופן צינור"
+	  "pipe_thick":"עובי דופן צינור",
+      "spiral_diam": "קוטר מלפף"
     },
     "ru": {
       "costumer_id": "номер клиента",

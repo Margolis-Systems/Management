@@ -130,6 +130,154 @@ class Images:
             return decode
         return {}
 
+    @staticmethod
+    def create_pile_plot(data, testing=False):
+        size = (550, 600)
+        font_size = 16
+        # font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
+        font_dir = 'C:\\Windows\\Fonts\\arial.ttf'
+        file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
+        im = Image.new('RGBA', size, 'white')
+        draw = ImageDraw.Draw(im)
+        spiral = []
+        pitch = []
+        bend = 0
+        if 'bend' in data:
+            # spiral = [data['bend_len']]
+            bend = int(data['bend_len'])
+            data['spiral'] = str(int(data['spiral']) - int(data['bend_len']))
+            # pitch = ['']
+
+        for k in data:
+            if 'spiral' in k and 'diam' not in k:
+                if data[k]:
+                    spiral.append(data[k])
+                    if k.replace('spiral', 'pitch') in data:
+                        pitch.append('#'+data[k.replace('spiral', 'pitch')])
+                    else:
+                        pitch.append('')
+        # Draw length line
+        draw.line([(15, 50), (490, 50)], fill="black", width=3)
+        draw.line([(15, 45), (15, 55)], fill="black", width=3)
+        pos = 15
+        o = True
+        for i in range(len(spiral)):
+            break_line = pos+int(int(spiral[i])/int(data['length'])*475)
+            if break_line > 490:
+                break_line = 490
+            draw.text((pos+int(int(spiral[i])/int(data['length'])*475/2), 30), spiral[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
+            draw.text((pos+int(int(spiral[i])/int(data['length'])*475/2), 60), pitch[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
+            draw.line([(break_line, 45), (break_line, 55)], fill="black", width=3)
+            if pitch[i]:
+                s = pos
+                ptch = int(pitch[i][1:])
+                while s < break_line-2*ptch:
+                    draw.line([(s, 80), (s + ptch, 200)], fill="black", width=3)
+                    if s+2*ptch > break_line:
+                        draw.line([(s + ptch, 200), (break_line, 80)], fill="black", width=3)
+                    else:
+                        draw.line([(s + ptch, 200), (s + 2*ptch, 80)], fill="black", width=3)
+                    s += 2*ptch
+                draw.line([(s, 80), (break_line, 200)], fill="black", width=3)
+                draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
+            pos = break_line
+        draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
+        # Draw pile
+        draw.line([(15,80),(490,80)], fill="black", width=3)
+        draw.line([(15,200),(490,200)], fill="black", width=3)
+        if 'CFA' in data:
+            draw.line([(490, 80), (545, 135)], fill="black", width=3)
+            draw.line([(490, 200), (545, 145)], fill="black", width=3)
+        tot_bars = int(data['bars'])
+        if 'bars_1' in data:
+            tot_bars += int(data['bars_1'])
+        if 'bend' in data:
+            data['bend'] = data['bend'].replace('+ CFA', '')
+            if data['bend'] == 'שושנה':
+                draw.line([(15, 80), (15, 100)], fill="black", width=3)
+                draw.line([(15, 200), (15, 220)], fill="black", width=3)
+                draw.text((25, 90), data['bend_len'], fill="black",
+                          font=ImageFont.truetype(font_dir, font_size))
+                draw.text((25, 210), data['bend_len'], fill="black",
+                          font=ImageFont.truetype(font_dir, font_size))
+                for i in range(tot_bars):
+                    x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
+                    y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                    x1 = round(122.5 + 55 * math.sin(2*math.pi*i/tot_bars+0.2))
+                    y1 = round(497.5 + 55 * math.cos(2*math.pi*i/tot_bars+0.2))
+                    draw.line([(x, y), (x1, y1)], fill="black", width=2)
+            elif data['bend'] == 'חוץ':
+                draw.line([(15, 80), (15, 60)], fill="black", width=3)
+                draw.line([(15, 200), (15, 220)], fill="black", width=3)
+                draw.text((25, 60), data['bend_len'], fill="black",
+                          font=ImageFont.truetype(font_dir, font_size))
+                draw.text((25, 210), data['bend_len'], fill="black",
+                          font=ImageFont.truetype(font_dir, font_size))
+                for i in range(tot_bars):
+                    x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
+                    y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                    x1 = round(122.5 + 85 * math.sin(2*math.pi*i/tot_bars))
+                    y1 = round(497.5 + 85 * math.cos(2*math.pi*i/tot_bars))
+                    draw.line([(x, y), (x1, y1)], fill="black", width=2)
+            elif data['bend'] == 'פנים':
+                draw.line([(15, 80), (15, 100)], fill="black", width=3)
+                draw.line([(15, 200), (15, 180)], fill="black", width=3)
+                draw.text((25, 90), data['bend_len'], fill="black",
+                          font=ImageFont.truetype(font_dir, font_size))
+                draw.text((25, 180), data['bend_len'], fill="black",
+                          font=ImageFont.truetype(font_dir, font_size))
+                for i in range(tot_bars):
+                    x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
+                    y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                    x1 = round(122.5 + 45 * math.sin(2*math.pi*i/tot_bars))
+                    y1 = round(497.5 + 45 * math.cos(2*math.pi*i/tot_bars))
+                    draw.line([(x, y), (x1, y1)], fill="black", width=2)
+        else:
+            for i in range(tot_bars):
+                x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
+                y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                draw.ellipse([(x-3, y-3), (x+3, y+3)], outline='black', width=4)
+        # Draw length bars
+            # #1
+        draw.line([(15,290),(500,290)], fill="black", width=3)
+        bars_decript = u'{} X @{} X {}'.format(data['bars'], data['bars_diam'], data['length'])
+        draw.text((400, 270), 'מוטות אורך', direction='rtl', fill="black",
+                  font=ImageFont.truetype(font_dir, font_size))
+        draw.text((50, 270), bars_decript, fill="black",
+                  font=ImageFont.truetype(font_dir, font_size))
+            # #2
+        if 'bars_1' in data:
+            draw.line([(15,350),(500,350)], fill="black", width=3)
+            bars_decript = u'{} X @{} X {}'.format(data['bars_1'], data['bars_diam_1'], data['length'])
+            draw.text((400, 330), 'מוטות אורך 2', fill="black",
+                      font=ImageFont.truetype(font_dir, font_size))
+            draw.text((50, 330), bars_decript, fill="black",
+                      font=ImageFont.truetype(font_dir, font_size))
+        # Draw pipes
+        if 'pipe_len' in data:
+            pipe_decript = u'{} X @{} X {} [{}]'.format(data['pipes'], data['pipe_diam'], data['length'], data['pipe_thick'])
+            draw.line([(15,400),(500,400)], fill="black", width=3)
+            draw.text((400, 380), 'צינורות', direction='rtl', fill="black",
+                      font=ImageFont.truetype(font_dir, font_size))
+            draw.text((50, 380), pipe_decript, fill="black",
+                      font=ImageFont.truetype(font_dir, font_size))
+        # Draw rings
+        draw.ellipse([(315, 430), (450, 565)], outline='black', width=2)
+        rings_ov = u'{} X @{}'.format(data['rings'], data['rings_diam'])
+        draw.text((360, 490), 'טבעות', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
+        draw.text((350, 580), rings_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        # Pile overview
+        draw.ellipse([(55, 430), (190, 565)], outline='black', width=2)
+        # draw.line([(55,564),(190,430)], fill="black", width=1)  # TODO: REMOVE
+        pile_ov = u'{} X @{}'.format(data['pile_diam'], data['spiral_diam'])
+        draw.text((90, 490), 'קוטר כלונס', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
+        draw.text((90, 580), pile_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        if testing:
+            im.show()
+        else:
+            im.save(file_name)
+        return file_name
+
 
 class Bartender:
     @staticmethod
@@ -206,7 +354,14 @@ class Bartender:
             el_buf = []
             _rows = []
             for row in rows:
-                row['weight'] = round(row['weight'])
+                if 'CFA' in row:
+                    if 'bend' in row:
+                        row['bend'] += '+ CFA'
+                    else:
+                        row['bend'] = row['CFA']
+                for el in row:
+                    if 'weight' in el:
+                        row[el] = round(row[el])
                 if 'element' not in row:
                     row['element'] = ''
                 if row['element'] and print_type != 'test_page':
@@ -284,7 +439,7 @@ class Bartender:
                             index += 1
                             print_data.append(kora)
                 # Header indicator
-                if info['type'] == 'regular':
+                if info['type'] in ['regular','piles']:
                     if index % 8 == 0:
                         line['z19'] = 1
                 index += 1
@@ -342,6 +497,14 @@ class Bartender:
                         line['img_dir'] = Images.create_shape_plot('404', bends).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
                 summary_data.append(line)
+        elif 'piles' in info['type']:
+            summary_data = rows.copy()
+            for r in summary_data:
+                r.update(info)
+                for i in r:
+                    if r[i] == '0':
+                        r[i] = ''
+                r['img_dir'] = Images.create_pile_plot(r)
         else:
             table_data = {}
             spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
@@ -489,8 +652,8 @@ class Bartender:
                  + printer.upper() + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        if main.session['username'] in ['baruch', 'Baruch']:
-            file_dir = file_dir.replace('.txt', '.tmp')
+        # if main.session['username'] in ['baruch', 'Baruch']:
+        #     file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"

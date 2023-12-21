@@ -251,6 +251,8 @@ def new_order_row():
     elif 'spiral' in new_row:
         weight, new_row['length'] = piles.calc_weight(new_row)
         new_row['weight'] = weight['total']
+        new_row['pile_weight'] = weight['pile']
+        new_row['pipe_weight'] = weight['pipes']
         # return
     else:
         # Order comment
@@ -283,7 +285,8 @@ def new_order_row():
                 order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id'])+1)
         order['info']['total_weight'] += float(order['rows'][i]['weight'])
     order['rows'].append(new_row)
-    order['info']['total_weight'] = round(order['info']['total_weight'])
+    # order['info']['total_weight'] = round(order['info']['total_weight'])
+    order['info']['total_weight'] = str(int(order['info']['total_weight'])) #todo: ????
     order['info']['rows'] = len(order['rows'])
     main.mongo.update_one('orders', {'order_id': new_row['order_id']}, order, '$set')
 

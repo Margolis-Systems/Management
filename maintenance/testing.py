@@ -1,5 +1,8 @@
 import sys
 from datetime import datetime
+
+import piles
+
 sys.path.insert(1, 'C:\\Server')
 import configs
 import orders
@@ -51,5 +54,7 @@ for order in list(all_orders):
                 print(r['order_id'], r['job_id'])
 
 
-query = {'rows': {'$in': {'status':'loaded'}}}
-deliv = list(mongo.read_collection_list('orders', query))
+import reports
+order = mongo.read_collection_one('orders', {'order_id':'1759'})['rows'][0]
+# piles.calc_weight(order)
+reports.Images.create_pile_plot(order, True)

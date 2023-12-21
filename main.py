@@ -224,6 +224,7 @@ def scale_overview():
 
 @app.route('/scaling_weight', methods=['POST', 'GET'])
 def scaling_weight():
+    # todo: fix
     if 'scale' not in session:
         session['scale'] = {'site': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
         # return {}
@@ -231,7 +232,6 @@ def scaling_weight():
         session['scale'] = {'site': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
         # return {}
     cur_weight = scale.get_weight(session['scale']['site'])
-    print(cur_weight)
     return {'ts1': cur_weight[0], 'weight1': cur_weight[1], 'ts2': cur_weight[2], 'weight2': cur_weight[3]}
 
 
