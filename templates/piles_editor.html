@@ -26,15 +26,20 @@
         <td>
             <table class="table table-striped" dir="rtl" align="center">
                 <tr>
-                    <td id="bars_len_container">
+                    <td id="bars_container">
                         חוטי אורך
-                        <input type="number" name="bars" id="bars"  class="form-control" placeholder="כמות" value="{{defaults['bars']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
-                        <input type="number" name="bars_1" id="bars_1"  class="form-control" placeholder="כמות" value="{{defaults['bars_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        <input type="number" name="bars" id="bars"  class="form-control" placeholder="חוטי אורך כמות" value="{{defaults['bars']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="bars_1" id="bars_1"  class="form-control" placeholder="חוטי אורך כמות" value="{{defaults['bars_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
                     </td>
                     <td id="bars_diam_container">
                         קוטר
                         <input type="number" name="bars_diam" id="bars_diam" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
                         <input type="number" name="bars_diam_1" id="bars_diam_1" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                    </td>
+                    <td id="bars_len_container">
+                        אורך
+                        <input type="number" name="bars_len" id="bars_len" class="form-control" placeholder="אורך" value="{{defaults['bars_len']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="bars_len_1" id="bars_len_1" class="form-control" placeholder="אורך" value="{{defaults['bars_len_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
                     </td>
                 </tr>
             </table>
@@ -42,8 +47,8 @@
         <td width="80"></td>
         <td>
             <label>טבעות</label>
-            <input class="form-control" name="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';">
-            <input class="form-control" name="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';">
+            <input class="form-control" name="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';" required>
+            <input class="form-control" name="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';" required>
         </td>
         <td width="80"></td>
         <td>

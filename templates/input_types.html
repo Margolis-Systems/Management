@@ -6,7 +6,7 @@
 {% endif %}
     {% if order_data.data_to_display[item] == 0 %} <!-- Regular not required -->
     <td>
-    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' autofocus>
+    <input type="text" id="{{ item }}" value="{{ defaults[item] }}" class="form-control" name="{{ item }}" placeholder="{{ name }}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' onfocus="select()" autofocus>
     {% else %}
     {% if order_data.data_to_display[item] == 0.2 %} <!-- Regular not required -->
     <td>
@@ -32,7 +32,7 @@
     {% if order_data.data_to_display[item] == 3 %} <!-- Data list - Must have a list with the item name -->
     <td>
     <select id="{{ item }}" class="form-control" name="{{ item }}" autofocus="autofocus" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' required>
-            <option style="display:none" selected></option>
+            <option style="display:none" value="" selected></option>
         {% for optn in lists[item] %}
         {% if defaults[item] == optn %}
             <option value="{{ optn }}" selected>{{ optn }} {{dictionary[optn]}}</option>

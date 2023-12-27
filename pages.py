@@ -304,7 +304,6 @@ def scan():
                 status = "Start"
             elif main.session['username'] == 'operator34' and "Finished" in row['status']:
                 if 'operator34' not in row['status_updated_by']:
-                # if main.session['username'] == 'operator34' and "Finished" in row['status']:
                     status = "Start"
                 else:
                     msg = row['status']
@@ -560,13 +559,13 @@ def reports_page():
                     order['rows'] = []
                 if 'total_weight' not in new_row:
                     new_row['total_weight'] = 0
-                total_weight['global'] += new_row['total_weight'] / weight_multp
+                total_weight['global'] += int(new_row['total_weight']) / weight_multp
                 type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט', 'girders': 'סהכ מסבכונים'}
                 ord_type = type_dict[new_row['type']]
                 if ord_type not in total_weight:
-                    total_weight[ord_type] = new_row['total_weight'] / weight_multp
+                    total_weight[ord_type] = int(new_row['total_weight']) / weight_multp
                 else:
-                    total_weight[ord_type] += new_row['total_weight'] / weight_multp
+                    total_weight[ord_type] += int(new_row['total_weight']) / weight_multp
                 orders_data.append(new_row)
             orders_data.sort(key=lambda k: k['costumer_name'])
             total_weight['temp'] = 0
@@ -577,6 +576,7 @@ def reports_page():
                     template_row[item] = ''
             template_row['costumer_name'] = 'סהכ ללקוח'
             for row in orders_data:
+                row['total_weight'] = int(row['total_weight'])
                 row['total_weight'] = round(row['total_weight'] / weight_multp, 2)
                 if row['costumer_name'] == last_client:
                     total_weight['temp'] += row['total_weight']
@@ -650,10 +650,6 @@ def production_log(form_data):
     machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
     if not machine_data:
         return
-    # if not job_data:
-    #     print(job_data)
-    #     print(form_data)
-    #     return
     for item in keys_to_log:
         if item in job_data[0]:
             log[item] = job_data[0][item]

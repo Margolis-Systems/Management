@@ -45,7 +45,6 @@ class Images:
             formatted += '@d' + str(data['diam'])
         if 'shape_data' in data.keys():
             formatted += '@g@Gl'
-            # print(data)
             for item in range(len(data['shape_data'])):
                 if item > 0:
                     formatted += '@l'
@@ -64,8 +63,6 @@ class Images:
             chksm += ord(char)
         chksm = 96 - (chksm % 32)
         formatted += str(chksm) + '@'
-        # if main.session['username'] == 'baruch':
-        #     print(formatted)
         return formatted
 
     @staticmethod
@@ -125,14 +122,12 @@ class Images:
                         decode['weight'] = item[1:]
                     elif item[0] == 'd':
                         decode['diam'] = item[1:]
-                    # elif item[0] == 'g':
-                    #     print("Shape_data")
             return decode
         return {}
 
     @staticmethod
     def create_pile_plot(data, testing=False):
-        size = (550, 600)
+        size = (710, 520)
         font_size = 16
         # font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
         font_dir = 'C:\\Windows\\Fonts\\arial.ttf'
@@ -141,12 +136,12 @@ class Images:
         draw = ImageDraw.Draw(im)
         spiral = []
         pitch = []
-        bend = 0
-        if 'bend' in data:
-            # spiral = [data['bend_len']]
-            bend = int(data['bend_len'])
-            data['spiral'] = str(int(data['spiral']) - int(data['bend_len']))
-            # pitch = ['']
+        # bend = 0
+        # if 'bend' in data:
+        #     # spiral = [data['bend_len']]
+        #     bend = int(data['bend_len'])
+        #     data['spiral'] = str(int(data['spiral']) - int(data['bend_len']))
+        #     # pitch = ['']
 
         for k in data:
             if 'spiral' in k and 'diam' not in k:
@@ -156,17 +151,23 @@ class Images:
                         pitch.append('#'+data[k.replace('spiral', 'pitch')])
                     else:
                         pitch.append('')
+        # CFA
+        cfa = 0
+        if 'CFA' in data:
+            cfa = 40
+            draw.line([(675-cfa, 80), (690, 135)], fill="black", width=3)
+            draw.line([(675-cfa, 200), (690, 145)], fill="black", width=3)
+            # draw.text((655, 130), 'CFA', fill="black", font=ImageFont.truetype(font_dir, font_size))
         # Draw length line
-        draw.line([(15, 50), (490, 50)], fill="black", width=3)
+        draw.line([(15, 50), (675, 50)], fill="black", width=3)
         draw.line([(15, 45), (15, 55)], fill="black", width=3)
         pos = 15
-        o = True
         for i in range(len(spiral)):
-            break_line = pos+int(int(spiral[i])/int(data['length'])*475)
-            if break_line > 490:
-                break_line = 490
-            draw.text((pos+int(int(spiral[i])/int(data['length'])*475/2), 30), spiral[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
-            draw.text((pos+int(int(spiral[i])/int(data['length'])*475/2), 60), pitch[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
+            break_line = pos+int(int(spiral[i])/int(data['length'])*660)
+            if break_line > 675-cfa:
+                break_line = 675-cfa
+            draw.text((pos+int(int(spiral[i])/int(data['length'])*660/2)-20, 30), spiral[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
+            draw.text((pos+int(int(spiral[i])/int(data['length'])*660/2)-20, 60), pitch[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
             draw.line([(break_line, 45), (break_line, 55)], fill="black", width=3)
             if pitch[i]:
                 s = pos
@@ -181,18 +182,18 @@ class Images:
                 draw.line([(s, 80), (break_line, 200)], fill="black", width=3)
                 draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
             pos = break_line
-        draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
+        if cfa == 0:
+            draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
         # Draw pile
-        draw.line([(15,80),(490,80)], fill="black", width=3)
-        draw.line([(15,200),(490,200)], fill="black", width=3)
-        if 'CFA' in data:
-            draw.line([(490, 80), (545, 135)], fill="black", width=3)
-            draw.line([(490, 200), (545, 145)], fill="black", width=3)
+        draw.line([(15,80),(675-cfa,80)], fill="black", width=3)
+        draw.line([(15,200),(675-cfa,200)], fill="black", width=3)
         tot_bars = int(data['bars'])
         if 'bars_1' in data:
             tot_bars += int(data['bars_1'])
         if 'bend' in data:
             data['bend'] = data['bend'].replace('+ CFA', '')
+            if 'bend_len' not in data:
+                data['bend_len'] = '20'
             if data['bend'] == 'שושנה':
                 draw.line([(15, 80), (15, 100)], fill="black", width=3)
                 draw.line([(15, 200), (15, 220)], fill="black", width=3)
@@ -202,10 +203,10 @@ class Images:
                           font=ImageFont.truetype(font_dir, font_size))
                 for i in range(tot_bars):
                     x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
-                    y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                    y = round(427.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
                     x1 = round(122.5 + 55 * math.sin(2*math.pi*i/tot_bars+0.2))
-                    y1 = round(497.5 + 55 * math.cos(2*math.pi*i/tot_bars+0.2))
-                    draw.line([(x, y), (x1, y1)], fill="black", width=2)
+                    y1 = round(427.5 + 55 * math.cos(2*math.pi*i/tot_bars+0.2))
+                    draw.line([(x, y), (x1, y1)], fill="black", width=4)
             elif data['bend'] == 'חוץ':
                 draw.line([(15, 80), (15, 60)], fill="black", width=3)
                 draw.line([(15, 200), (15, 220)], fill="black", width=3)
@@ -215,10 +216,10 @@ class Images:
                           font=ImageFont.truetype(font_dir, font_size))
                 for i in range(tot_bars):
                     x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
-                    y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                    y = round(427.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
                     x1 = round(122.5 + 85 * math.sin(2*math.pi*i/tot_bars))
-                    y1 = round(497.5 + 85 * math.cos(2*math.pi*i/tot_bars))
-                    draw.line([(x, y), (x1, y1)], fill="black", width=2)
+                    y1 = round(427.5 + 85 * math.cos(2*math.pi*i/tot_bars))
+                    draw.line([(x, y), (x1, y1)], fill="black", width=4)
             elif data['bend'] == 'פנים':
                 draw.line([(15, 80), (15, 100)], fill="black", width=3)
                 draw.line([(15, 200), (15, 180)], fill="black", width=3)
@@ -228,50 +229,64 @@ class Images:
                           font=ImageFont.truetype(font_dir, font_size))
                 for i in range(tot_bars):
                     x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
-                    y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+                    y = round(427.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
                     x1 = round(122.5 + 45 * math.sin(2*math.pi*i/tot_bars))
-                    y1 = round(497.5 + 45 * math.cos(2*math.pi*i/tot_bars))
-                    draw.line([(x, y), (x1, y1)], fill="black", width=2)
-        else:
-            for i in range(tot_bars):
-                x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
-                y = round(497.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
-                draw.ellipse([(x-3, y-3), (x+3, y+3)], outline='black', width=4)
+                    y1 = round(427.5 + 45 * math.cos(2*math.pi*i/tot_bars))
+                    draw.line([(x, y), (x1, y1)], fill="black", width=4)
+        # else:
+        for i in range(tot_bars):
+            x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
+            y = round(427.5 + 67.5 * math.cos(2*math.pi*i/tot_bars))
+            draw.ellipse([(x-3, y-3), (x+3, y+3)], outline='black', width=4)
         # Draw length bars
             # #1
-        draw.line([(15,290),(500,290)], fill="black", width=3)
-        bars_decript = u'{} X @{} X {}'.format(data['bars'], data['bars_diam'], data['length'])
+        draw.line([(15,290),(675,290)], fill="black", width=3)
+        if 'bars_len' not in data:
+            data['bars_len'] = data['length']
+        bars_decript = u'{} X @{} X {}'.format(data['bars'], data['bars_diam'], data['bars_len'])
         draw.text((400, 270), 'מוטות אורך', direction='rtl', fill="black",
                   font=ImageFont.truetype(font_dir, font_size))
         draw.text((50, 270), bars_decript, fill="black",
                   font=ImageFont.truetype(font_dir, font_size))
             # #2
         if 'bars_1' in data:
-            draw.line([(15,350),(500,350)], fill="black", width=3)
-            bars_decript = u'{} X @{} X {}'.format(data['bars_1'], data['bars_diam_1'], data['length'])
-            draw.text((400, 330), 'מוטות אורך 2', fill="black",
+            if 'bars_len_1' not in data:
+                data['bars_len_1'] = data['length']
+            draw.line([(15,330),(675*(int(data['bars_len_1'])/int(data['bars_len'])),330)], fill="black", width=3)
+            bars_decript = u'{} X @{} X {}'.format(data['bars_1'], data['bars_diam_1'], data['bars_len_1'])
+            draw.text((400, 310), 'מוטות אורך 2', fill="black",
                       font=ImageFont.truetype(font_dir, font_size))
-            draw.text((50, 330), bars_decript, fill="black",
+            draw.text((50, 310), bars_decript, fill="black",
                       font=ImageFont.truetype(font_dir, font_size))
         # Draw pipes
         if 'pipe_len' in data:
             pipe_decript = u'{} X @{} X {} [{}]'.format(data['pipes'], data['pipe_diam'], data['length'], data['pipe_thick'])
-            draw.line([(15,400),(500,400)], fill="black", width=3)
-            draw.text((400, 380), 'צינורות', direction='rtl', fill="black",
+            draw.line([(15,250),(675,250)], fill="black", width=3)
+            draw.text((400, 230), 'צינורות', direction='rtl', fill="black",
                       font=ImageFont.truetype(font_dir, font_size))
-            draw.text((50, 380), pipe_decript, fill="black",
+            draw.text((50, 230), pipe_decript, fill="black",
                       font=ImageFont.truetype(font_dir, font_size))
         # Draw rings
-        draw.ellipse([(315, 430), (450, 565)], outline='black', width=2)
+        draw.ellipse([(415, 360), (550, 495)], outline='black', width=2)
         rings_ov = u'{} X @{}'.format(data['rings'], data['rings_diam'])
-        draw.text((360, 490), 'טבעות', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
-        draw.text((350, 580), rings_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        draw.text((460, 420), 'טבעות', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
+        draw.text((450, 440), rings_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
         # Pile overview
-        draw.ellipse([(55, 430), (190, 565)], outline='black', width=2)
-        # draw.line([(55,564),(190,430)], fill="black", width=1)  # TODO: REMOVE
-        pile_ov = u'{} X @{}'.format(data['pile_diam'], data['spiral_diam'])
-        draw.text((90, 490), 'קוטר כלונס', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
-        draw.text((90, 580), pile_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        draw.ellipse([(55, 360), (190, 495)], outline='black', width=2)
+
+        draw.line([(123, 360), (250, 360)], fill="black", width=1)
+        draw.line([(123, 495), (250, 495)], fill="black", width=1)
+        draw.line([(250, 360), (250, 495)], fill="black", width=3)
+        draw.line([(245, 360), (255, 360)], fill="black", width=3)
+        draw.line([(245, 495), (255, 495)], fill="black", width=3)
+
+        spiral_ov = u' @{}'.format(data['spiral_diam'])
+        pile_ov = u'{}'.format(data['pile_diam'])
+        draw.text((85, 420), 'קוטר ספירלה', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
+        draw.text((90, 440), spiral_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        draw.text((260, 400), 'קוטר כלונס', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
+        draw.text((260, 420), pile_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        # draw.text((500, 500), 'fff', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
         if testing:
             im.show()
         else:
@@ -307,7 +322,6 @@ class Bartender:
                 template_row = {'temp_select': table_selector}
                 for indx in range(table_rows):
                     if table_rows * row_n + indx >= len(rows):
-                        # print(print("break ", row_n + indx, " > ", len(rows) - 1)
                         break
                     n = table_rows * row_n + indx
                     i = table_cells * indx
@@ -330,6 +344,8 @@ class Bartender:
                             template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
                     else:
                         template_row["tb" + str(3 + i)] = "מיוחדת לפי תוכנית כוורת מרותכת דקה"
+                        if float(row['diam_x']) >= 18 or float(row['diam_y']) >= 18:
+                            template_row["tb" + str(3 + i)] = template_row["tb" + str(3 + i)].replace('מיוחדת', 'אלמנט')
                         if float(row['diam_x']) >= 14 or float(row['diam_y']) >= 14:
                             template_row["tb" + str(3 + i)] = template_row["tb" + str(3 + i)].replace('דקה', 'עבה')
                         if disable_weight:
@@ -358,10 +374,10 @@ class Bartender:
                     if 'bend' in row:
                         row['bend'] += '+ CFA'
                     else:
-                        row['bend'] = row['CFA']
+                        row['bend'] = 'CFA'
                 for el in row:
-                    if 'weight' in el:
-                        row[el] = round(row[el])
+                    if 'weight' in el and 'unit' not in el:
+                        row[el] = round(float(row[el]))
                 if 'element' not in row:
                     row['element'] = ''
                 if row['element'] and print_type != 'test_page':
@@ -373,6 +389,9 @@ class Bartender:
                         el_buf.append(row['element'])
                 if row['element'] in el_buf:
                     continue
+                if info['type'] == 'piles' and 'label' in print_type:
+                    row['pack_quantity'] = 1
+                    pile_fix = round(float(row['weight']) / int(row['quantity']))
                 if 'pack_quantity' in row and 'label' in print_type:
                     pack_rows = []
                     row['quantity'] = int(row['quantity'])
@@ -383,6 +402,8 @@ class Bartender:
                         pack_row = row.copy()
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
+                            if 'unit_weight' not in pack_row:
+                                pack_row['unit_weight'] = pile_fix
                             pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:
@@ -501,13 +522,14 @@ class Bartender:
             summary_data = rows.copy()
             for r in summary_data:
                 r.update(info)
+                r['barcode_data'] = Images.format_qr_data(r)
                 for i in r:
                     if r[i] == '0':
                         r[i] = ''
                 r['img_dir'] = Images.create_pile_plot(r)
         else:
             table_data = {}
-            spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
+            spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
                    'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
             special_sum = {}
             for i in spec_keys:
@@ -533,7 +555,6 @@ class Bartender:
                         special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
                     special_sum['חיתוך']['qnt'] += quantity
                     special_sum['חיתוך']['weight'] += row['weight']
-                    # print(special_sum['חיתוך']['weight'])
                 if row['shape'] not in ["1", "905"]:
                     if 'כיפוף' not in special_sum.keys():
                         special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
@@ -544,6 +565,11 @@ class Bartender:
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
                     special_sum['ספירלים']['weight'] += row['weight']
+                if row['shape'] in ['200']:
+                    if 'חישוק מיוחד' not in special_sum.keys():
+                        special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
+                    special_sum['חישוק מיוחד']['qnt'] += quantity
+                    special_sum['חישוק מיוחד']['weight'] += row['weight']
                 elif row['shape'] in ['49','59']:
                     if 'ספסלים' not in special_sum.keys():
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
@@ -601,7 +627,6 @@ class Bartender:
                 template_row = {'temp_select': table_selector}
                 for indx in range(table_rows):
                     if table_rows * row + indx >= len(table_data.keys()):
-                        # print("break ", row + indx, " > ", len(table_data.keys()) - 1)
                         break
                     diam = list(table_data.keys())[table_rows * row + indx]
                     template_row["tb" + str(1 + table_cells * indx)] = table_data[diam]['type']
@@ -633,7 +658,6 @@ class Bartender:
                     template_row = {'temp_select': table_selector}
                     for indx in range(table_rows):
                         if table_rows * row + indx >= len(special_sum.keys()):
-                            # print("break ", row + indx, " > ", len(special_sum) - 1)
                             break
                         description = list(special_sum.keys())[table_rows * row + indx]
                         template_row["tb" + str(1 + table_cells * indx)] = description.replace("_", " ")
@@ -652,8 +676,8 @@ class Bartender:
                  + printer.upper() + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        # if main.session['username'] in ['baruch', 'Baruch']:
-        #     file_dir = file_dir.replace('.txt', '.tmp')
+        if main.session['username'] in ['baruch', 'Baruch']:
+            file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"
@@ -772,7 +796,6 @@ class Docs:
             tb_dictionary = {'weight': 'משקל', 'weight_per_M': 'משקל למטר', 'length': 'סה"כ אורך', 'type': 'סוג ברזל',
                              'qnt': 'כמות', 'description': 'תיאור'}
             for dt in summary_data:
-                print(dt)
                 header = []
                 tb_data = []
                 # Add header above table
@@ -809,7 +832,6 @@ class Docs:
         #  table
         doc.save(file_name)
         output_file = configs.reports_dir+'report_output\\'+os.path.basename(file_name).replace('docx', 'pdf')
-        print(functions.ts())
         convert(file_name, output_file, pythoncom.CoInitialize())
         return output_file
 

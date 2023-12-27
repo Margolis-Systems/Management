@@ -74,6 +74,13 @@ def orders_page():
     return orders.orders()
 
 
+@app.route('/all_orders', methods=['POST', 'GET'])
+def all_orders_page():
+    if users.validate_user() < 10:
+        return '', 204
+    return orders.orders(True)
+
+
 @app.route('/edit_order', methods=['POST', 'GET'])
 def edit_order():
     if users.validate_user() < 10:
@@ -331,7 +338,7 @@ def integration_orders():
     return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary())
 
 
-production = False
+production = True
 if __name__ == '__main__':
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:

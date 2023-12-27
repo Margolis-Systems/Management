@@ -13,7 +13,7 @@ import math
 from collections import OrderedDict
 
 
-def orders():
+def orders(all=False):
     if not users.validate_user():
         return users.logout()
     if 'order_id' in main.session.keys():
@@ -41,6 +41,9 @@ def orders():
         if main.session['user_config']['status']:
             query['info.status'] = {'$regex': main.session['user_config']['status']}
             # del query['info.date_created']
+    elif not all:
+        query['info.status'] = {'$nin': ['canceled']}
+        query['info.costumer_id'] = {'$ne': '58'}
     if main.request.form:
         req_form = dict(main.request.form)
         for item in req_form:
@@ -476,23 +479,24 @@ def update_order_status(new_status, order_id, job_id="", force=False):
     if not order:
         return
     flag = True
+    if new_status == 'Loaded':
+        order['info']['status'] = 'PartlyDelivered'
     if job_id != "":
         for i in range(len(order['rows'])):
             if order['rows'][i]['job_id'] == job_id:
                 order['rows'][i]['status'] = new_status
                 order['rows'][i]['status_updated_by'] = main.session['username'] + ' : ' + ts()
                 functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
-            if order['rows'][i]['status'] != 'Finished':
+            if order['rows'][i]['status'] != new_status or new_status not in ['Finished', 'Loaded']:
                 flag = False
         if flag:
-            order['info']['status'] = new_status
+            dic = {'Finished': 'Finished', 'Loaded': 'Delivered'}
+            order['info']['status'] = dic[new_status]
     else:
         order['info']['status'] = new_status
-        # if new_status in ['NEW', 'Processed', 'Production'] or force:
         if re.search('NEW|Processed|Production', new_status):
             for i in range(len(order['rows'])):
                 if re.search('NEW|Processed|Production', order['rows'][i]['status']) or force:
-                # if order['rows'][i]['status'] in ['NEW', 'Processed', 'Production'] or force:
                     order['rows'][i]['status'] = new_status
         if not force:
             if 'reason' in main.request.form:
