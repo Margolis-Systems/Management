@@ -55,6 +55,6 @@ for order in list(all_orders):
 
 
 import reports
-order = mongo.read_collection_one('orders', {'order_id':'1759'})['rows'][0]
+order = mongo.read_collection_one('orders', {'order_id':'2817'})['rows'][0]
 # piles.calc_weight(order)
 reports.Images.create_pile_plot(order, True)

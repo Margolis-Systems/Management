@@ -58,6 +58,7 @@
         <td width="80"></td>
         <td>
             <table class="table table-striped" dir="rtl" align="center">
+                {% set focus_index = 22 %}
                 <tr>
                     <td>
                         <input type="number" step=".1" name="trim_y_start" id="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" value="{{defaults['trim_y_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
@@ -111,9 +112,9 @@
             </table>
         </td>
         <td>
-            <input class="form-control" name="bend1" placeholder="כיפוף1" value="{{defaults['bend1']}}" onkeydown="return event.key != 'Enter';">
-            <input class="form-control" name="bend2" placeholder="כיפוף2" value="{{defaults['bend2']}}" onkeydown="return event.key != 'Enter';">
-            <input class="form-control" name="bend3" placeholder="כיפוף3" value="{{defaults['bend3']}}" onkeydown="return event.key != 'Enter';">
+            <input class="form-control" name="bend1" id="bend1" placeholder="כיפוף1" value="{{defaults['bend1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(32)'>
+            <input class="form-control" name="bend2" id="bend2" placeholder="כיפוף2" value="{{defaults['bend2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(33)'>
+            <input class="form-control" name="bend3" id="bend3" placeholder="כיפוף3" value="{{defaults['bend3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(34)'>
         </td>
     </tr>
 </table>

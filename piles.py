@@ -1,7 +1,9 @@
 import math
 import configs
 
-pipes_wt_m = {'2': 2.5, '2.5': 3.25}
+# {pipe diam: {pipe thick: 'weight per M' } }
+pipes_wt_m = {'2': {'1.5': 2.18, '2': 2.88, '2.2': 3.15, '2.65': 3.76, '2.9': 4.06, '3.25': 4.54, '3.65': 5.1, '4': 5.55},
+              '2.5': {'1.5': 2.76, '2': 3.65, '2.2': 4.01, '2.65': 4.8, '2.9': 5.24, '3.25': 5.92, '3.65': 6.52}}
 
 
 def calc_weight(data_dict):
@@ -30,8 +32,12 @@ def calc_weight(data_dict):
     weight['pipes'] = 0
     if 'pipe_diam' in data_dict:
         if data_dict['pipe_diam'] in pipes_wt_m:
-            weight['pipes'] = round(int(data_dict['pipe_len']) * int(data_dict['pipes']) * pipes_wt_m[data_dict['pipe_diam']]/100)
+            if data_dict['pipe_thick'] in pipes_wt_m[data_dict['pipe_diam']]:
+                # print(data_dict)
+                weight['pipes'] = round(int(data_dict['pipe_len']) * int(data_dict['pipes']) * int(data_dict['quantity'])
+                                        * pipes_wt_m[data_dict['pipe_diam']][data_dict['pipe_thick']]/100)
 
     weight['pile'] = weight['spiral'] + weight['bars'] + weight['rings']
     weight['total'] = weight['pile'] + weight['pipes']
+    # print('wt', weight)
     return weight, total_length

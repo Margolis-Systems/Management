@@ -233,6 +233,8 @@ class Images:
                     x1 = round(122.5 + 45 * math.sin(2*math.pi*i/tot_bars))
                     y1 = round(427.5 + 45 * math.cos(2*math.pi*i/tot_bars))
                     draw.line([(x, y), (x1, y1)], fill="black", width=4)
+            elif data['bend'] == 'טבעת חיזוק':
+                draw.line([(20, 80), (20, 200)], fill="black", width=3)
         # else:
         for i in range(tot_bars):
             x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
@@ -260,7 +262,7 @@ class Images:
                       font=ImageFont.truetype(font_dir, font_size))
         # Draw pipes
         if 'pipe_len' in data:
-            pipe_decript = u'{} X @{} X {} [{}]'.format(data['pipes'], data['pipe_diam'], data['length'], data['pipe_thick'])
+            pipe_decript = u'{} X @{} X {} [{}]'.format(data['pipes'], data['pipe_diam'], data['pipe_len'], data['pipe_thick'])
             draw.line([(15,250),(675,250)], fill="black", width=3)
             draw.text((400, 230), 'צינורות', direction='rtl', fill="black",
                       font=ImageFont.truetype(font_dir, font_size))

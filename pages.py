@@ -62,7 +62,7 @@ def gen_patterns(order_type='regular'):
     elif order_type == 'piles':
         diam = list(main.configs.weights.keys())
         diam.sort(key=lambda k: float(k))
-        bend = ['חוץ', 'פנים', 'שושנה']
+        bend = ['חוץ', 'פנים', 'שושנה', 'טבעת חיזוק']
         lists = {'spiral_diam': diam, 'bend': bend}
         patterns = {'spiral_diam': '|'.join(diam), 'bend': '|'.join(bend)}
     else:
@@ -290,8 +290,8 @@ def scan():
         #         order['rows'].pop(i)
         #         break
         # order['rows'].append(row)
-        if 'status' in row:
-            row['status'] = row['status'].replace('order_status_', '')
+        row['status'] = row['status'].replace('order_status_', '')
+        if 'status' in row and 'operator' in main.session['username']:
             if 'InProduction' in row['status']:
                 status = "Start"
             elif 'Production' in row['status']:
@@ -302,17 +302,20 @@ def scan():
             elif "Processed" in row['status']:
                 orders.update_order_status('InProduction', order_id)
                 status = "Start"
-            elif main.session['username'] == 'operator34' and "Finished" in row['status']:
-                if 'operator34' not in row['status_updated_by']:
+            elif main.session['username'] in ['operator34'] and "Finished" in row['status']:
+                if main.session['username'] not in row['status_updated_by']:
                     status = "Start"
                 else:
                     msg = row['status']
                     order_id = ''
-            elif row['status'] == 'Finished' and 'amasa' in main.session['username']:
-                status = 'Loaded'
             else:
                 msg = row['status']
                 order_id = ''
+        elif row['status'] == 'Finished' and 'amasa' in main.session['username']:
+            status = 'Loaded'
+        else:
+            msg = row['status']
+            order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
                                 dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']})
 

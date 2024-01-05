@@ -39,6 +39,7 @@ print_dicts = {'regular': {}, 'rebar': {}, 'pile': {}, 'girders': {}}
 
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
 circle = ['925', '966', '215', '216', '78', '79', '119', '68', '36', '44', '16', '6', '331','161', '82','200']
-order_types = {'regular', 'rebar', 'R', 'girders', 'piles'}
-order_statuses = {'NEW', 'Processed', 'Production', 'Finished', 'Loaded', 'Delivered', 'PartlyDelivered',
-                  'PartlyDeliveredClosed', 'Outsource', 'canceled'}
+phones_to_notify = ['0509595953', '0509393938', '0528008018', '0515907228', '0509393934']
+order_types = ['regular', 'rebar', 'R', 'girders', 'piles']
+order_statuses = ['NEW', 'Processed', 'Production', 'Finished', 'Loaded', 'Delivered', 'PartlyDelivered',
+                  'PartlyDeliveredClosed', 'Outsource', 'canceled']

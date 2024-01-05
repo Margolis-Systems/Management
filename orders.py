@@ -13,7 +13,7 @@ import math
 from collections import OrderedDict
 
 
-def orders(all=False):
+def orders(_all=False):
     if not users.validate_user():
         return users.logout()
     if 'order_id' in main.session.keys():
@@ -41,7 +41,7 @@ def orders(all=False):
         if main.session['user_config']['status']:
             query['info.status'] = {'$regex': main.session['user_config']['status']}
             # del query['info.date_created']
-    elif not all:
+    elif not _all:
         query['info.status'] = {'$nin': ['canceled']}
         query['info.costumer_id'] = {'$ne': '58'}
     if main.request.form:
@@ -256,6 +256,10 @@ def new_order_row():
         new_row['weight'] = weight['total']
         new_row['pile_weight'] = weight['pile']
         new_row['pipe_weight'] = weight['pipes']
+        if 'bend' in new_row:
+            if 'bend_len' not in new_row:
+                new_row['bend_len'] = '20'
+            new_row['length'] += int(new_row['bend_len'])
         # return
     else:
         # Order comment
@@ -389,11 +393,14 @@ def edit_order_data():
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
         order_data['dtd_order'].extend(
-            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
+            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'x_length0', 'x_pitch0', 'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2',
+             'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch', 'y_length0', 'y_pitch0', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
+             'bend1', 'bend2', 'bend3'])
     elif info['type'] == 'piles':
         order_data['include'] = 'piles_editor.html'
         order_data['dtd_order'].extend(
-            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])
+            ['spiral', 'pitch', 'spiral_1', 'pitch_1', 'spiral_2', 'pitch_2', 'spiral_3', 'pitch_3', 'bars', 'bars_diam', 'bars_len',
+             'bars_1', 'bars_diam_1', 'bars_len_1', 'rings', 'rings_diam', 'pipes', 'pipe_diam', 'pipe_len', 'pipe_thick', 'pile_comment'])
     lists, patterns = pages.gen_patterns(info['type'])
     dictionary = pages.get_dictionary()
     if 'total_weight' not in info:
@@ -511,7 +518,7 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                     .format(order_id=order_id, date_created=order['info']['date_created'], date_delivery=order['info']['date_delivery'],
                             costumer_name=order['info']['costumer_name'], costumer_site=order['info']['costumer_site'],
                             total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'])
-                phone_book = ['0509595953', '0509393938', '0528008018']
+                phone_book = configs.phones_to_notify
                 functions.send_sms(msg, phone_book)
     main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
 

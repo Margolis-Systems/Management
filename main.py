@@ -338,8 +338,9 @@ def integration_orders():
     return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary())
 
 
-production = True
+production = False
 if __name__ == '__main__':
+    # 054200076
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
         serve(app, host=configs.server, port=configs.server_port, threads=50)
