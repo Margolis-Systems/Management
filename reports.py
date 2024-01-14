@@ -39,6 +39,8 @@ class Images:
             formatted += '@l' + str(int(float(data['length'])*10))
         if 'quantity' in data.keys():
             formatted += '@n' + str(data['quantity'])
+        if 'pack_quantity' in data.keys():
+            formatted += '@q' + str(data['pack_quantity'])
         if 'weight' in data.keys():
             formatted += '@e' + str(data['weight'])
         if 'diam' in data.keys():
@@ -118,6 +120,8 @@ class Images:
                         decode['length'] = item[1:]
                     elif item[0] == 'n':
                         decode['quantity'] = item[1:]
+                    elif item[0] == 'q':
+                        decode['pack_quantity'] = item[1:]
                     elif item[0] == 'e':
                         decode['weight'] = item[1:]
                     elif item[0] == 'd':
@@ -393,7 +397,7 @@ class Bartender:
                     continue
                 if info['type'] == 'piles' and 'label' in print_type:
                     row['pack_quantity'] = 1
-                    pile_fix = round(float(row['weight']) / int(row['quantity']))
+                    # pile_fix = round(float(row['weight']) / int(row['quantity']))
                 if 'pack_quantity' in row and 'label' in print_type:
                     pack_rows = []
                     row['quantity'] = int(row['quantity'])
@@ -405,7 +409,8 @@ class Bartender:
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
                             if 'unit_weight' not in pack_row:
-                                pack_row['unit_weight'] = pile_fix
+                                # pack_row['unit_weight'] = pile_fix
+                                pack_row['unit_weight'] = round(float(row['weight']) / int(row['quantity']))
                             pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:

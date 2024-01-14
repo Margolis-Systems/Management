@@ -1,4 +1,6 @@
 # Server
+import sys
+
 from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory, make_response
 from waitress import serve
 from werkzeug.utils import secure_filename
@@ -17,9 +19,6 @@ from operator import itemgetter
 
 mongo = db_handler.DBHandle()
 app = Flask("Management system")
-
-with open('pid.txt', 'w') as pid:
-    pid.write(str(os.getpid()))
 
 
 @app.route('/')
@@ -224,6 +223,11 @@ def scaling():
     return scale.main_page()
 
 
+@app.route('/weights', methods=['POST', 'GET'])
+def weights():
+    return scale.weights_page()
+
+
 @app.route('/scaleov', methods=['POST', 'GET'])
 def scale_overview():
     return scale.overview()
@@ -338,11 +342,28 @@ def integration_orders():
     return render_template('integration_orders.html', orders=intg_orders, data_to_display=dtd, dictionary=pages.get_dictionary())
 
 
+@app.route('/reload_config', methods=['POST', 'GET'])
+def reload_config():
+    if users.validate_user() < 99:
+        return '', 204
+    configs.read_mongo_conf()
+    configs.read_shapes()
+    return redirect('/')
+
+
 production = False
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'True':
+        production = True
+
+
 if __name__ == '__main__':
     # 054200076
+
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
         serve(app, host=configs.server, port=configs.server_port, threads=50)
+        with open('pid.txt', 'w') as pid:
+            pid.write(str(os.getpid()))
     else:
-        app.run(debug=True, host=configs.server, port=configs.server_port)
+        app.run(debug=True, host=configs.server)  # , port=configs.server_port)

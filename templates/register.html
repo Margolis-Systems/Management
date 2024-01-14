@@ -23,6 +23,26 @@
                         <option value="ar">ערבית</option>
                     </datalist>
                  </div>
+                <div class="form-group">
+                    <label>מדפסת ברירת מחדל</label>
+                    <input list="page" class="form-control" name="default_printer.page" required>
+                    <datalist id="page">
+                        <option value="-" selected>-</option>
+                        {% for p in printers.page %}
+                        <option value="{{p}}">{{p}}</option>
+                        {% endfor %}
+                    </datalist>
+                 </div>
+                <div class="form-group">
+                    <label>מדפסת מדבקות ברירת מחדל</label>
+                    <input list="label" class="form-control" name="default_printer.label" required>
+                    <datalist id="label">
+                        <option value="-" selected>-</option>
+                        {% for p in printers.label %}
+                        <option value="{{p}}">{{p}}</option>
+                        {% endfor %}
+                    </datalist>
+                 </div>
                 <button type="submit" class="btn btn-primary btn-block">משתמש חדש</button>
                 <div class="errmsg">
                  {{msg}}
@@ -40,16 +60,28 @@
                 </div>
                 <div class="form-group">
                     <label>סיסמה \ Password</label>
-                    <input type="password" class="form-control" name="pass" placeholder="Password" required>
+                    <input type="password" class="form-control" name="pass" placeholder="Password">
+                </div>
+                <div class="form-group">
+                    <label>הרשאות</label>
+                    <input type="number" class="form-control" name="group" placeholder="Group">
                 </div>
                 <div class="form-group">
                     <label>שפה</label>
-                    <input list="lang" class="form-control" name="lang" required>
+                    <input list="lang" class="form-control" name="lang">
                     <datalist id="lang">
                         <option value="he">עברית</option>
                         <option value="ru">רוסית</option>
                         <option value="ar">ערבית</option>
                     </datalist>
+                 </div>
+                <div class="form-group">
+                    <label>מדפסת ברירת מחדל</label>
+                    <input list="page" class="form-control" name="default_printer.page">
+                 </div>
+                <div class="form-group">
+                    <label>מדפסת מדבקות ברירת מחדל</label>
+                    <input list="label" class="form-control" name="default_printer.label">
                  </div>
                 <button type="submit" class="btn btn-primary btn-block">עדכן</button>
                 <div class="errmsg">

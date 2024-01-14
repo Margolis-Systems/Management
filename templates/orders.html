@@ -28,22 +28,23 @@
         <form method=POST autocomplete="off" action="{{ url_for('orders_page') }}">
         <td>
             <label>חיפוש</label>
-            <input type="text" name="order_id" value="{{defaults.order_id}}" placeholder="מספר הזמנה">
-            <input type="text" name="info.costumer_name" value="{{defaults['info.costumer_name']}}" placeholder="שם לקוח">
-            {% if defaults['info.costumer_name'] %}
-            <select name="info.costumer_site">
-                {% for opt in defaults['info.costumer_site'] %}
+            <input type="number" min="1" name="order_id" value="{{defaults.order_id}}" placeholder="מספר הזמנה" onchange="location.href='/user_config?search=&order_id='+this.value;refresh();" >
+            <input type="text" name="info.costumer_name" value="{{defaults['info.costumer_name']}}" placeholder="שם לקוח" onchange="location.href='/user_config?search=&info.costumer_name='+this.value;refresh();" >
+            {% if sites_search_list %}
+            <select name="info.costumer_site" onchange="location.href='/user_config?search=&info.costumer_site='+this.value;refresh();" >
+                <option></option>
+                {% for opt in sites_search_list %}
                 <option>{{opt}}</option>
                 {% endfor %}
             </select>
             {% endif %}
-            <button type="submit">חפש</button>
-            <button type="button" onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
+            <!--<button type="submit">חפש</button>-->
+            <button type="button" onclick="location.href='/user_config?search=';refresh();">איפוס</button>
         </td>
         </form>
         <td>סינון:</td>
         <td>
-            <select onchange="location.href='/user_config?type='+this.value;refresh();" >
+            <select onchange="location.href='/user_config?search=&info.type='+this.value;refresh();" >
                 <option style="display:none" selected>בחר סוג</option>
                 {% for opt in order_types %}
                 {% if opt in search['type'] %}
@@ -55,7 +56,7 @@
             </select>
         </td>
         <td>
-            <select onchange="location.href='/user_config?status='+this.value;refresh();" >
+            <select onchange="location.href='/user_config?search=&info.status='+this.value;refresh();" >
                 <option style="display:none" selected>סטטוס</option>
                 {% for opt in order_statuses %}
                 {% if opt in search['type'] %}
@@ -67,7 +68,7 @@
             </select>
         </td>
         <td colspan="5">
-            <button onclick="location.href='/user_config?filter=';refresh();">איפוס</button>
+            <button onclick="location.href='/user_config?search=';refresh();">איפוס</button>
         </td>
     </tr>
 </table>
@@ -84,7 +85,11 @@
     {% for order in orders %}
     <tr bgcolor="{{dictionary.html_colors[order.status]}}">
         {% for item in display_items %}
+        {% if order['linked_orders_tot_w'] %}
+        <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'" title="TOTAL: {{order['linked_orders_tot_w']}} KG">
+        {% else %}
         <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'">
+        {% endif %}
         {% if dictionary[order[item]] %}
             {{dictionary[order[item]]}}
         {% else %}

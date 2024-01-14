@@ -35,10 +35,12 @@ def edit_client(client_id=""):
                 client_id = add_new_client(main.request.form['name'])
                 client_data = main.mongo.read_collection_one('costumers', {'id': client_id})
             for item in main.request.form:
-                if 'site' in item:
+                if item == 'new_site':
                     new_site = main.request.form[item].strip()
                     if new_site and new_site not in client_data['sites']:
                         main.mongo.update_one('costumers', {'id': client_id}, {'sites': new_site}, '$push')  # , upsert=True)
+                elif 'site_' in item:
+                    main.mongo.update_one('costumers', {'id': client_id}, {'sites.{}'.format(item[5:]): main.request.form[item]}, '$set')
                 elif item not in ['return_to', 'order_type', 'id']:
                     main.mongo.update_one('costumers', {'id': client_id}, {item: main.request.form[item]}, '$set')
             return main.redirect('/edit_client?'+client_id)

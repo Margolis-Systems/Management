@@ -8,7 +8,7 @@ import configs
 import orders
 
 mongo = configs.mongo
-all_orders = mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}})
+all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
 
 
 def find_not_updated():
@@ -46,15 +46,15 @@ def validate_log():
             if logg[-1]['operation']['status'] != order['info']['status']:
                 print(order['order_id'],order['info']['status'],logg[-1]['operation']['status'])
 
+weights = {}
+for order in all_orders:
+    if 'total_weight' in order['info']:
+        weights[order['order_id']] = order['info']['total_weight']
+    else:
+        weights[order['order_id']] = 0
+for order in all_orders:
+    if 'linked_orders' in order['info']:
+        for i in range(len(order['info']['linked_orders'])):
+            l_id = order['info']['linked_orders'][i]['order_id']
+            mongo.update_one('orders', {'order_id': order['order_id']}, {'info.linked_orders.{}.total_weight'.format(i): weights[l_id]}, '$set')
 
-for order in list(all_orders):
-    for r in order['rows']:
-        if 'status_updated_by' in r:
-            if 'operator1 : 2023-11-12' in r['status_updated_by']:
-                print(r['order_id'], r['job_id'])
-
-
-import reports
-order = mongo.read_collection_one('orders', {'order_id':'2817'})['rows'][0]
-# piles.calc_weight(order)
-reports.Images.create_pile_plot(order, True)

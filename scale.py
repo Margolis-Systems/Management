@@ -84,6 +84,11 @@ def main_page():
                                 dictionary=pages.get_dictionary(), doc_list=doc_list, perm=perm)
 
 
+def weights_page():
+
+    return main.render_template('weight/weights.html')
+
+
 def overview():
     permission = users.validate_user()
     if not permission:
@@ -124,6 +129,14 @@ def get_weight(site_info):
                         ret[sensor * 2 + 1] = 0
             else:
                 print("No data from Sensor:", sensors[sensor])
+    elif 'station_id' in site_info:
+        weights = main.mongo.read_collection_one('weights', {'station_id': site_info['station_id']}, db_name='Scaling')
+        if weights:
+            if site_info['sensors'] in weights:
+                act = weights[site_info['sensors']]['actual']
+                if 'tare' in weights[site_info['sensors']]:
+                    act -= weights[site_info['sensors']]['tare']
+                ret = [weights[site_info['sensors']]['info'], act, '', 0]
     return ret
 
 
@@ -228,12 +241,21 @@ def calc_weight(req):
 
 
 def tare_scale(site_info):
-    weights = main.mongo.read_collection_one('weights', db_name='Scaling',
-                                             query={'CRR_ID': site_info['crr'], 'error': {'$exists': False}})
-    tare = {}
-    for sensor in site_info['sensors']:
-        tare[sensor+'.tare'] = weights[sensor]['actual']
-    main.mongo.update_one('weights', {'CRR_ID': site_info['crr']}, tare, '$set', db_name='Scaling', upsert=True)
+    if 'crr' in site_info:
+        weights = main.mongo.read_collection_one('weights', db_name='Scaling',
+                                                 query={'CRR_ID': site_info['crr'], 'error': {'$exists': False}})
+        tare = {}
+        for sensor in site_info['sensors']:
+            tare[sensor+'.tare'] = weights[sensor]['actual']
+        main.mongo.update_one('weights', {'CRR_ID': site_info['crr']}, tare, '$set', db_name='Scaling', upsert=True)
+    elif 'station_id' in site_info:
+        weights = main.mongo.read_collection_one('weights', db_name='Scaling',
+                                                 query={'station_id': site_info['station_id'], 'error': {'$exists': False}})
+        print(weights)
+        #{'sensors': 'גשר קטן', 'station_id': 'Barzel1'}
+        main.mongo.update_one('weights', {'station_id': site_info['station_id']},
+                              {'{}.tare'.format(site_info['sensors']): weights[site_info['sensors']]['actual']}, '$set', db_name='Scaling')
+        #{'station_id': 'Barzel1', 'גשר קטן': {'actual': 10, 'info': ''}, 'גשר גדול': {'actual': 0, 'info': ''}}
 
 
 def pick_crane():

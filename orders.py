@@ -19,48 +19,23 @@ def orders(_all=False):
     if 'order_id' in main.session.keys():
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
-    query = {'info': {'$exists': True}, 'info.type': {'$ne': 'integration'},
+    query = {'info.type': {'$ne': 'integration'}, 'info.status': {'$nin': ['canceled']}, 'info.costumer_id': {'$ne': '58'},
              'info.date_created': {'$gte': functions.ts('html_date', 60), '$lte': functions.ts('html_date') + 'T23:59:59'}}
     defaults = {'from': functions.ts('html_date', 60), 'to': functions.ts('html_date')}
     if 'user_config' in main.session:
         if 'search' in main.session['user_config']:
             if main.session['user_config']['search']:
-                query = main.session['user_config']['search']
-                if 'info.date_created' in query:
-                    del query['info.date_created']
-                for k in query:
-                    if '$regex' in query[k]:
-                        defaults[k] = query[k]['$regex']
-                        if k == 'info.costumer_name':
-                            defaults['info.costumer_site'] = []
-    if 'type' in main.session['user_config']:
-        if main.session['user_config']['type']:
-            query['info.type'] = {'$regex': main.session['user_config']['type']}
-            # del query['info.date_created']
-    if 'status' in main.session['user_config']:
-        if main.session['user_config']['status']:
-            query['info.status'] = {'$regex': main.session['user_config']['status']}
-            # del query['info.date_created']
-    elif not _all:
-        query['info.status'] = {'$nin': ['canceled']}
-        query['info.costumer_id'] = {'$ne': '58'}
-    if main.request.form:
-        req_form = dict(main.request.form)
-        for item in req_form:
-            if 'date' in item:
-                defaults['from'] = req_form['date_from']
-                defaults['to'] = req_form['date_to']
-                query['info.date_created'] = {'$gte': req_form['date_from'], '$lte': req_form['date_to'] + 'T23:59:59'}
-            else:
-                if req_form[item]:
-                    query[item] = {'$regex': req_form[item]}
-        main.session['user_config']['search'] = query
-        main.session.modified = True
-        return main.redirect('/orders')
+                del query['info.status']
+                del query['info.costumer_id']
+                del query['info.date_created']
+                for k in main.session['user_config']['search']:
+                    defaults[k] = main.session['user_config']['search'][k]
+                    query[k] = {'$regex': str(main.session['user_config']['search'][k])}
     # Read all orders data with Info, mean that it's not including order rows
     orders_data = main.mongo.read_collection_list('orders', query)
     dictionary = pages.get_dictionary()
     orders_info = []
+    sites_search_list = []
     for order in orders_data:
         row = order['info'].copy()
         row['order_id'] = order['order_id']
@@ -73,22 +48,23 @@ def orders(_all=False):
         if 'linked_orders' in row:
             temp = row['linked_orders'].copy()
             row['linked_orders'] = ''
+            row['linked_orders_tot_w'] = 0
             for i in temp:
+                row['linked_orders_tot_w'] += int(i['total_weight'])
                 if i['order_id'] != row['order_id']:
                     order_type = i['type']
                     if i['type'] in dictionary:
                         order_type = dictionary[i['type']]
-                    row['linked_orders'] += '{}: {}'.format(i['order_id'], order_type)
+                    row['linked_orders'] += '\n[{} : {}] '.format(i['order_id'], order_type)
         orders_info.append(row)
-        if 'info.costumer_site' in defaults:
-            if not isinstance(defaults['info.costumer_site'], list):
-                defaults['info.costumer_site'] = [defaults['info.costumer_site']]
-            if row['costumer_site'] not in defaults['info.costumer_site']:
-                defaults['info.costumer_site'].append(row['costumer_site'])
+        if 'info.costumer_name' in defaults:
+            if 'costumer_site' in row:
+                if row['costumer_site'] not in sites_search_list:
+                    sites_search_list.append(row['costumer_site'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults, search=main.session['user_config'],
-                                order_types=configs.order_types, order_statuses=configs.order_statuses)
+                                order_types=configs.order_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list)
 
 
 def new_order(client="", order_type=""):
@@ -494,7 +470,9 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                 order['rows'][i]['status'] = new_status
                 order['rows'][i]['status_updated_by'] = main.session['username'] + ' : ' + ts()
                 functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
-            if order['rows'][i]['status'] != new_status or new_status not in ['Finished', 'Loaded']:
+            status_list = configs.all_statuses
+            only_fwd_cond = status_list.index(new_status) < status_list.index(order['info']['status'])
+            if order['rows'][i]['status'] != new_status or new_status not in ['Finished', 'Loaded'] or only_fwd_cond:
                 flag = False
         if flag:
             dic = {'Finished': 'Finished', 'Loaded': 'Delivered'}
@@ -650,7 +628,7 @@ def link_order():
         link_order_data, link_order_info = get_order_data(link_order_id)
         cur_l = {}
         to_l = {}
-        for key in ['order_id', 'type', 'comment']:
+        for key in ['order_id', 'type', 'comment', 'total_weight']:
             if key in link_order_info:
                 to_l[key] = link_order_info[key]
             if key in order_info:

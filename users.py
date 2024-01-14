@@ -1,3 +1,4 @@
+import configs
 import functions
 import main
 import bcrypt
@@ -48,25 +49,39 @@ def register():
     if main.request.method == 'POST':
         existing_user = get_user_data(main.request.form['username'].lower())
         if existing_user is None:
-            main.mongo.insert_collection_one(main.configs.users_collection, {'name': main.request.form['username'].lower(), 'password':
-                                            bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), bcrypt.gensalt()),
-                                        'group': 1, 'lang': main.request.form['lang']})
-            # main.session['username'] = main.request.form['username']
-            # return main.redirect(main.url_for('index'))
+            form = dict(main.request.form)
+            new_user = {}
+            for k in form:
+                if k == 'pass':
+                    new_user['password'] = bcrypt.hashpw(form[k].encode('utf-8'), bcrypt.gensalt())
+                elif '.' in k:
+                    ks = k.split('.')
+                    if ks[0] not in new_user:
+                        new_user[ks[0]] = {}
+                    new_user[ks[0]][ks[1]] = form[k]
+                else:
+                    new_user[k] = form[k]
+            main.mongo.insert_collection_one(main.configs.users_collection, new_user)
         else:
             message = "That username already exists!"
-    return main.render_template('register.html', msg=message)
+    return main.render_template('register.html', msg=message, printers=configs.printers)
 
 
 def edit_user():
     req_form = dict(main.request.form)
     doc = {}
-    if 'password' in req_form:
-        if req_form['password']:
-            doc['password'] = bcrypt.hashpw(req_form['pass'].encode('utf-8'), bcrypt.gensalt())
-    if 'lang' in req_form:
-        if req_form['lang']:
-            doc['lang'] = req_form['lang']
+    k_list = ['lang', 'default_printer.page', 'default_printer.label']
+    i_list = ['group']
+    for k in req_form:
+        if k == 'pass':
+            if req_form[k]:
+                doc[k] = bcrypt.hashpw(req_form[k].encode('utf-8'), bcrypt.gensalt())
+        elif k in k_list:
+            if req_form[k]:
+                doc[k] = req_form[k]
+        elif k in i_list:
+            if req_form[k]:
+                doc[k] = int(req_form[k])
     main.mongo.update_one('users', {'name': req_form['username']}, doc, '$set')
     return '', 204
 
@@ -89,17 +104,19 @@ def clear():
 
 def user_configs():
     req_vals = dict(main.request.values)
-    if req_vals:
-        if 'type' in req_vals:
-            main.session['user_config']['type'] = req_vals['type']
-            main.session['user_config']['search'] = {}
-        elif 'status' in req_vals:
-            main.session['user_config']['status'] = req_vals['status']
-            main.session['user_config']['search'] = {}
+    keys = list(req_vals.keys())
+    if not req_vals:
+        main.session['user_config'] = {}
+        main.session['user_config']['search'] = {}
+    if 'search' in keys:
+        keys.remove('search')
+        if len(keys) == 1:
+            if 'search' not in main.session['user_config']:
+                main.session['user_config']['search'] = {}
+            main.session['user_config']['search'][keys[0]] = req_vals[keys[0]]
         else:
-            main.session['user_config'] = {}
             main.session['user_config']['search'] = {}
-        main.session.modified = True
+    main.session.modified = True
     return '', 204
 
 

@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block body %}
+<script src="\static\js\shapes.js" ></script>
+
+<script>
+  var intervalID = setInterval(update_values,2000);
+  const isObjectEmpty = (objectName) => {
+  return (
+    objectName &&
+    Object.keys(objectName).length === 0 &&
+    objectName.constructor === Object
+  );
+};
+  function update_values() {
+  var data
+        $.getJSON('/scaling_weight', function(data) {
+        $('#result').text(data);
+        if (Object.keys(data).length === 0){
+        window.location.reload();
+        }
+        ts1 = document.getElementById('timestamp1');
+        ts2 = document.getElementById('timestamp2');
+        weight1 = document.getElementById('weight1');
+        weight2 = document.getElementById('weight2');
+        ts1.value = data.ts1;
+        ts2.value = data.ts2;
+        weight1.value = data.weight1;
+        weight2.value = data.weight2;
+        if (data.ts1 == 'Not stable' || data.ts1 == 'COMMUNICATION ERROR' || data.ts2 == 'Not stable' || data.ts2 == 'COMMUNICATION ERROR'){
+            document.getElementById("submit").disabled = true;
+        }
+        else{
+            document.getElementById("submit").disabled = false;
+        }
+      });
+    };
+    function stopTextColor() {
+      clearInterval(intervalID);
+    }
+    function refreshPage() {
+        setTimeout('window.location.reload()',1000);
+    }
+</script>
+
+{% endblock %}
