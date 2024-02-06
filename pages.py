@@ -91,7 +91,7 @@ def shape_editor():
             shape_data['tot_len'] = int(main.request.form['1']) * 3.14 / 2 + 20
         else:
             for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
-                shape_data['tot_len'] += int(main.request.form[str(item)])
+                shape_data['tot_len'] += int(float(main.request.form[str(item)]))
                 if item > 1:
                     shape_data['shape_data'] += ',' + main.request.form[str(item)]
     else:
@@ -265,7 +265,9 @@ def scan():
         job_id = req_form['job_id']
         status = req_form['status'].replace('order_status_', '')
         orders.update_order_status(status, order_id, job_id)
-        production_log(req_form)
+        for spl in job_id.split(','):
+            req_form['job_id'] = spl
+            production_log(req_form)
         return main.redirect('/scan')
     if order_id:
         rows, info = orders.get_order_data(order_id)
@@ -339,10 +341,13 @@ def order_files():
     msg = ""
     if main.request.method == 'POST':
         try:
-            save_file(order_id, main.request.files['file'], description)
-            return main.redirect('/order_files')
+            if 'file' in main.request.files:
+                save_file(order_id, main.request.files['file'], description)
+                return main.redirect('/order_files')
+            else:
+                return '', 204
         except Exception as e:
-            print(e)
+            print('order_files', e)
             msg = "Internal Error"
     files = main.mongo.read_collection_list('attachments', {'order_id': order_id})
     return main.render_template('/order_files.html', files=files, message=msg, order_id=order_id, no_upload=no_upload)
@@ -414,7 +419,7 @@ def reports_page():
         main.session.modified = True
     # Report type handle
     if 'report' in req_vals.keys():
-        weight_multp = 1
+        weight_multp = 1000
         report = req_vals['report']
         query = {}
         machines_id = []
@@ -544,6 +549,7 @@ def reports_page():
                          'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']},
                          'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             # Read all orders data with Info, mean that it's not including order rows
+            query['rows'] = {'$gt': {'size': 0}}
             all_orders = list(main.mongo.read_collection_list('orders', query))
             orders_data = []
             # global_total_weight = 0
@@ -634,8 +640,10 @@ def file_listener():
         order_id = main.request.values['order_id']
     else:
         order_id = main.session['order_id']
-    scanner = main.mongo.read_collection_one('users', {'name': main.session['username']})['default_scanner']
-    main.mongo.upsert_collection_one('attachments', {'name': scanner}, {'name': scanner, 'order_id': order_id})
+    scanner = main.mongo.read_collection_one('users', {'name': main.session['username']})
+    if 'default_scanner' in scanner:
+        main.mongo.upsert_collection_one('attachments', {'name': scanner['default_scanner']},
+                                         {'name': scanner['default_scanner'], 'order_id': order_id})
     return '', 204
 
 

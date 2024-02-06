@@ -1,10 +1,28 @@
-{% extends "layout.html" %}
+{% extends "layout/layout.html" %}
 {% block body %}
+{% if order_id %}
+הזמנה מס: {{order_id}}
+{% endif %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
         <form method=POST id="input_form" autocomplete="off" action="{{ url_for('new_order') }}" onsubmit="input_form.disabled = true; return true;">
             <td>
-                <input type="hidden" name="order_type" value="{{ order_type }}">
+                <label>סוג הזמנה</label>
+
+                <select name="order_type" class="form-control">
+                    {% for i in types %}
+                    {% if order_type==i %}
+                    <option value="{{ i }}" selected>{{ dictionary[i] }}</option>
+                    {% else %}
+                    <option value="{{ i }}">{{ dictionary[i] }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="hidden" name="order_id" value="{{order_id}}">
                 {% if site == "" %}
                 <label>בחר לקוח</label>
                 <input list="client_list" class="form-control" name="name" placeholder="select client" autofocus="autofocus" required>
@@ -26,26 +44,6 @@
                 <button type="submit" class="btn btn-primary btn-block">אישור</button>
             </form>
         </td>
-        {% if permission and not permission %}
-        <td>
-            <form method=POST autocomplete="off" action="{{ url_for('edit_client') }}">
-            {% if site == "" %}
-                <label>לקוח חדש</label><br>
-                <input type="text" class="form-control" name="name">
-                <input type="hidden" name="return_to" value="pick_client">
-                <input type="hidden" name="order_type" value="{{ order_type }}">
-                <button type="submit" class="btn btn-primary btn-block">לקוח חדש</button>
-            {% else %}
-                <label>הוסף אתר</label><br>
-                <input type="hidden" name="name" value="{{clients}}">
-                <input type="hidden" name="return_to" value="pick_client">
-                <input type="hidden" name="order_type" value="{{ order_type }}">
-                <input type="text" class="form-control" name="site_name">
-                <button type="submit" class="btn btn-primary btn-block">הוסף אתר</button>
-            {% endif %}
-            </form>
-        </td>
-        {% endif %}
     </tr>
 </table>
 {% endblock %}

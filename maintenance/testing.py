@@ -2,13 +2,14 @@ import sys
 from datetime import datetime
 
 import piles
+import reports
 
 sys.path.insert(1, 'C:\\Server')
 import configs
-import orders
 
 mongo = configs.mongo
-all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
+# all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'},'info.costumer_name':{'$regex':'דניה סיבוס'},'info.costumer_site':{'$regex':'אומאמי'}}))
+all_orders = list(mongo.read_collection_list('orders', {}))
 
 
 def find_not_updated():
@@ -46,15 +47,48 @@ def validate_log():
             if logg[-1]['operation']['status'] != order['info']['status']:
                 print(order['order_id'],order['info']['status'],logg[-1]['operation']['status'])
 
-weights = {}
-for order in all_orders:
-    if 'total_weight' in order['info']:
-        weights[order['order_id']] = order['info']['total_weight']
-    else:
-        weights[order['order_id']] = 0
-for order in all_orders:
-    if 'linked_orders' in order['info']:
-        for i in range(len(order['info']['linked_orders'])):
-            l_id = order['info']['linked_orders'][i]['order_id']
-            mongo.update_one('orders', {'order_id': order['order_id']}, {'info.linked_orders.{}.total_weight'.format(i): weights[l_id]}, '$set')
+
+def csv_for_yosi_azulai():
+    import csv
+    data = []
+    total = 0
+    for order in all_orders:
+        for r in order['rows']:
+            if r['diam'] == '36':
+                line = [order['order_id'],r['job_id'],r['diam'],r['length'],r['weight']]
+                total += int(r['', '', '', 'TOTAL WEIGHT:', 'weight'])
+                data.append(line)
+
+    data.append([total])
+    with open('c:\\Server\\1.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+
+
+# diff = configs.sscircle.copy()
+# for i in configs.circle:
+#     if i in diff:
+#         diff.remove(i)
+# print(diff)
+# diff = ['58']
+# for o in all_orders:
+#     if o['info']['type'] == 'regular':
+#         for r in o['rows']:
+#             if 'shape' in r:
+#                 if r['shape'] in diff:
+#                     print(r['order_id'], r['job_id'], r['shape'])
+
+# for sha in configs.shapes:
+#     print(sha)
+#     reports.Images.create_shape_plot(sha,enable_text_plot=False)
+import re
+
+
+def decode(raw_str):
+    ret = 'READ ERROR'
+    pattern = '^wn[0-9]+'
+    # wn-00130 kg\r\n
+    if re.match(pattern, raw_str):
+        ret = raw_str[2:8]
+    return ret
 

@@ -69,35 +69,35 @@ def update_user():
 @app.route('/orders', methods=['POST', 'GET'])
 def orders_page():
     if users.validate_user() < 10:
-        return '', 204
+        return redirect('/')
     return orders.orders()
 
 
 @app.route('/all_orders', methods=['POST', 'GET'])
 def all_orders_page():
     if users.validate_user() < 10:
-        return '', 204
+        return redirect('/')
     return orders.orders(True)
 
 
 @app.route('/edit_order', methods=['POST', 'GET'])
 def edit_order():
     if users.validate_user() < 10:
-        return '', 204
+        return redirect('/')
     return orders.edit_order()
 
 
 @app.route('/edit_row', methods=['POST', 'GET'])
 def edit_row():
     if users.validate_user() < 10:
-        return '', 204
+        return redirect('/')
     return orders.edit_row()
 
 
 @app.route('/new_order', methods=['POST', 'GET'])
 def new_order(client="", order_type=""):
     if users.validate_user() < 10:
-        return '', 204
+        return redirect('/')
     return orders.new_order()
 
 
@@ -235,7 +235,9 @@ def scale_overview():
 
 @app.route('/scaling_weight', methods=['POST', 'GET'])
 def scaling_weight():
-    # todo: fix
+    req_vals = dict(request.values)
+    if 'new' in req_vals:
+        return scale.read_weights()
     if 'scale' not in session:
         session['scale'] = {'site': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
         # return {}
@@ -351,6 +353,23 @@ def reload_config():
     return redirect('/')
 
 
+@app.route('/data_req', methods=['POST', 'GET'])
+def data_req():
+    ret = {}
+    if users.validate_user() < 10:
+        return ret
+    req_vals = dict(request.values)
+    if 'clients' in req_vals:
+        client_list, sites_list = clients.gen_client_list()
+        ret = {'clients': client_list}
+    elif 'sites' in req_vals:
+        client_list, sites_list = clients.gen_client_list(req_vals['sites'])
+        ret = {'clients': client_list, 'sites': sites_list}
+    elif 'order_types':
+        ret = {}
+    return ret
+
+
 production = False
 if len(sys.argv) > 1:
     if sys.argv[1] == 'True':
@@ -362,8 +381,8 @@ if __name__ == '__main__':
 
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
-        serve(app, host=configs.server, port=configs.server_port, threads=50)
         with open('pid.txt', 'w') as pid:
             pid.write(str(os.getpid()))
+        serve(app, host=configs.server, port=configs.server_port, threads=50)
     else:
         app.run(debug=True, host=configs.server)  # , port=configs.server_port)

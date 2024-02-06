@@ -14,6 +14,8 @@ from collections import OrderedDict
 
 
 def orders(_all=False):
+    req_vals = dict(main.request.values)
+    rev = True
     if not users.validate_user():
         return users.logout()
     if 'order_id' in main.session.keys():
@@ -22,15 +24,27 @@ def orders(_all=False):
     query = {'info.type': {'$ne': 'integration'}, 'info.status': {'$nin': ['canceled']}, 'info.costumer_id': {'$ne': '58'},
              'info.date_created': {'$gte': functions.ts('html_date', 60), '$lte': functions.ts('html_date') + 'T23:59:59'}}
     defaults = {'from': functions.ts('html_date', 60), 'to': functions.ts('html_date')}
+    if req_vals:
+        if 'date_from' in req_vals:
+            query['info.date_created']['$gte'] = req_vals['date_from']
+            defaults['from'] = req_vals['date_from']
+        if 'date_to' in req_vals:
+            query['info.date_created']['$lte'] = req_vals['date_to'] + 'T23:59:59'
+            defaults['to'] = req_vals['date_to']
+
     if 'user_config' in main.session:
         if 'search' in main.session['user_config']:
             if main.session['user_config']['search']:
                 del query['info.status']
                 del query['info.costumer_id']
-                del query['info.date_created']
+                #del query['info.date_created']
+                exclude = ['reverse']
                 for k in main.session['user_config']['search']:
-                    defaults[k] = main.session['user_config']['search'][k]
-                    query[k] = {'$regex': str(main.session['user_config']['search'][k])}
+                    if k not in exclude:
+                        defaults[k] = main.session['user_config']['search'][k]
+                        query[k] = {'$regex': str(main.session['user_config']['search'][k])}
+                    elif k == 'reverse':
+                        rev = False
     # Read all orders data with Info, mean that it's not including order rows
     orders_data = main.mongo.read_collection_list('orders', query)
     dictionary = pages.get_dictionary()
@@ -61,7 +75,7 @@ def orders(_all=False):
             if 'costumer_site' in row:
                 if row['costumer_site'] not in sites_search_list:
                     sites_search_list.append(row['costumer_site'])
-    orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=True)
+    orders_info.sort(key=lambda k: int(k['order_id'].replace('R','')), reverse=rev)
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults, search=main.session['user_config'],
                                 order_types=configs.order_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list)
@@ -72,10 +86,13 @@ def new_order(client="", order_type=""):
     if not user_group:
         return users.logout()
     req_form = dict(main.request.form)
+    types = configs.new_order_types
+    order_id = ''
+    req_vals = list(main.request.values)
     if 'name' in req_form or client:
         if 'site' in req_form and 'sites_list' in main.session.keys():
-            if 'order_type' in req_form and 'order_id' in main.session.keys():
-                if req_form['order_type'] == main.session['order_id']:
+            if 'order_id' in req_form and 'order_id' in main.session.keys():
+                if req_form['order_id'] == main.session['order_id']:
                     doc = {'info.costumer_name': req_form['name'],
                            'info.costumer_id':
                                main.mongo.read_collection_one('costumers', {'name': req_form['name']})['id'],
@@ -100,8 +117,17 @@ def new_order(client="", order_type=""):
                 return main.redirect('/orders')
         elif 'name' in req_form:
             client = req_form['name']
-    if len(list(main.request.values)) == 1 and not order_type:
-        order_type = list(main.request.values)[0]
+            order_id = req_form['order_id']
+    if req_vals and not order_type and not req_form:
+        order_id = req_vals[0]
+        ord_rows, ord_info = get_order_data(order_id)
+        if ord_info:
+            order_type = ord_info['type']
+            if ord_rows:
+                types = [ord_info['type']]
+        else:
+            order_type = req_vals[0]
+            order_id = ''
     elif 'order_type' in req_form:
         order_type = req_form['order_type']
     client_list, sites_list = clients.gen_client_list(client)
@@ -111,7 +137,7 @@ def new_order(client="", order_type=""):
     if sites_list:
         main.session['sites_list'] = sites_list
     return main.render_template('/pick_client.html', clients=client_list, site=sites_list, order_type=order_type,
-                                permission=permission)
+                                permission=permission, dictionary=pages.get_dictionary(), types=types, order_id=order_id)
 
 
 def new_order_row():
@@ -119,6 +145,8 @@ def new_order_row():
     if 'R' in order_id:
         return
     req_form_data = dict(main.request.form)
+    for item in req_form_data:
+        req_form_data[item] = req_form_data[item].strip()
     # print(req_form_data)
     req_vals = dict(main.request.values)
     order = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
@@ -184,6 +212,7 @@ def new_order_row():
                 bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['x_pitch'][i]))
             else:
                 bars_x += 1
+        # print(bars_x, bars_y)
         x_pitch = '(' + ')('.join(new_row['x_pitch']) + ')'
         y_pitch = '(' + ')('.join(new_row['y_pitch']) + ')'
         new_row['x_bars'] = int(bars_x)
@@ -462,21 +491,23 @@ def update_order_status(new_status, order_id, job_id="", force=False):
     if not order:
         return
     flag = True
-    if new_status == 'Loaded':
-        order['info']['status'] = 'PartlyDelivered'
+    # todo: DISABLED 23.01.2024
+    # if new_status == 'Loaded':
+    #     order['info']['status'] = 'PartlyDelivered'
     if job_id != "":
-        for i in range(len(order['rows'])):
-            if order['rows'][i]['job_id'] == job_id:
-                order['rows'][i]['status'] = new_status
-                order['rows'][i]['status_updated_by'] = main.session['username'] + ' : ' + ts()
-                functions.log('job_status_change', {'order_id': order_id, 'job_id': job_id, 'status': new_status})
-            status_list = configs.all_statuses
-            only_fwd_cond = status_list.index(new_status) < status_list.index(order['info']['status'])
-            if order['rows'][i]['status'] != new_status or new_status not in ['Finished', 'Loaded'] or only_fwd_cond:
-                flag = False
-        if flag:
-            dic = {'Finished': 'Finished', 'Loaded': 'Delivered'}
-            order['info']['status'] = dic[new_status]
+        for spl in job_id.split(','):
+            for i in range(len(order['rows'])):
+                if order['rows'][i]['job_id'] == spl:
+                    order['rows'][i]['status'] = new_status
+                    order['rows'][i]['status_updated_by'] = main.session['username'] + ' : ' + ts()
+                    functions.log('job_status_change', {'order_id': order_id, 'job_id': spl, 'status': new_status})
+                status_list = configs.all_statuses
+                only_fwd_cond = status_list.index(new_status) < status_list.index(order['info']['status'])
+                if order['rows'][i]['status'] != new_status or new_status not in ['Finished', 'Loaded'] or only_fwd_cond:
+                    flag = False
+            if flag:
+                dic = {'Finished': 'Finished', 'Loaded': 'Delivered'}
+                order['info']['status'] = dic[new_status]
     else:
         order['info']['status'] = new_status
         if re.search('NEW|Processed|Production', new_status):
@@ -489,6 +520,9 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                 order['info']['cancel_reason'] = main.request.form['reason']
             else:
                 if 'cancel_reason' in order['info']:
+                    if 'history' not in order['info']:
+                        order['info']['history'] = []
+                    order['info']['history'].append('canceled: '+order['info']['cancel_reason'])
                     del order['info']['cancel_reason']
             functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
             if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
@@ -570,28 +604,41 @@ def peripheral_orders(add_orders, order_id, orig_job_id):
 
 
 def copy_order():
+    client_list, sites_list = clients.gen_client_list()
+    order_id = ''
+    client = ''
     if main.request.form:
         req_form = dict(main.request.form)
         order_id = req_form['order_id']
-        copies = int(req_form['copies'])
-        for copy in list(range(copies)):
-            new_id = new_order_id()
-            order = main.mongo.read_collection_one('orders', {'order_id': order_id})
-            order['order_id'] = new_id
-            order['info']['date_created'] = ts()
-            order['info']['date_delivery'] = ts('html_date')
-            order['info']['created_by'] = main.session['username']
-            for row in order['rows']:
-                row['order_id'] = new_id
-                row['status'] = 'NEW'
-                row['date_created'] = order['info']['date_created']
-                if 'status_updated_by' in row:
-                    del row['status_updated_by']
-                # todo: if הזמנת ייצור
-            main.mongo.insert_collection_one('orders', order)
-            update_order_status('NEW', new_id)
-        return '', 204
-    return main.render_template('/copy_order.html')
+        order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+        if not order:
+            order_id = ''
+            print('w')
+        else:
+            client, sites_list = clients.gen_client_list(order['info']['costumer_name'])
+            # client_list = [client_list]
+        if 'copies' in req_form:
+            copies = int(req_form['copies'])
+            for copy in list(range(copies)):
+                new_id = new_order_id()
+                order['order_id'] = new_id
+                order['info']['date_created'] = ts()
+                order['info']['date_delivery'] = ts('html_date')
+                order['info']['created_by'] = main.session['username']
+                order['info']['costumer_name'] = req_form['client']
+                order['info']['costumer_id'] = main.mongo.read_collection_one('costumers', {'name': req_form['client']})['id']
+                order['info']['costumer_site'] = req_form['site']
+                for row in order['rows']:
+                    row['order_id'] = new_id
+                    row['status'] = 'NEW'
+                    row['date_created'] = order['info']['date_created']
+                    if 'status_updated_by' in row:
+                        del row['status_updated_by']
+                    # todo: if הזמנת ייצור
+                main.mongo.insert_collection_one('orders', order)
+                update_order_status('NEW', new_id)
+            return '', 204
+    return main.render_template('/copy_order.html', order_id=order_id, client_list=client_list, sites_list=sites_list, client=client)
 
 
 def split_order():
@@ -615,12 +662,27 @@ def split_order():
                     order['rows'][i]['order_split'] = req_form[order['rows'][i]['job_id']]
                 else:
                     order['rows'][i]['order_split'] = 1
+        if 'reason' in main.request.form:
+            functions.log('split_order', main.request.form['reason'])
+            order['info']['split_reason'] = main.request.form['reason']
+        else:
+            if 'split_reason' in order['info']:
+                if 'history' not in order['info']:
+                    order['info']['history'] = []
+                order['info']['history'].append('split: ' + order['info']['split_reason'])
+                del order['info']['split_reason']
         main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
         return '', 204
-    return main.render_template('/split_order.html', order=order['rows'])
+    if 'split_reason' in order['info']:
+        split_reason = order['info']['split_reason']
+    else:
+        split_reason = ''
+    return main.render_template('/split_order.html', order=order['rows'], split_reason=split_reason)
 
 
 def link_order():
+    if 'order_id' not in main.session:
+        return '', 204
     order_data, order_info = get_order_data(main.session['order_id'])
     if main.request.form:
         req_form = dict(main.request.form)

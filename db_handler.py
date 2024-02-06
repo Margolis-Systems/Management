@@ -83,7 +83,11 @@ class DBHandle:
         if limit:
             dic = db[collect].find(query, {'_id': False}).sort([('_id', -1)]).limit(limit)
             return dic
-        dic = db[collect].find(query, {'_id': False})
+        try:
+            dic = list(db[collect].find(query, {'_id': False}))
+        except Exception as e:
+            print('read_list:\n', e)
+            return []
         return dic
 
     @staticmethod

@@ -51,6 +51,7 @@ def register():
         if existing_user is None:
             form = dict(main.request.form)
             new_user = {}
+            # todo: 'username and 'group'
             for k in form:
                 if k == 'pass':
                     new_user['password'] = bcrypt.hashpw(form[k].encode('utf-8'), bcrypt.gensalt())
@@ -105,6 +106,7 @@ def clear():
 def user_configs():
     req_vals = dict(main.request.values)
     keys = list(req_vals.keys())
+    exclude = ['reverse']
     if not req_vals:
         main.session['user_config'] = {}
         main.session['user_config']['search'] = {}
@@ -113,7 +115,10 @@ def user_configs():
         if len(keys) == 1:
             if 'search' not in main.session['user_config']:
                 main.session['user_config']['search'] = {}
-            main.session['user_config']['search'][keys[0]] = req_vals[keys[0]]
+            if keys[0] not in exclude or keys[0] not in main.session['user_config']['search']:
+                main.session['user_config']['search'][keys[0]] = req_vals[keys[0]]
+            else:
+                del main.session['user_config']['search'][keys[0]]
         else:
             main.session['user_config']['search'] = {}
     main.session.modified = True
@@ -122,5 +127,7 @@ def user_configs():
 
 def get_user_data(username=''):
     if not username:
+        if 'username' not in main.session:
+            return {}
         username = main.session['username']
     return main.mongo.read_collection_one(main.configs.users_collection, {'name': username})

@@ -11,7 +11,7 @@
 </head>
 <body>
 <table class="table table-striped" dir="rtl" align="center">
-    <form name="choose_printer" id="choose_printer" method=POST autocomplete="off">
+    <form name="choose_printer" id="choose_printer" method=POST autocomplete="off" onsubmit="refreshWindow();">
       <tr>
         <td>מספר שורה</td>
           <td>משקל</td>
@@ -35,7 +35,8 @@
           </datalist>
       </tr>
       {% endfor %}
-      <tr><td><button type="submit" class="btn btn-warning" onclick="refreshWindow();">פצל</button> </td></tr>
+        <textarea name="reason" class="form-control" placeholder="סיבה" required>{{split_reason}}</textarea>
+      <tr><td><button type="submit" class="btn btn-warning" onclick="">פצל</button> </td></tr>
     </form>
 </table>
 <script src="\static\js\shapes.js" ></script>

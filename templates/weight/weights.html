@@ -1,45 +1,251 @@
 {% extends "layout.html" %}
 {% block body %}
 <script src="\static\js\shapes.js" ></script>
+<style>
+@media print {
+@page {size: landscape;margin-top:150px;};
+    table {
+        font-size: 20px;
+    }
 
+    select{
+      border: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      }
+}
+.multiselect {
+  width: 200px;
+}
+
+.selectBox {
+  position: relative;
+}
+
+.selectBox select {
+  width: 100%;
+  font-weight: bold;
+}
+
+.overSelect {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+</style>
+<form>
+<table class="table table-striped d-print-none">
+    <tr>
+        <td>
+            {% set tare=0 %}
+            {% set gross_weight=0 %}
+            <button type="button" class="btn btn-warning btn-lg" onclick="location.href='/weights?new'">שקילה חדשה</button>
+        </td>
+        <td rowspan="2">
+            <input class="form-control" style="font-size:60px" name="weight" id="weight" value="משקל נוכחי: {{gross_weight-tare}}" readonly>
+        </td>
+        <td>
+            <input class="form-control" title="לחץ פעמיים לאיפוס" name="tare" id="tare" value="טארה: {{tare}}" ondblclick="reset_tare()" readonly>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button type="submit" id="add_btn" class="btn btn-success btn-lg" disabled>הוסף שקילה</button>
+            <button type="button" id="tare_btn" class="btn btn-primary btn-lg" onclick="tare_weight()" disabled>טארה</button>
+        </td>
+        <td>
+            <input class="form-control" name="gross_weight" id="gross_weight" value="ברוטו: {{gross_weight}}" readonly>
+        </td>
+    </tr>
+</table>
+</form>
+<form>
+<table class="table" style="padding-top:300px;">
+    <tr>
+        <th class="d-print-none">
+            <select name="sensor" id="sensor" class="form-control" onchange="set_sensor()">
+                {% for s in weights %}
+                {% if s == sensor %}
+                <option selected>{{s}}</option>
+                {% else %}
+                <option>{{s}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </th>
+        <th colspan="4" style="text-align: center;">
+            תעודת שקילה מספר: {{info.doc_id}}
+        </th>
+    </tr>
+    <tr>
+        <th>
+            כניסה: {{info.start}}
+        </th>
+        <th>
+            <label>לקוח:</label>
+            <input class="form-control" id="client" name="client" value="{{info.client}}">
+        </th>
+        <th>
+            <label>נהג:</label>
+            <input class="form-control" list="drv_l" id="driver" name="driver" value="{{info.driver}}" onchange="submit()">
+        </th>
+        <th></th>
+    </tr>
+    <tr>
+        <th>
+            יציאה: {{info.end}}
+        </th>
+        <th>
+            <label>אתר:</label>
+            <input class="form-control" id="site" name="site" value="{{info.site}}">
+        </th>
+        <th>
+            <label>רכב:</label>
+            <input class="form-control" id="vehicle" name="vehicle" value="{{info.vehicle}}">
+        </th>
+        <th></th>
+    </tr>
+    <tr>
+        <th width="25%">
+            סוג חומר
+        </th>
+        <th width="25%">
+            ברוטו
+        </th>
+        <th width="25%">
+            טארה
+        </th>
+        <th width="25%">
+            נטו
+        </th>
+    </tr>
+    {% for r in data %}
+    <tr ondblclick="split_line({{loop.index0}}, {{r}})">
+        <td style="text-align: center; vertical-align: middle;">
+        {% if r.gross!='' %}
+            <select id="product{{loop.index0}}" name="product{{loop.index0}}" onchange="update_product({{loop.index0}})">
+                {% for product in products_list %}
+                {% if r.product == product %}
+                <option selected>{{ product }}</option>
+                {% else %}
+                <option>{{ product }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        {% endif %}
+        </td>
+        <td>{{r.gross}}</td>
+        <td>{{r.tare}}</td>
+        <td>
+        {% if r.gross=='' %}
+            <b>{{r.net}}</b>
+        {% else %}
+            {{r.net}}
+        {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td> חתימת מפעיל: _________________________</td>
+        <td> חתימת נהג: _________________________</td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+</form>
+<datalist id="product">
+    {% for product in products_list %}
+    <option>{{ product }}</option>
+    {% endfor %}
+</datalist>
+<datalist id="drv_l">
+    {% for drv in drv_l %}
+    <option>{{ drv }}</option>
+    {% endfor %}
+</datalist>
 <script>
-  var intervalID = setInterval(update_values,2000);
-  const isObjectEmpty = (objectName) => {
-  return (
-    objectName &&
-    Object.keys(objectName).length === 0 &&
-    objectName.constructor === Object
-  );
-};
-  function update_values() {
-  var data
-        $.getJSON('/scaling_weight', function(data) {
+const drv_l = {{drv_l|tojson|safe}};
+sensor = getCookie("sensor");
+if (sensor != ""){
+    document.getElementById("sensor").options.selectedIndex = sensor;
+
+}
+
+function set_sensor(){
+    var x = 0;
+    if (document.getElementById('sensor').value == "Barzel1 : גשר גדול"){
+        x = 1;
+    }
+    setCookie("sensor", x, 100)
+}
+
+function update_weights(){
+    var data
+    $.getJSON('/scaling_weight?new', function(data) {
         $('#result').text(data);
-        if (Object.keys(data).length === 0){
-        window.location.reload();
+        let cur_sen = document.getElementById('sensor').value;
+        let cur_weight = data[cur_sen];
+        document.getElementById('gross_weight').value = "ברוטו: "+cur_weight.actual;
+        if (parseInt(cur_weight.actual) > 0){
+            document.getElementById('weight').value = "משקל נוכחי: "+(parseInt(cur_weight.actual)-parseInt(cur_weight.tare));
+            document.getElementById('tare').value = "טארה: "+cur_weight.tare;
+            document.getElementById('tare_btn').removeAttribute("disabled");
+            document.getElementById('add_btn').removeAttribute("disabled");
         }
-        ts1 = document.getElementById('timestamp1');
-        ts2 = document.getElementById('timestamp2');
-        weight1 = document.getElementById('weight1');
-        weight2 = document.getElementById('weight2');
-        ts1.value = data.ts1;
-        ts2.value = data.ts2;
-        weight1.value = data.weight1;
-        weight2.value = data.weight2;
-        if (data.ts1 == 'Not stable' || data.ts1 == 'COMMUNICATION ERROR' || data.ts2 == 'Not stable' || data.ts2 == 'COMMUNICATION ERROR'){
-            document.getElementById("submit").disabled = true;
-        }
-        else{
-            document.getElementById("submit").disabled = false;
-        }
-      });
-    };
-    function stopTextColor() {
-      clearInterval(intervalID);
+    });
+}
+
+function update_product(l_num){
+    $.post("/weights",
+    {
+        product: document.getElementById('product'+l_num).value,
+        line_num: l_num
+    });
+    setInterval(window.location.reload(),1000);
+}
+
+function tare_weight(){
+    $.post("/weights",
+    {
+        tare: document.getElementById('sensor').value
+    },
+        window.location.reload());
+}
+
+function reset_tare(val=0){
+    res = {reset: document.getElementById('sensor').value}
+    if (val != 0){
+        res['val'] = val;
     }
-    function refreshPage() {
-        setTimeout('window.location.reload()',1000);
+    $.post("/weights", res, window.location.reload());
+}
+
+var intervalID = setInterval(update_weights,1000);
+
+function split_line(line_num,line) {
+  let text;
+  let split_weight = parseInt(prompt("הזן משקל לפיצול שורה:", ""));
+  if (!split_weight) {
+    window.alert("הזנה שגויה");
+  }
+  else {
+    line['split'] = line_num;
+    line['split_weight'] = split_weight;
+    $.post("/weights", line);
+    setInterval(window.location.reload(),1000);
+  }
+}
+
+function update_drv(){
+    let drv = document.getElementById('driver').value;
+    if (drv in drv_l){
+        document.getElementById('vehicle').value = drv_l[drv]['plate'];
+        reset_tare(drv_l[drv]['tare']);
     }
+}
 </script>
 
 {% endblock %}

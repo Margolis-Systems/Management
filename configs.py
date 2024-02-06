@@ -63,9 +63,13 @@ reports_dir = os.getcwd()+'\\reports\\'
 print_dicts = {'regular': {}, 'rebar': {}, 'pile': {}, 'girders': {}}
 
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
-circle = ['925', '966', '215', '216', '78', '79', '119', '68', '36', '44', '16', '6', '331','161', '82','200']
+circle = ['6', '8', '9', '10', '11', '16', '20', '35', '36', '37', '39', '40', '41', '42', '44', '63', '66', '68',
+           '76', '77', '78', '79', '80', '81', '82', '83', '91', '92', '103', '119', '120', '135', '139', '140', '161',
+           '216', '331', '925', '965', '966']
+_circle = ['925', '966', '215', '216', '78', '79', '119', '68', '36', '44', '16', '6', '331', '161', '82', '120']
 phones_to_notify = ['0509595953', '0509393938', '0528008018', '0515907228', '0509393934']
 order_types = ['regular', 'rebar', 'R', 'girders', 'piles']
+new_order_types = ['regular', 'rebar', 'rebar_special', 'piles', 'girders']
 order_statuses = ['NEW', 'Processed', 'Production', 'Finished', 'Loaded', 'PartlyDelivered', 'Delivered',
                   'PartlyDeliveredClosed', 'Outsource', 'canceled']
 all_statuses = ['NEW', 'Processed', 'Production', 'InProduction', 'Start', 'Finished', 'Loaded', 'PartlyDelivered', 'Delivered',

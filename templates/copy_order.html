@@ -13,14 +13,54 @@
 <div class="form-floating">
     <form name="choose_printer" id="copy_order" method=POST action="{{ url_for('copy_order') }}" onsubmit="copy_order.disabled = true; return true;">
         מספר הזמנה<br>
-        <input type="number" class="form-control" name="order_id" placeholder="מספר הזמנה" autofocus="autofocus" required>
+        <input type="number" class="form-control" value="{{order_id}}" name="order_id" placeholder="מספר הזמנה" autofocus="autofocus" onchange="submit()" required>
+        {% if order_id %}
+        שם לקוח<br>
+        <select class="form-control" id="client" name="client" onchange="update_sites();" autofocus="autofocus" required>
+            {% for i in client_list %}
+            {% if i==client %}
+            <option value="{{i}}" selected>{{i}}</option>
+            {% else %}
+            <option value="{{i}}">{{i}}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        אתר לקוח<br>
+        <select class="form-control" id="site" name="site" autofocus="autofocus" required>
+            {% for s in sites_list %}
+            <option value="{{s}}">{{s}}</option>
+            {% endfor %}
+        </select>
         כמות העתקים<br>
         <input type="number" class="form-control" name="copies" min="1" value="1" placeholder="כמות עותקים">
         <button class="w-100 btn btn-lg btn-primary" id="submitbtn" type="submit" onclick="refreshWindow();submitbtn.disabled = true;copy_order.submit();">אישור</button>
         <button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button>
         <input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label>
+        {% endif %}
     </form>
 </div>
 <script src="\static\js\shapes.js" ></script>
+<script src="\static\js\jquery.js"></script>
+<script>
+    function update_sites(){
+        site_select = document.getElementById('site');
+        site_select.options.length = 0;
+        client = document.getElementById('client').value;
+        add_site_list(client);
+    }
+
+    function add_site_list(client){
+        var data
+        $.getJSON('/data_req?sites='+client, function(data) {
+        $('#result').text(data);
+        for (var i = 0; i < data.sites.length; i++)
+            {
+	        var option = document.createElement("option");
+            option.text = data.sites[i];
+            site_select.add(option);
+            }
+        });
+    }
+</script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import functions
+from functions import ts
 import main
 from datetime import datetime, timedelta
 from operator import itemgetter
@@ -85,8 +85,78 @@ def main_page():
 
 
 def weights_page():
+    products_list = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
+    drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
+    info = {'doc_id': '', 'start': '', 'end': '', 'driver': '', 'vehicle': '', 'site': '', 'client': '', 'sensor': ''}
+    sensor = ''
+    if 'weights_data' not in main.session:
+        doc_id = gen_id()
+        doc = {'doc_id': doc_id, 'lines': [], 'start': ts('w')}
+        main.mongo.insert_collection_one('documents', doc, db_name='Scaling')
+        main.session['weights_data'] = {'doc_id': doc_id}
+        main.session.modified = True
+    if main.request.values:
+        cmd = dict(main.request.values)
+        print(cmd)
+        if 'new' in cmd:
+            del main.session['weights_data']
+            main.session.modified = True
+        elif 'split' in cmd:
+            line_num = cmd['split']
+            new_line = {'ts': cmd['ts'], 'product': cmd['product'], 'net': cmd['split_weight'], 'gross': cmd['gross']}
+            cmd['net'] = str(int(cmd['net'])-int(cmd['split_weight']))
+            cmd['gross'] = str(int(cmd['gross'])-int(cmd['split_weight']))
+            new_line['tare'] = cmd['gross']
+            main.mongo.update_one('documents', {'doc_id': main.session['weights_data']['doc_id']},
+                                  {'lines.{}.net'.format(line_num): cmd['net'], 'lines.{}.gross'.format(line_num): cmd['gross']}, '$set', db_name='Scaling')
+            main.mongo.update_one('documents', {'doc_id': main.session['weights_data']['doc_id']},
+                                  {'lines': {'$each': [new_line], '$position': int(line_num)+1}}, '$push', db_name='Scaling')
+        elif 'gross_weight' in cmd:
+            station_id, sensor = cmd['sensor'].split(' : ')
+            scale = {'ts': ts('w'),'product': 'ברזל', 'gross': cmd['gross_weight'].replace('ברוטו: ', ''), 'tare': cmd['tare'].replace('טארה: ', ''), 'net': cmd['weight'].replace('משקל נוכחי: ', '')}
+            main.mongo.update_one('documents', {'doc_id': main.session['weights_data']['doc_id']}, {'lines': scale}, '$push', db_name='Scaling')
+            tare_scale({'station_id': station_id, 'sensors': sensor})
+        elif 'product' in cmd:
+            product = cmd['product']
+            line_num = cmd['line_num']
+            main.mongo.update_one('documents', {'doc_id': main.session['weights_data']['doc_id']},
+                                  {'lines.{}.product'.format(line_num): product}, '$set', db_name='Scaling')
+        elif 'tare' in cmd:
+            station_id, sensor = cmd['tare'].split(' : ')
+            tare_scale({'station_id': station_id, 'sensors': sensor})
+        elif 'reset' in cmd:
+            r_val = 0
+            if 'val' in cmd:
+                r_val = int(cmd['val'])
+            station_id, sensor = cmd['reset'].split(' : ')
+            main.mongo.update_one('weights', {'station_id': station_id}, {'{}.tare'.format(sensor): r_val}, '$set', db_name='Scaling')
+        return main.redirect('/weights')
+    doc = main.mongo.read_collection_one('documents', {'doc_id': main.session['weights_data']['doc_id']}, db_name='Scaling')
+    data = doc['lines']
+    for item in doc:
+        if item in info:
+            info[item] = doc[item]
+    if data:
+        if 'ts' in data[-1]:
+            info['end'] = data[-1]['ts']
+    return main.render_template('weight/weights.html', info=info, data=data, weights=read_weights(), products_list=products_list, sensor=sensor, drv_l=drv_l)
 
-    return main.render_template('weight/weights.html')
+
+def read_weights():
+    weights = {}
+    raw = main.mongo.read_collection_list('weights', {'station_id': {'$exists': True}}, db_name='Scaling')
+    delta = datetime.now() - timedelta(seconds=10)
+    for r in raw:
+        for item in r:
+            if item != 'station_id':
+                # print(item)
+                if 'ts' in r[item] or r[item]['actual'] < 0:
+                    if r[item]['ts'] == '11':
+                        print('goo')
+                if 'tare' not in r[item]:
+                    r[item]['tare'] = 0
+                weights['{} : {}'.format(r['station_id'], item)] = r[item]
+    return weights
 
 
 def overview():
@@ -161,7 +231,7 @@ def form_request(req_form):
 
 
 def gen_id():
-    return functions.ts('s')
+    return ts('s')
 
 
 def print_scale():
@@ -226,7 +296,7 @@ def calc_weight(req):
     error_msg = ['Not stable', 'COMMUNICATION ERROR']
     if cur_weight[0] in error_msg or cur_weight[2] in error_msg:
         return {}
-    ret = {'ts': datetime.now().strftime('%d-%m-%Y %H-%M-%S'), 'weight': 0}
+    ret = {'ts': ts('w'), 'weight': 0}
     if cur_weight[1]:
         ret['weight'] += cur_weight[1]
         if not ret['ts']:
@@ -249,13 +319,10 @@ def tare_scale(site_info):
             tare[sensor+'.tare'] = weights[sensor]['actual']
         main.mongo.update_one('weights', {'CRR_ID': site_info['crr']}, tare, '$set', db_name='Scaling', upsert=True)
     elif 'station_id' in site_info:
-        weights = main.mongo.read_collection_one('weights', db_name='Scaling',
-                                                 query={'station_id': site_info['station_id'], 'error': {'$exists': False}})
-        print(weights)
-        #{'sensors': 'גשר קטן', 'station_id': 'Barzel1'}
+        tare_val = main.mongo.read_collection_one('weights', db_name='Scaling', query={'station_id': site_info['station_id'],
+                                                   'error': {'$exists': False}})[site_info['sensors']]['actual']
         main.mongo.update_one('weights', {'station_id': site_info['station_id']},
-                              {'{}.tare'.format(site_info['sensors']): weights[site_info['sensors']]['actual']}, '$set', db_name='Scaling')
-        #{'station_id': 'Barzel1', 'גשר קטן': {'actual': 10, 'info': ''}, 'גשר גדול': {'actual': 0, 'info': ''}}
+                              {'{}.tare'.format(site_info['sensors']): tare_val}, '$set', db_name='Scaling')
 
 
 def pick_crane():

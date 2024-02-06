@@ -13,6 +13,8 @@ def ts(mode="", days=0):
         return datetime.now().strftime('%Y%m%d%H%M%S%f')[:16]
     elif mode == 'html_date':
         return (datetime.now()-timedelta(days=days)).strftime('%Y-%m-%d')
+    elif mode == 'w':
+        return datetime.now().strftime('%d-%m-%Y %H-%M-%S')
 
 
 def uniquify(path):

@@ -397,10 +397,10 @@ class Bartender:
                     continue
                 if info['type'] == 'piles' and 'label' in print_type:
                     row['pack_quantity'] = 1
-                    # pile_fix = round(float(row['weight']) / int(row['quantity']))
                 if 'pack_quantity' in row and 'label' in print_type:
                     pack_rows = []
                     row['quantity'] = int(row['quantity'])
+                    unit_weight = round(float(row['weight']) / int(row['quantity']))
                     row['pack_quantity'] = int(row['pack_quantity'])
                     total_packs = math.ceil(row['quantity']/row['pack_quantity'])
                     pack_index = 1
@@ -409,8 +409,7 @@ class Bartender:
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
                             if 'unit_weight' not in pack_row:
-                                # pack_row['unit_weight'] = pile_fix
-                                pack_row['unit_weight'] = round(float(row['weight']) / int(row['quantity']))
+                                pack_row['unit_weight'] = unit_weight
                             pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:
@@ -444,21 +443,25 @@ class Bartender:
                     line['temp_select'] = 1
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
+                    # print(line)
                     if len(line['element']) > 0:
                         if line['element'][0] == 'ק' and line['element'] not in element_buf:# and 'label' in print_type:
+                            # print(line['element'])
                             item_to_copy = ['order_id', 'element', 'costumer_name', 'comment', 'costumer_site']
+                            kora['barcode_data'] = []
                             for item in item_to_copy:
                                 if item in line:
                                     kora[item] = line[item]
                             for _row in rows:
                                 if _row['element'] == line['element']:
+                                    # print(_row['job_id'])
+                                    kora['barcode_data'].append(_row['job_id'])
                                     kora['z15'] += 1
                                     kora['z16'] += _row['weight']
+                            kora['barcode_data'] = 'BF2D@Hj @r{}@i@p{}'.format(kora['order_id'],','.join(kora['barcode_data']))
                             kora['z16'] = int(kora['z16'])
                             kora['weight'] = kora['z16']
                             kora['quantity'] = kora['z15']
-                            # todo: barcode DATA
-                            kora['barcode_data'] = ''
                             element_buf.append(line['element'])
                             # # Header indicator
                             if info['type'] == 'regular':
@@ -572,7 +575,7 @@ class Bartender:
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
                     special_sum['ספירלים']['weight'] += row['weight']
-                if row['shape'] in ['200']:
+                if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
                     if 'חישוק מיוחד' not in special_sum.keys():
                         special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק מיוחד']['qnt'] += quantity
@@ -707,6 +710,7 @@ class Bartender:
                     else:
                         print_line += '~'
                 print_file.write(print_line + "\n")
+            functions.log('bt_print', '{} : {}'.format(printer, print_data[0]['order_id']))
         return file_dir
 
 
