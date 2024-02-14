@@ -102,6 +102,7 @@
       "scan_barcode": "סריקת ברקוד",
       "order_split": "פיצול הזמנה",
       "split": "פיצולים",
+      "split_reason": "סיבת פיצול",
       "linked_orders": "הזמנות מקושרות",
       "machine_id": "מספר מכונה",
       "machine_name": "שם מכונה",

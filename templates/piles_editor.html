@@ -54,7 +54,17 @@
         <td>
             <label>צינור</label>
             <input class="form-control" name="pipes" id="pipes" placeholder="כמות" value="{{defaults['pipes']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+16}})'>
-            <input class="form-control" name="pipe_diam" id="pipe_diam" placeholder="{{dictionary['pipe_diam']}}" value="{{defaults['pipe_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+17}})'>
+            <select class="form-control" name="pipe_diam" id="pipe_diam" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+17}})'>
+            {% set pile_diams = ['2', '2.5'] %}
+                <option style="display:none" value="" selected>{{dictionary['pipe_diam']}}</option>
+                {% for d in pile_diams %}
+                {% if d == defaults['pipe_diam'] %}
+                <option value="{{d}}" selected>{{d}}</option>
+                {% else %}
+                <option value="{{d}}">{{d}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
             <input class="form-control" name="pipe_len" id="pipe_len" placeholder="{{dictionary['pipe_length']}}" value="{{defaults['pipe_len']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+18}})'>
             <input class="form-control" name="pipe_thick" id="pipe_thick" placeholder="{{dictionary['pipe_thick']}}" value="{{defaults['pipe_thick']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(0)'>
         </td>

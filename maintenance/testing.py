@@ -81,14 +81,9 @@ def csv_for_yosi_azulai():
 # for sha in configs.shapes:
 #     print(sha)
 #     reports.Images.create_shape_plot(sha,enable_text_plot=False)
-import re
 
-
-def decode(raw_str):
-    ret = 'READ ERROR'
-    pattern = '^wn[0-9]+'
-    # wn-00130 kg\r\n
-    if re.match(pattern, raw_str):
-        ret = raw_str[2:8]
-    return ret
-
+msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} [{type}] \n{username} ' \
+                    .format(order_id='ord_id', date_created='date_created', date_delivery='date_deliver',
+                            costumer_name='client', costumer_site='site',
+                            total_weight='tot_weight', rows='2', username='user', type='הזמנת ברזל')
+print(msg)

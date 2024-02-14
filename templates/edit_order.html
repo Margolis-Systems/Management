@@ -13,8 +13,9 @@ div {
 </style>
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
+    {% set exclude = ['comment','date_delivery', 'linked_orders', 'history'] %}
     {% for item in order_data.info %}
-    {% if item not in ['comment','date_delivery', 'linked_orders'] %}
+    {% if item not in exclude %}
         <td>
             <b>
                 {% if dictionary[item] %}
@@ -29,7 +30,7 @@ div {
     </tr>
     <tr>
     {% for item in order_data.info %}
-    {% if item not in ['comment','date_delivery', 'linked_orders'] %}
+    {% if item not in exclude %}
         {% if item in ['costumer_name', 'costumer_site'] %}
         <td ondblclick='openNewWindow("/new_order?{{order_data.info.order_id}}")'>
         {% else %}

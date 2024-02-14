@@ -116,9 +116,9 @@ function copyLastRow(dict, dataToDisplay){
     dataToDisplay['weight'] = 2;
     for(item in dataToDisplay){
         if(dataToDisplay[item] != 2 && dataToDisplay[item] != 4){
-        // validate no undefind
             try {
-                document.getElementById(item).value = dict[item];
+                if (dict[item])
+                    document.getElementById(item).value = dict[item];
             }
             catch (error) {
                 document.getElementById(item).value = dict[item].map(String);

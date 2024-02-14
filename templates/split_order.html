@@ -11,7 +11,7 @@
 </head>
 <body>
 <table class="table table-striped" dir="rtl" align="center">
-    <form name="choose_printer" id="choose_printer" method=POST autocomplete="off" onsubmit="refreshWindow();">
+    <form name="split_form" id="split_form" method=POST autocomplete="off" onsubmit="refreshWindow();">
       <tr>
         <td>מספר שורה</td>
           <td>משקל</td>
@@ -35,10 +35,20 @@
           </datalist>
       </tr>
       {% endfor %}
-        <textarea name="reason" class="form-control" placeholder="סיבה" required>{{split_reason}}</textarea>
-      <tr><td><button type="submit" class="btn btn-warning" onclick="">פצל</button> </td></tr>
+        <textarea name="reason" id="reason" class="form-control" placeholder="סיבה" required>{{split_reason}}</textarea>
+      <tr>
+          <td><button type="submit" class="btn btn-warning">פצל</button> </td>
+          <td colspan="10"><button type="button" class="btn btn-danger" onclick="cancel_split()">בטל פיצול</button> </td>
+      </tr>
     </form>
 </table>
 <script src="\static\js\shapes.js" ></script>
+<script>
+    function cancel_split() {
+        document.getElementById("reason").setAttribute('name', 'cancel');
+        document.getElementById('split_form').submit();
+        refreshWindow();
+    }
+</script>
 </body>
 </html>

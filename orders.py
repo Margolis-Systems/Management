@@ -526,11 +526,13 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                     del order['info']['cancel_reason']
             functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
             if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
-                msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} \n{username} ' \
+                dictionary = pages.get_dictionary()
+                msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} [{type}] \n{username} ' \
                     .format(order_id=order_id, date_created=order['info']['date_created'], date_delivery=order['info']['date_delivery'],
                             costumer_name=order['info']['costumer_name'], costumer_site=order['info']['costumer_site'],
-                            total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'])
+                            total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'], type=dictionary[order['info']['type']])
                 phone_book = configs.phones_to_notify
+                # print(msg)
                 functions.send_sms(msg, phone_book)
     main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
 
@@ -671,6 +673,9 @@ def split_order():
                     order['info']['history'] = []
                 order['info']['history'].append('split: ' + order['info']['split_reason'])
                 del order['info']['split_reason']
+                for r in order['rows']:
+                    if 'order_split' in r:
+                        del r['order_split']
         main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
         return '', 204
     if 'split_reason' in order['info']:

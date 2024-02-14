@@ -69,14 +69,15 @@ def main_page():
     if permission > 50:
         perm = True
         doc_df = main.mongo.read_collection_df_sort('documents', 'doc_id', 'Scaling',
-                                                    {'$where': "this.lines.length > 0"}, 50).to_dict('index')
+                                                    {'$where': "this.lines.length > 0", 'driver': {'$exists': True}}, 50).to_dict('index')
         for doc in doc_df:
             doc_info = {}
             for item in doc_df[doc]:
                 if item in ['doc_id', 'driver', 'vehicle_id']:
                     doc_info[item] = doc_df[doc][item]
-            doc_info['scale_start'] = doc_df[doc]['lines'][0]['timestamp']
-            doc_info['scale_end'] = doc_df[doc]['lines'][-1]['timestamp']
+            if 'timestamp' in doc_df[doc]['lines'][0] and 'timestamp' in doc_df[doc]['lines'][-1]:
+                doc_info['scale_start'] = doc_df[doc]['lines'][0]['timestamp']
+                doc_info['scale_end'] = doc_df[doc]['lines'][-1]['timestamp']
             doc_list.append(doc_info)
         doc_list.sort(key=itemgetter('doc_id'), reverse=True)
     sites = list(main.mongo.read_collection_one('data_lists', {'name': 'sites'}, 'Scaling')['data'].keys())
