@@ -86,7 +86,7 @@ class DBHandle:
         try:
             dic = list(db[collect].find(query, {'_id': False}))
         except Exception as e:
-            print('read_list:\n', e)
+            print('read_list:\n{}\n{}'.format(e, query))
             return []
         return dic
 

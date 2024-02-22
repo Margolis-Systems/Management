@@ -1,0 +1,55 @@
+
+{% block body %}
+
+<table class="table table-condensed" dir="rtl" align="center">
+    <tr>
+        {% for i in [1,2] %}
+        {% for item in display_items %}
+        <td width="5%"  style="outline: thin solid;text-align: center">
+            <b>{{dictionary[item]}}</b>
+        </td>
+        {% endfor %}
+        <td width="1%"></td>
+        {% endfor%}
+    </tr>
+    {% for i in range((orders|length/2)|int) %}
+    {% set order = orders[i*2+1] %}
+    <tr bgcolor="{{dictionary.html_colors[order.status]}}">
+        {% for item in display_items %}
+        <td height="50" style="outline: thin solid;text-align: center">
+        {% if dictionary[order[item]] %}
+            {{dictionary[order[item]]}}
+        {% else %}
+            {{ order[item] }}
+        {% endif %}
+        {% if item == 'rows' and order['finished'] > 0 %}
+        ( {{order['finished']}} )
+        {% endif %}
+        </td>
+        {% endfor %}
+        <td></td>
+    {% set order = orders[i*2] %}
+        {% for item in display_items %}
+        <td height="50" style="outline: thin solid;text-align: center">
+        {% if dictionary[order[item]] %}
+            {{dictionary[order[item]]}}
+        {% else %}
+            {{ order[item] }}
+        {% endif %}
+        {% if item == 'rows' and order['finished'] > 0 %}
+        ( {{order['finished']}} )
+        {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table >
+<script src="\static\js\bootstrap.js" ></script>
+<script src="\static\js\shapes.js" ></script>
+<script src="\static\js\popper.js"></script>
+<script>
+setTimeout(function(){
+   window.location.reload(1);
+}, 300000);
+</script>
+{% endblock %}

@@ -266,7 +266,7 @@ class Images:
                       font=ImageFont.truetype(font_dir, font_size))
         # Draw pipes
         if 'pipe_len' in data:
-            pipe_decript = u'{} X @{} X {} [{}]'.format(data['pipes'], data['pipe_diam'], data['pipe_len'], data['pipe_thick'])
+            pipe_decript = u'{} X @{} X {}'.format(data['pipes'], data['pipe_diam'], data['pipe_len'])
             draw.line([(15,250),(675,250)], fill="black", width=3)
             draw.text((400, 230), 'צינורות', direction='rtl', fill="black",
                       font=ImageFont.truetype(font_dir, font_size))
@@ -358,7 +358,7 @@ class Bartender:
                             template_row["tb" + str(6 + i)] = '---'
                         else:
                             template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
-                    if 'bend1' in row or 'bend2' in row or 'bend3' in row:
+                    if 'bend1' in row or 'bend2' in row or 'bend3' in row or 'כיפוף' in row:
                         template_row["tb" + str(3 + i)] += ' + כיפוף'
                     if 'חיתוך' in row:
                         template_row["tb" + str(3 + i)] += ' + חיתוך'
@@ -428,6 +428,11 @@ class Bartender:
                     break
                 line = {}
                 kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora', 'order_split': split}
+                try:
+                    if 'unit_weight' not in row:
+                        row['unit_weight'] = int(float(row['weight']) / int(row['quantity']))
+                except Exception as e:
+                    print('issue with unit weight code\n', e)
                 for obj in row:
                     line[obj] = row[obj]
                 for obj in info:
@@ -718,7 +723,6 @@ class Docs:
     from docx.enum.table import WD_TABLE_DIRECTION
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-
 
     @staticmethod
     def print_doc(order_id, disable_weight=False, select_jobs='', split=''):

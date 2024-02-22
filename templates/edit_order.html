@@ -13,9 +13,8 @@ div {
 </style>
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-    {% set exclude = ['comment','date_delivery', 'linked_orders', 'history'] %}
-    {% for item in order_data.info %}
-    {% if item not in exclude %}
+    {% set info_disp = ['created_by', 'date_created', 'last_status_update', 'type', 'costumer_name', 'costumer_site', 'status', 'total_weight', 'rows', 'order_id'] %}
+    {% for item in info_disp %}
         <td>
             <b>
                 {% if dictionary[item] %}
@@ -25,12 +24,10 @@ div {
                 {% endif %}:
             </b>
         </td>
-    {% endif %}
     {% endfor %}
     </tr>
     <tr>
-    {% for item in order_data.info %}
-    {% if item not in exclude %}
+    {% for item in info_disp %}
         {% if item in ['costumer_name', 'costumer_site'] %}
         <td ondblclick='openNewWindow("/new_order?{{order_data.info.order_id}}")'>
         {% else %}
@@ -39,10 +36,13 @@ div {
             {% if dictionary[order_data.info[item]] %}
             {{dictionary[order_data.info[item]]}}
             {% else %}
+            {% if item=='status' %}
+            {{dictionary['order_status_'+order_data.info[item]]}}
+            {% else %}
             {{ order_data.info[item] }}
             {% endif %}
+            {% endif %}
         </td>
-    {% endif %}
     {% endfor %}
     </tr>
 </table>
@@ -68,7 +68,7 @@ div {
         <td><button onclick='openNewWindow("\choose_printer?test_page")' type="button" class="btn btn-primary btn-block">הדפס דוגמה</button></td>
         <td><button onclick='openNewWindow("\choose_printer?pdf")' type="button" class="btn btn-primary btn-block">הדפס PDF</button></td>
         <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
-        {% if order_data.info.status == "order_status_NEW" %}
+        {% if order_data.info.status == "NEW" %}
         <td><button onclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
         {% else %}
         <td><button onclick='openNewWindow("\change_order_status")' type="button" class="btn btn-primary btn-block">שנה סטטוס</button></td>
@@ -87,13 +87,13 @@ div {
 {% if order_data.include %}
     {% include order_data.include %}
 {% endif %}
-{% if order_data.info.status != "order_status_NEW" %}
+{% if order_data.info.status != "NEW" %}
 <table class="table table-bordered" dir="rtl" align="center">
 {% else %}
 <table class="table table-striped" dir="rtl" align="center">
 {% endif %}
     <tr>
-        {% if order_data.info.status == "order_status_NEW" %}
+        {% if order_data.info.status == "NEW" %}
         <td colspan="2"></td>
         {% endif %}
         {% for item in order_data.data_to_display %}
@@ -107,7 +107,7 @@ div {
         </td>
         {% endfor %}
     </tr>
-    {% if order_data.info.status == "order_status_NEW" %}
+    {% if order_data.info.status == "NEW" %}
     <tr>
         <td colspan="2"></td>
         {% include 'input_types.html'%}
@@ -115,12 +115,12 @@ div {
     {% endif %}
     {% for row in order_data.order_rows %}
     {% if row['job_id'] != "0" %}
-    {% if order_data.info.status == "order_status_NEW" %}
+    {% if order_data.info.status == "NEW" %}
     <tr ondblclick="location.href='/edit_row?order_id={{row['order_id']}}&job_id={{row['job_id']}}'" title="אורכים: {{row.shape_data}}">
     {% else %}
-    <tr style="background-color:{{dictionary.html_colors[row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")' title="אורכים: {{row.shape_data}}">
+    <tr style="background-color:{{dictionary.html_colors['order_status_'+row['status']]}} !important;"  ondblclick='openNewWindow("\change_order_status?job_id={{row.job_id}}")' title="אורכים: {{row.shape_data}}">
     {% endif %}
-    {% if order_data.info.status == "order_status_NEW" %}
+    {% if order_data.info.status == "NEW" %}
         <td><button type="button" onclick="location.href='/edit_row?order_id={{row['order_id']}}&addbefore={{row['job_id']}}'">הוסף</button></td>
         <td><input type="checkbox" name="select_{{row['job_id']}}_hid" class="select" value="{{row['job_id']}}"></td>
     {% endif %}

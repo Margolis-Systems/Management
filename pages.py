@@ -287,11 +287,6 @@ def scan():
             for r in order['rows']:
                 if r['job_id'] == job_id:
                     row = r
-        # for i in range(len(order['rows'])):
-        #     if order['rows'][i]['job_id'] == row['job_id']:
-        #         order['rows'].pop(i)
-        #         break
-        # order['rows'].append(row)
         row['status'] = row['status'].replace('order_status_', '')
         if 'status' in row and 'operator' in main.session['username']:
             if 'InProduction' in row['status']:

@@ -81,6 +81,30 @@ def orders(_all=False):
                                 order_types=configs.order_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list)
 
 
+def overview():
+    query = {'info.type': 'regular', 'info.status': {'$regex': 'Production'}, 'info.costumer_id': {'$ne': '58'}}
+    orders_data = main.mongo.read_collection_list('orders', query)
+    orders_info = []
+    for o in orders_data:
+        row = {'order_id': o['order_id']}
+        row.update(o['info'])
+        orders_info.append(row)
+        row['status'] = 'order_status_' + row['status']
+        finished_cntr = 0
+        for r in o['rows']:
+            if r['status'] not in ['NEW', 'Processed', 'Production', 'InProduction']:
+                finished_cntr += 1
+        row['finished'] = finished_cntr
+        # print(row['order_id'])
+        # log = main.mongo.read_collection_one('logs', {'operation.order_id': row['order_id'], 'operation.status': o['info']['status']})
+        # row['update_time'] = log['timestamp']
+    orders_info.sort(key=lambda k: int(k['order_id'].replace('R', '')), reverse=True)
+    if len(orders_info)%2:
+        orders_info.append({'finished': 0})
+    return main.render_template('productionov.html', orders=orders_info, display_items=main.configs.data_to_display['productionov'],
+                                dictionary=pages.get_dictionary())
+
+
 def new_order(client="", order_type=""):
     user_group = users.validate_user()
     if not user_group:
@@ -352,11 +376,9 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
         info['type'] = 'regular'
     info['order_id'] = order_id
     for row in order_data:
-        row['status'] = 'order_status_' + row['status']
         if info['type'] == 'rebar':
             row['diam'] = row['diam_x']
             row['pitch'] = row['x_pitch']
-    info['status'] = 'order_status_' + info['status']
     order_data.sort(key=lambda k: int(k['job_id']), reverse=reverse)
     return order_data.copy(), info
 
@@ -534,6 +556,7 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                 phone_book = configs.phones_to_notify
                 # print(msg)
                 functions.send_sms(msg, phone_book)
+    order['info']['last_status_update'] = ts()
     main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
 
 

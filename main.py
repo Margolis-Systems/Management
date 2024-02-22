@@ -31,7 +31,9 @@ def index():
         session['user_config'] = {}
         session['username'] = user
         login_user = mongo.read_collection_one(configs.users_collection, {'name': session['username']})
-        if login_user['group'] > 10:
+        if login_user['group'] == 11:
+            return redirect('/productionov')
+        elif login_user['group'] > 10:
             return render_template('main.html', user=user)
         elif login_user['group'] == 2:
             return redirect('/scale')
@@ -231,6 +233,11 @@ def weights():
 @app.route('/scaleov', methods=['POST', 'GET'])
 def scale_overview():
     return scale.overview()
+
+
+@app.route('/productionov', methods=['POST', 'GET'])
+def productionov():
+    return orders.overview()
 
 
 @app.route('/scaling_weight', methods=['POST', 'GET'])

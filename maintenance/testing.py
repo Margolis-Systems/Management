@@ -1,6 +1,7 @@
 import sys
 from datetime import datetime
 
+
 import piles
 import reports
 
@@ -27,17 +28,18 @@ def find_not_updated():
     print(len(hist))
 
 
-def fix_status(orders_list):
-    for ordr in orders_list:
+def fix_status(orders_list=None):
+    if orders_list is None:
+        orders_list = all_orders
+    for order in orders_list:
         flag = False
-        for r in ordr['rows']:
+        for r in order['rows']:
             if 'order_status_' in r['status']:
+                print(order['order_id'], r['job_id'], r['status'].split('_')[-1], r['status'])
+                r['status'] = r['status'].split('_')[-1]
                 flag = True
-                while 'order_status_' in r['status']:
-                    r['status'] = r['status'].replace('order_status_', '')
         if flag:
-            print(ordr['order_id'])
-            mongo.update_one('orders', {'order_id': ordr['order_id']}, ordr, '$set')
+            mongo.update_one('orders', {'order_id': order['order_id']}, order, '$set')
 
 
 def validate_log():
@@ -63,27 +65,3 @@ def csv_for_yosi_azulai():
     with open('c:\\Server\\1.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
-
-
-# diff = configs.sscircle.copy()
-# for i in configs.circle:
-#     if i in diff:
-#         diff.remove(i)
-# print(diff)
-# diff = ['58']
-# for o in all_orders:
-#     if o['info']['type'] == 'regular':
-#         for r in o['rows']:
-#             if 'shape' in r:
-#                 if r['shape'] in diff:
-#                     print(r['order_id'], r['job_id'], r['shape'])
-
-# for sha in configs.shapes:
-#     print(sha)
-#     reports.Images.create_shape_plot(sha,enable_text_plot=False)
-
-msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} [{type}] \n{username} ' \
-                    .format(order_id='ord_id', date_created='date_created', date_delivery='date_deliver',
-                            costumer_name='client', costumer_site='site',
-                            total_weight='tot_weight', rows='2', username='user', type='הזמנת ברזל')
-print(msg)

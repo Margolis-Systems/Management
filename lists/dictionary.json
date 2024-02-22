@@ -126,7 +126,8 @@
       "spiral_diam": "קוטר מלפף",
       "bend_len": "אורך כיפוף",
       "bend": "כיפוף",
-      "pipe_weight": "משקל צינור"
+      "pipe_weight": "משקל צינור",
+      "last_status_update": "עדכון סטטוס אחרון"
     },
     "ru": {
       "costumer_id": "номер клиента",
