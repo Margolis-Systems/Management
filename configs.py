@@ -74,3 +74,4 @@ order_statuses = ['NEW', 'Processed', 'Production', 'Finished', 'Loaded', 'Partl
                   'PartlyDeliveredClosed', 'Outsource', 'canceled']
 all_statuses = ['NEW', 'Processed', 'Production', 'InProduction', 'Start', 'Finished', 'Loaded', 'PartlyDelivered', 'Delivered',
                   'PartlyDeliveredClosed', 'Outsource', 'canceled']
+bend_diam = {'5.5': 2.2, '6.5': 3, '8': 3.2, '10': 4, '12': 4.8, '14': 5.6, '16': 6.4, '18': 7.2, '20': 14, '22': 15.4, '24':17.5, '25': 17.5, '28': 19.6, '32': 22.4, '36': 25.2}

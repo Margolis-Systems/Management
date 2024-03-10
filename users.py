@@ -116,7 +116,10 @@ def user_configs():
             if 'search' not in main.session['user_config']:
                 main.session['user_config']['search'] = {}
             if keys[0] not in exclude or keys[0] not in main.session['user_config']['search']:
-                main.session['user_config']['search'][keys[0]] = req_vals[keys[0]]
+                vall = req_vals[keys[0]]
+                for k in ['[', ']', '\\', '/', '{', '}']:
+                    vall = vall.replace(k, '')
+                main.session['user_config']['search'][keys[0]] = vall
             else:
                 del main.session['user_config']['search'][keys[0]]
         else:

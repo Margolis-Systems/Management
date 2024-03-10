@@ -1,7 +1,7 @@
 import sys
 from datetime import datetime
 
-
+import os
 import piles
 import reports
 
@@ -10,8 +10,8 @@ import configs
 
 mongo = configs.mongo
 # all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'},'info.costumer_name':{'$regex':'דניה סיבוס'},'info.costumer_site':{'$regex':'אומאמי'}}))
-all_orders = list(mongo.read_collection_list('orders', {}))
-
+all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
+order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
 def find_not_updated():
     hist = []
@@ -65,3 +65,10 @@ def csv_for_yosi_azulai():
     with open('c:\\Server\\1.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
+
+
+for order in all_orders:
+    if order['info']['type'] == 'regular':
+
+        if int(order['order_id'].replace('R', '')) > 4273:
+            print(order['order_id'])

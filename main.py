@@ -9,6 +9,7 @@ import os
 import data_logger
 import configs
 import db_handler
+import functions
 import pages
 import clients
 import users
@@ -388,6 +389,8 @@ if __name__ == '__main__':
 
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
+        if os.getlogin() != 'baruch':
+            functions.send_sms('שרת צומת ברזל הופעל מחדש')
         with open('pid.txt', 'w') as pid:
             pid.write(str(os.getpid()))
         serve(app, host=configs.server, port=configs.server_port, threads=50)

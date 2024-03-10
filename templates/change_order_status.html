@@ -65,6 +65,12 @@
     </tr>
 {% endfor %}
 </table>
+<form method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
+    <input type="hidden" name="order_id" value="{{order_id}}">
+    <input type="hidden" name="job_id" value="{{job_id}}">
+    <input type="hidden" name="cancel_row" value="Canceled">
+    <button class="w-100 btn btn-lg btn-danger" type="button" ondblclick="submit();refreshWindow();">בטל שורה</button>
+</form>
 <script src="\static\js\shapes.js" ></script>
 </body>
 </html>

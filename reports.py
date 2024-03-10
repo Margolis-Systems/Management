@@ -312,6 +312,8 @@ class Bartender:
                 index = rlen - 1 - i
                 if rows[index]['job_id'] not in select_jobs:
                     rows.pop(index)
+        if info['type'] in ['R', 'K']:
+            info['type'] = 'regular'
         bt_format = configs.bartender_formats[info['type']][print_type]
         print_data = []
         element_buf = []
@@ -400,7 +402,8 @@ class Bartender:
                 if 'pack_quantity' in row and 'label' in print_type:
                     pack_rows = []
                     row['quantity'] = int(row['quantity'])
-                    unit_weight = round(float(row['weight']) / int(row['quantity']))
+                    if not disable_weight:
+                        unit_weight = round(float(row['weight']) / int(row['quantity']))
                     row['pack_quantity'] = int(row['pack_quantity'])
                     total_packs = math.ceil(row['quantity']/row['pack_quantity'])
                     pack_index = 1
@@ -408,13 +411,14 @@ class Bartender:
                         pack_row = row.copy()
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
-                            if 'unit_weight' not in pack_row:
+                            if 'unit_weight' not in pack_row and not disable_weight:
                                 pack_row['unit_weight'] = unit_weight
                             pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
-                            pack_row['weight'] = round(float(pack_row['unit_weight'])*row['quantity'])
+                            if not disable_weight:
+                                pack_row['weight'] = round(float(pack_row['unit_weight'])*row['quantity'])
                         pack_rows.append(pack_row)
                         pack_index += 1
                         row['quantity'] -= row['pack_quantity']
@@ -434,9 +438,15 @@ class Bartender:
                 except Exception as e:
                     print('issue with unit weight code\n', e)
                 for obj in row:
-                    line[obj] = row[obj]
+                    if disable_weight and 'weight' in obj:
+                        line[obj] = '---'
+                    else:
+                        line[obj] = row[obj]
                 for obj in info:
-                    line[obj] = info[obj]
+                    if disable_weight and 'weight' in obj:
+                        line[obj] = '---'
+                    else:
+                        line[obj] = info[obj]
                 if 'shape_data' in line:
                     line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
                     if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
@@ -453,17 +463,17 @@ class Bartender:
                         if line['element'][0] == 'ק' and line['element'] not in element_buf:# and 'label' in print_type:
                             # print(line['element'])
                             item_to_copy = ['order_id', 'element', 'costumer_name', 'comment', 'costumer_site']
-                            kora['barcode_data'] = []
+                            # kora['barcode_data'] = []
                             for item in item_to_copy:
                                 if item in line:
                                     kora[item] = line[item]
                             for _row in rows:
                                 if _row['element'] == line['element']:
                                     # print(_row['job_id'])
-                                    kora['barcode_data'].append(_row['job_id'])
+                                    # kora['barcode_data'].append(_row['job_id'])
                                     kora['z15'] += 1
                                     kora['z16'] += _row['weight']
-                            kora['barcode_data'] = 'BF2D@Hj @r{}@i@p{}'.format(kora['order_id'],','.join(kora['barcode_data']))
+                            # kora['barcode_data'] = 'BF2D@Hj @r{}@i@p{}'.format(kora['order_id'],','.join(kora['barcode_data']))
                             kora['z16'] = int(kora['z16'])
                             kora['weight'] = kora['z16']
                             kora['quantity'] = kora['z15']
@@ -541,6 +551,8 @@ class Bartender:
                 for i in r:
                     if r[i] == '0':
                         r[i] = ''
+                    if disable_weight and 'weight' in i:
+                        r[i] = '---'
                 r['img_dir'] = Images.create_pile_plot(r)
         else:
             table_data = {}
@@ -590,7 +602,7 @@ class Bartender:
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספסלים']['qnt'] += quantity
                     special_sum['ספסלים']['weight'] += row['weight']
-                elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                elif ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) and info['costumer_id'] not in ['143']) \
                         or row['shape'] in configs.circle:
                     if 'חישוק' not in special_sum.keys():
                         special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
@@ -691,8 +703,8 @@ class Bartender:
                  + printer.upper() + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        if main.session['username'] in ['baruch', 'Baruch']:
-            file_dir = file_dir.replace('.txt', '.tmp')
+        # if main.session['username'] in ['baruch', 'Baruch']:
+        #     file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"
