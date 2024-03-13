@@ -8,29 +8,41 @@
                         <input type="number" step=".1" name="trim_x_start" id="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" value="{{defaults['trim_x_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                     </td>
-                    <td>
-                        <input type="number" step=".1" name="trim_x_end" id="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
-                        {% set focus_index = focus_index + 1 %}
-                    </td>
+                    <td colspan="2"></td>
                 </tr>
                 <tr>
                     <td id="x_length_container">
                         רוחב
                         <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
-                        <input type="number" name="x_length1" id="x_length1" class="form-control" placeholder="רוחב" value="{{defaults['x_length_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-                        <input type="number" name="x_length2" id="x_length2" class="form-control" placeholder="רוחב" value="{{defaults['x_length_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-
+                        {% for p in range(19) %}
+                        {% if defaults['x_length_'+loop.index|string] %}
+                        <input type="number" name="x_length{{loop.index}}" id="x_length{{loop.index}}" class="form-control x_length" placeholder="רוחב" value="{{defaults['x_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        {% else %}
+                        <input type="number" name="x_length{{loop.index}}" id="x_length{{loop.index}}" class="form-control x_length" placeholder="רוחב" value="{{defaults['x_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        {% endif %}
+                        {% endfor %}
                         </td>
                     <td id="x_pitch_container">
                         פסיעה
-                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
-                        <input type="number" name="x_pitch1" id="x_pitch1" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-                        <input type="number" name="x_pitch2" id="x_pitch2" class="form-control" placeholder="פסיעה" value="{{defaults['x_pitch_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-
+                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        {% for p in range(19) %}
+                        {% if defaults['x_pitch_'+loop.index|string] %}
+                        <input type="number" name="x_pitch{{loop.index}}" id="x_pitch{{loop.index}}" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        {% else %}
+                        <input type="number" name="x_pitch{{loop.index}}" id="x_pitch{{loop.index}}" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        {% endif %}
+                        {% endfor %}
                     </td>
                     <td>
-                        <button type="button" onclick="addInput('x_length_container');addInput('x_pitch_container');">הוסף</button>
+                        <button type="button" onclick="addInput('x')">הוסף</button>
                     </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="number" step=".1" name="trim_x_end" id="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        {% set focus_index = focus_index + 1 %}
+                    </td>
+                    <td colspan="2"></td>
                 </tr>
                 {% if order_data.include_data %}
                 {% for item in order_data.include_data.x_pitch %}
@@ -56,29 +68,41 @@
                         <input type="number" step=".1" name="trim_y_start" id="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" value="{{defaults['trim_y_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
                         {% set focus_index = focus_index + 1 %}
                     </td>
-                    <td>
-                        <input type="number" step=".1" name="trim_y_end" id="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" value="{{defaults['trim_y_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
-                        {% set focus_index = focus_index + 1 %}
-                    </td>
+                    <td colspan="2"></td>
                 </tr>
                 <tr>
                     <td id="y_length_container">
                         אורך
                         <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
-                        <input type="number" name="y_length1" id="y_length1"  class="form-control" placeholder="אורך" value="{{defaults['y_length_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-                        <input type="number" name="y_length2" id="y_length2"  class="form-control" placeholder="אורך" value="{{defaults['y_length_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-
+                        {% for p in range(19) %}
+                        {% if defaults['y_length_'+loop.index|string] %}
+                        <input type="number" name="y_length{{loop.index}}" id="y_length{{loop.index}}"  class="form-control y_length" placeholder="אורך" value="{{defaults['y_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        {% else %}
+                        <input type="number" name="y_length{{loop.index}}" id="y_length{{loop.index}}"  class="form-control y_length" placeholder="אורך" value="{{defaults['y_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        {% endif %}
+                        {% endfor %}
                     </td>
                     <td id="y_pitch_container">
                         פסיעה
-                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
-                        <input type="number" name="y_pitch1" id="y_pitch1" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-                        <input type="number" name="y_pitch2" id="y_pitch2" class="form-control" placeholder="פסיעה" value="{{defaults['y_pitch_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
-
+                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        {% for p in range(19) %}
+                        {% if defaults['y_pitch_'+loop.index|string] %}
+                        <input type="number" name="y_pitch{{loop.index}}" id="y_pitch{{loop.index}}" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        {% else %}
+                        <input type="number" name="y_pitch{{loop.index}}" id="y_pitch{{loop.index}}" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        {% endif %}
+                        {% endfor %}
                     </td>
                     <td>
-                        <button type="button" onclick="addInput('y_length_container');addInput('y_pitch_container');">הוסף</button>
+                        <button type="button" onclick="addInput('y');">הוסף</button>
                     </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="number" step=".1" name="trim_y_end" id="trim_y_end" class="form-control" placeholder="קוץ אורך סוף" value="{{defaults['trim_y_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        {% set focus_index = focus_index + 1 %}
+                    </td>
+                    <td colspan="2"></td>
                 </tr>
                 {% if order_data.include_data %}
                 {% for item in order_data.include_data.y_pitch %}

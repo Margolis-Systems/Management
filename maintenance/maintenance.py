@@ -5,7 +5,7 @@ import shutil
 import requests
 import bson
 
-import orders
+# import orders
 
 sys.path.insert(1, 'C:\\Server')
 import configs
@@ -153,8 +153,7 @@ if __name__ == '__main__':
     # fix_weight_integ_ord()
     # add_ang()
     # update_orders_total_weight()
-    # mongo_restore("C:\\DB_backup\\25-10-2023_12-01-38-045340")
-    # mongo_restore("C:\\Projects\\Tzomet\\old ver\\11-11-2023_20-00-04-917085")
+    mongo.restore('C:\\DB_backup\\12-03-2024_20-00-04-329469', col='data_lists.bson')
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()

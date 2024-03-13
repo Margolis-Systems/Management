@@ -46,44 +46,8 @@ div {
     {% endfor %}
     </tr>
 </table>
-<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
-<table class="table table-striped" dir="rtl" align="center">
-    <tr>
-        <td>
-            <button onclick='openNewWindow("\order_files")' type="button" class="btn btn-primary btn-block">קבצים מצורפים</button>
-        </td>
-        <td colspan="3">
-            הערות
-            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" onchange="this.form.submit()" value="{{ order_data.info['comment'] }}">
-        </td>
-        <td colspan="100">
-            תאריך אספקה
-            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onfocusout="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
-        </td>
-    </tr>
-</form>
+{% include 'layout/order_toolbar.html' %}
 <form name="input_form" id="input_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
-    <tr>
-        <td><button onclick="cmnt_form.submit();location.href='\close'" type="button" class="btn btn-success btn-block" >שמור וסגור</button></td>
-        <td><button onclick='openNewWindow("\choose_printer?test_page")' type="button" class="btn btn-primary btn-block">הדפס דוגמה</button></td>
-        <td><button onclick='openNewWindow("\choose_printer?pdf")' type="button" class="btn btn-primary btn-block">הדפס PDF</button></td>
-        <td><button onclick='openNewWindow("\choose_printer?page")' type="button" class="btn btn-primary btn-block" >הדפס הזמנה</button></td>
-        {% if order_data.info.status == "NEW" %}
-        <td><button onclick='openNewWindow("\choose_printer?label")' type="button" class="btn btn-primary btn-block" >הדפס פתקיות \ העבר לייצור</button></td>
-        {% else %}
-        <td><button onclick='openNewWindow("\change_order_status")' type="button" class="btn btn-primary btn-block">שנה סטטוס</button></td>
-        {% endif %}
-    </tr>
-    <tr>
-        <td><button type=button class="btn btn-primary btn-block" name="input_form" onclick="formSubmit()">שורה חדשה</button></td>
-        <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
-        <td> <button onclick="delete_rows();" type="button"  class="btn btn-danger btn-block" id="delete_rows_btn">מחק שורות</button></td>
-        <td> <button ondblclick='openNewWindow("\cancel_order")' type="button" class="btn btn-danger btn-block">ביטול הזמנה</button></td>
-        <td> <button onclick='openNewWindow("\split_order")' type="button" class="btn btn-warning btn-block">פיצול הזמנה</button></td>
-        <td> <button onclick='openNewWindow("\link_order")' type="button" class="btn btn-warning btn-block">קישור הזמנה</button></td>
-        <td><label>סה"כ משקל</label><input type="number" value="{{ order_data.info.total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
-    </tr>
-</table>
 {% if order_data.include %}
     {% include order_data.include %}
 {% endif %}

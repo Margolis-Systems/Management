@@ -1,0 +1,49 @@
+<table class="table table-striped" dir="rtl" align="center">
+<form name="input_form" id="cmnt_form" method=POST action="{{ url_for('edit_order') }}" onsubmit="input_form.disabled = true; return true;">
+    <tr>
+        <td>
+            <button onclick='openNewWindow("\order_files")' type="button" class="btn btn-primary btn-block">קבצים מצורפים</button>
+        </td>
+        <td colspan="3">
+            הערות
+            <input type="text" class="form-control" name="comment_hid" placeholder="הערות" onchange="this.form.submit()" value="{{ order_data.info['comment'] }}">
+        </td>
+        <td colspan="100">
+            תאריך אספקה
+            <input type="date" class="form-control" name="date_delivery_hid" min="2023-06-28" placeholder="תאריך אספקה" onfocusout="this.form.submit()" value="{{ order_data.info['date_delivery'] }}">
+        </td>
+    </tr>
+</form>
+    <tr>
+        <td><button onclick="cmnt_form.submit();location.href='\close'" type="button" class="btn btn-success btn-block" >שמור וסגור</button></td>
+        <td><button type=button class="btn btn-warning btn-block" name="input_form" onclick="formSubmit()">שורה חדשה</button></td>
+        <td><button onclick='copyLastRow({{ order_data.order_rows[0] }}, {{order_data.data_to_display}})' type="button" class="btn btn-primary btn-block">העתק שורה אחרונה</button></td>
+        <td> <button onclick="delete_rows();" type="button"  class="btn btn-danger btn-block" id="delete_rows_btn">מחק שורות</button></td>
+        <td><button class="btn btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="new_order_dropdown">
+            הדפסה
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="new_order_dropdown">
+            <li><a class="dropdown-item" onclick='openNewWindow("\choose_printer?page")'>הדפס הזמנה</a></li>
+            <li><a class="dropdown-item" onclick='openNewWindow("\choose_printer?test_page")'>הדפס דוגמה</a></li>
+            <li><a class="dropdown-item" onclick='openNewWindow("\choose_printer?pdf")'>הדפס PDF</a></li>
+            {% if order_data.info.status == "NEW" %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" onclick='openNewWindow("\choose_printer?label")'>הדפס פתקיות</a></li>
+            {% endif %}
+          </ul></td>
+        <td><button class="btn btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="new_order_dropdown">
+            פעולות
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="new_order_dropdown">
+            <li><a class="dropdown-item" onclick='openNewWindow("\change_order_status")'>שנה סטטוס</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" onclick='openNewWindow("\split_order")'>פיצול הזמנה</a></li>
+            <li><a class="dropdown-item" onclick='openNewWindow("\link_order")'>קישור הזמנה</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" onclick='openNewWindow("\cancel_order")' style="background-color:red;">ביטול הזמנה</a></li>
+          </ul></td>
+        <td class="input-group input-group-lg"><span class="input-group-text">סה"כ משקל:</span><input type="number" value="{{ order_data.info.total_weight }}" name="total_weight_hid" class="form-control" readonly></td>
+    </tr>
+</table>
+<script src="\static\js\bootstrap.js" ></script>
+<script src="\static\js\popper.js"></script>

@@ -299,6 +299,95 @@ class Images:
             im.save(file_name)
         return file_name
 
+    @staticmethod
+    def create_mesh_plot(data):
+        size = (720, 920)
+        font_size = 16
+        font_dir = 'C:\\Windows\\Fonts\\arial.ttf'
+        file_name = functions.ts(mode="file_name") + ".png"
+        im = Image.new('RGBA', size, 'white')
+        draw = ImageDraw.Draw(im)
+
+        # wid_bar = '{}X   {}@{}'.format(data['width'], data['x_bars'], data['diam_x'], set(data['x_pitch']))
+        # len_bar = '{}X   {}@{}'.format(data['length'], data['y_bars'], data['diam_y'], set(data['y_pitch']))
+        # draw.ellipse([(730, 384), (738, 392)], outline='black', width=1)
+        # draw.line([(729, 383), (739, 393)], fill="black", width=1)
+        # draw.ellipse([(330, 866), (338, 874)], outline='black', width=1)
+        # draw.line([(329, 865), (339, 875)], fill="black", width=1)
+
+        draw.line([(20, 5), (20, 810)], fill="black", width=1)
+        draw.line([(15, 5), (25, 5)], fill="black", width=1)
+        draw.line([(15, 810), (25, 810)], fill="black", width=1)
+        draw.text((625, 480), data['length'], fill="black", direction='rtl',
+                  font=ImageFont.truetype(font_dir, font_size, encoding="utf-8"))
+        draw.line([(620, 5), (620, 810)], fill="black", width=1)
+        draw.line([(615, 5), (625, 5)], fill="black", width=1)
+        draw.line([(615, 810), (625, 810)], fill="black", width=1)
+
+        draw.line([(50, 840), (600, 840)], fill="black", width=1)
+        draw.line([(50, 835), (50, 845)], fill="black", width=1)
+        draw.line([(600, 835), (600, 845)], fill="black", width=1)
+        draw.text((300, 850), data['width'], fill="black", direction='rtl',
+                  font=ImageFont.truetype(font_dir, font_size, encoding="utf-8"))
+        draw.line([(50, 870), (600, 870)], fill="black", width=1)
+        draw.line([(50, 865), (50, 875)], fill="black", width=1)
+        draw.line([(600, 865), (600, 875)], fill="black", width=1)
+        x_prop = 550/float(data['width'])
+        y_prop = 795/float(data['length'])
+        x_start = 50
+        y_start = 15
+        # data['x_length'].reverse()
+        # data['x_pitch'].reverse()
+        if 'y_length' not in data:
+            data['trim_x_start'] = '5'
+            data['trim_x_end'] = '5'
+            data['trim_y_start'] = str(float(data['y_pitch'])/2)
+            data['trim_y_end'] = str(float(data['y_pitch'])/2)
+            data['y_length'] = [str(int(float(data['length'])-float(data['trim_y_start'])-float(data['trim_y_end'])))]
+            data['y_pitch'] = [data['y_pitch']]
+            data['x_length'] = [str(int(float(data['width'])-float(data['trim_x_start'])-float(data['trim_x_end'])))]
+            data['x_pitch'] = [data['x_pitch']]
+        data['y_length'].reverse()
+        data['y_pitch'].reverse()
+        draw.text((x_start + int(float(data['trim_x_start'])/2), 810), data['trim_x_start'].replace('.0', ''), fill="black", direction='rtl',
+                  font=ImageFont.truetype(font_dir, 12))
+        draw.text((30, 5 + int(float(data['trim_y_end'])/2)), data['trim_y_end'].replace('.0', ''), fill="black", direction='rtl', font=ImageFont.truetype(font_dir, 12))
+        x_start += int(float(data['trim_x_start'])*x_prop)
+        y_start += int(float(data['trim_y_end'])*y_prop)
+        for i in range(len(data['x_length'])):
+            leng = int(data['x_length'][i])
+            pitch = int(data['x_pitch'][i])
+            for x in range(int(leng/pitch)):
+                pos = x_start + int(float(data['x_pitch'][i])/2)
+                draw.line([(x_start, 5), (x_start, 810)], fill="black", width=2)
+                draw.line([(x_start, 845), (x_start, 835)], fill="black", width=1)
+                draw.text((pos, 810), data['x_pitch'][i], fill="black", direction='rtl', font=ImageFont.truetype(font_dir, 12))
+                x_start += int(pitch)*x_prop
+        # draw.line([(x_start, 400), (620, 370)], fill="black", width=2)
+        # draw.line([(620, 370), (720, 370)], fill="black", width=2)
+        for i in range(len(data['y_length'])):
+            leng = int(data['y_length'][i])
+            pitch = int(data['y_pitch'][i])
+            for x in range(int(leng/pitch)):
+                # if x+i == 0:
+                #     draw.line([(590, y_start), (620, 270)], fill="black", width=2)
+                #     draw.line([(620, 270), (720, 270)], fill="black", width=2)
+                pos = y_start + int(float(data['y_pitch'][i])/2)
+                draw.line([(50, y_start), (600, y_start)], fill="black", width=2)
+                draw.line([(15, y_start), (25, y_start)], fill="black", width=1)
+                draw.text((30, pos), data['y_pitch'][i], fill="black", direction='rtl', font=ImageFont.truetype(font_dir, 12))
+                y_start += int(pitch)*y_prop
+        draw.line([(x_start, 5), (x_start, 810)], fill="black", width=2)
+        draw.line([(x_start, 845), (x_start, 835)], fill="black", width=1)
+        draw.text((x_start, 810), data['trim_x_end'].replace('.0', ''), fill="black", direction='rtl',
+                  font=ImageFont.truetype(font_dir, 12))
+        draw.line([(50, y_start), (600, y_start)], fill="black", width=2)
+        draw.line([(15, y_start), (25, y_start)], fill="black", width=1)
+        draw.text((30, y_start), data['trim_y_start'].replace('.0', ''), fill="black", direction='rtl', font=ImageFont.truetype(font_dir, 12))
+        # im.show()
+        im.save(configs.net_print_dir + "Picture\\" + file_name)
+        return file_name
+
 
 class Bartender:
     @staticmethod
@@ -523,10 +612,8 @@ class Bartender:
                             line['width_trim'] = '['+']['.join(row['x_length'])+']'
                         else:
                             line['width_trim'] = 250
-                    elif '_pitch' in obj and not isinstance(row[obj], str) and not isinstance(row[obj], int):
-                        line[obj] = ""
-                        for pit in row[obj]:
-                            line[obj] += "(" + pit + ")"
+                    elif '_pitch' in obj and not isinstance(row[obj], str):
+                        line[obj] = '(' + ')('.join(list(set(row[obj]))) + ')'
                     elif 'bend' in obj:
                         bends.append(int(row[obj]))
                     else:
@@ -538,10 +625,11 @@ class Bartender:
                     line[obj] = info[obj]
                 if bends:
                     if len(bends) == 2:
-                        line['img_dir'] = Images.create_shape_plot('405', bends).split('\\')[-1].replace('.png', '')
+                        line['bend_img_dir'] = Images.create_shape_plot('405', bends).split('\\')[-1].replace('.png', '')
                     elif len(bends) == 3:
-                        line['img_dir'] = Images.create_shape_plot('404', bends).split('\\')[-1].replace('.png', '')
+                        line['bend_img_dir'] = Images.create_shape_plot('404', bends).split('\\')[-1].replace('.png', '')
                 line['barcode_data'] = Images.format_qr_data(line)
+                line['img_dir'] = Images.create_mesh_plot(row)
                 summary_data.append(line)
         elif 'piles' in info['type']:
             summary_data = rows.copy()
@@ -703,8 +791,8 @@ class Bartender:
                  + printer.upper() + ' /R=3 /P /DD\n%END%\n'
         file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
         # --------- for testing ----------
-        # if main.session['username'] in ['baruch', 'Baruch']:
-        #     file_dir = file_dir.replace('.txt', '.tmp')
+        if main.session['username'] in ['baruch', 'Baruch']:
+            file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"

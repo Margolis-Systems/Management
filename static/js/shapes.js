@@ -76,7 +76,7 @@ function findTotal2(src, target, inputId){
     }
 }
 var temp = 0
-function addInput(div_id, val){
+function _addInput(div_id, val){
     var container = document.getElementById(div_id);
     var input = document.createElement("input");
     input.type = "number";
@@ -101,12 +101,16 @@ function addInput(div_id, val){
     container.appendChild(input);
 }
 
-function _addInput(table_id, val){
-    var table = document.getElementById(table_id);
-    var row = table.insertRow(14);
-    var cell1 = row.insertCell(0);
-    row.cells[0].className = 'input-group';
-    row.cells[0].innerHTML = "<span class='input-group-text'>נפח</span><input type='number' name='' id='hh' placeholder='נפח' class='form-control' autofocus required><button type='button' onclick=''>-</button>";
+function addInput(vect){
+    all_in = document.getElementsByClassName(vect+'_length');
+    for(i=0;i<all_in.length;i++){
+        if(all_in[i].hidden){
+            all_in[i].hidden = false;
+            console.log(vect+'_pitch'+i)
+            document.getElementById(vect+'_pitch'+(i+1)).hidden = false;
+            break;
+        }
+    }
 }
 
 function copyLastRow(dict, dataToDisplay){

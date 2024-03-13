@@ -163,10 +163,10 @@ class DBHandle:
                     f.write(bson.BSON.encode(doc))
 
     @staticmethod
-    def restore(path, db_name=""):
+    def restore(path, db_name="", col=''):
         db = DBHandle.con_to_mongo_default(db_name)
         for coll in os.listdir(path):
-            if coll.endswith('.bson'):
+            if coll.endswith('.bson') and (not col or col == coll):
                 try:
                     with open(os.path.join(path, coll), 'rb+') as f:
                         data = f.read()

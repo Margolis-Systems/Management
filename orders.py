@@ -193,8 +193,16 @@ def new_order_row():
         if req_form_data[item].isnumeric():
             req_form_data[item] = str(int(req_form_data[item]))
         if req_form_data[item] not in ['---', ''] and '_hid' not in item:
-            if '_length' in item or '_pitch' in item:
+            if '_length' in item:
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
+                if item.replace('length', 'pitch') not in req_form_data:
+                    new_row[item[:item.find('h') + 1].replace('length', 'pitch')].append(req_form_data[item])
+                elif req_form_data[item.replace('length', 'pitch')] == '0':
+                    new_row[item[:item.find('h') + 1].replace('length', 'pitch')].append(req_form_data[item])
+                else:
+                    new_row[item[:item.find('h') + 1].replace('length', 'pitch')].append(req_form_data[item.replace('length', 'pitch')])
+            elif '_pitch' in item:
+                continue
             else:
                 new_row[item] = req_form_data[item]
     # Order data handling
@@ -214,31 +222,33 @@ def new_order_row():
         if 'trim_x_end' not in new_row:
             new_row['trim_x_end'] = 5
             new_row['x_length'][0] = int(new_row['x_length'][0]) - 5
-        for i in range(len(new_row['x_length'])):  # todo: !!!!!!!!!!!!!!!!!!!!!!!!!!
-            if new_row['y_pitch'][i] != "0":
-                new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
-                                            int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])).replace('.0', '')
-                new_row['x_length'][i] = str(
-                    int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['y_pitch'][i])))
-                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['y_pitch'][i]))
-            else:
-                bars_y += 1
         new_row['length'] = sum(list(map(int, new_row['y_length'])))
         new_row['width'] = sum(list(map(int, new_row['x_length'])))
         new_row['length'] += int(float(new_row['trim_y_start']) + float(new_row['trim_y_end']))
         new_row['width'] += int(float(new_row['trim_x_start']) + float(new_row['trim_x_end']))
-        for i in range(len(new_row['y_length'])):  # todo: !!!!!!!!!!!!!!!!!!!!!!!!!!
+        for i in range(len(new_row['x_length'])):
             if new_row['x_pitch'][i] != "0":
+                new_row['trim_x_end'] = str(float(new_row['trim_x_end']) +
+                                            int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])).replace('.0', '')
+                new_row['x_length'][i] = str(
+                    int(new_row['x_length'][i]) - (int(new_row['x_length'][i]) % int(new_row['x_pitch'][i])))
+                bars_y += math.floor(int(new_row['x_length'][i]) / int(new_row['x_pitch'][i]))
+            else:
+                bars_y += 1
+        for i in range(len(new_row['y_length'])):
+            if new_row['y_pitch'][i] != "0":
                 new_row['trim_y_end'] = str(float(new_row['trim_y_end']) +
-                                            int(new_row['y_length'][i]) % int(new_row['x_pitch'][i]))
+                                            int(new_row['y_length'][i]) % int(new_row['y_pitch'][i]))
                 new_row['y_length'][i] = str(
-                    int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['x_pitch'][i])))
-                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['x_pitch'][i]))
+                    int(new_row['y_length'][i]) - (int(new_row['y_length'][i]) % int(new_row['y_pitch'][i])))
+                bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['y_pitch'][i]))
             else:
                 bars_x += 1
         # print(bars_x, bars_y)
-        x_pitch = '(' + ')('.join(new_row['x_pitch']) + ')'
-        y_pitch = '(' + ')('.join(new_row['y_pitch']) + ')'
+        x_pitch = '(' + ')('.join(list(set(new_row['x_pitch']))) + ')'
+        y_pitch = '(' + ')('.join(list(set(new_row['y_pitch']))) + ')'
+        # x_pitch = list(set(new_row['x_pitch']))
+        # y_pitch = str(set(new_row['y_pitch']))
         new_row['x_bars'] = int(bars_x)
         new_row['y_bars'] = int(bars_y)
         new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
@@ -314,7 +324,7 @@ def new_order_row():
     for item in new_row:
         if isinstance(new_row[item], int):
             new_row[item] = str(new_row[item])
-    order['info']['total_weight'] = new_row['weight'] # todo: ????
+    order['info']['total_weight'] = new_row['weight']
     for i in range(len(order['rows'])):
         if i >= len(order['rows']):
             break
@@ -329,7 +339,7 @@ def new_order_row():
         order['info']['total_weight'] += float(order['rows'][i]['weight'])
     order['rows'].append(new_row)
     # order['info']['total_weight'] = round(order['info']['total_weight'])
-    order['info']['total_weight'] = str(int(order['info']['total_weight'])) #todo: ????
+    order['info']['total_weight'] = str(int(order['info']['total_weight']))
     order['info']['rows'] = len(order['rows'])
     main.mongo.update_one('orders', {'order_id': new_row['order_id']}, order, '$set')
 

@@ -256,10 +256,11 @@ def scan():
     req_form = dict(main.request.form)
     if 'scan' in req_form.keys():
         decode = reports.Images.decode_qr(req_form['scan'])
-        if 'weight' in decode:
-            decode['weight'] = int(decode['weight'])
         if 'order_id' in decode:
             order_id, job_id = decode['order_id'], decode['job_id']
+        if 'weight' in decode:
+            if decode['weight'].isnumeric():
+                decode['weight'] = int(decode['weight'])
     elif 'order_id' in req_form.keys() and 'close' not in req_form.keys():
         order_id = req_form['order_id']
         job_id = req_form['job_id']
