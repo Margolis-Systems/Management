@@ -68,7 +68,7 @@ class Images:
         return formatted
 
     @staticmethod
-    def create_shape_plot(shape, text=[], enable_text_plot=True):
+    def create_shape_plot(shape, text=[], enable_text_plot=True, html=False):
         size = (200, 60)
         font_size = 16
         font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
@@ -82,7 +82,6 @@ class Images:
         positions = []
         for i in _positions:
             positions.append(tuple(i))
-        file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
         if not text:
             text = list(range(1, len(positions)))
         if shape.isdigit():
@@ -102,7 +101,12 @@ class Images:
                 draw.rectangle(bbox, fill="white")
                 draw.text(position, str(text[i]), fill="black", font=ImageFont.truetype(font_dir, font_size))
                 text_pos.append(position)
-        im.save(file_name)
+        if html:
+            file_name = "static\\img\\" + functions.ts(mode="file_name") + ".png"
+            im.save('C:\\Server\\'+file_name)
+        else:
+            file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
+            im.save(file_name)
         return file_name
 
     @staticmethod
@@ -130,12 +134,12 @@ class Images:
         return {}
 
     @staticmethod
-    def create_pile_plot(data, testing=False):
+    def create_pile_plot(data, html=False):
         size = (710, 520)
         font_size = 16
         # font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
         font_dir = 'C:\\Windows\\Fonts\\arial.ttf'
-        file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
+        file_name = functions.ts(mode="file_name") + ".png"
         im = Image.new('RGBA', size, 'white')
         draw = ImageDraw.Draw(im)
         spiral = []
@@ -293,14 +297,16 @@ class Images:
         draw.text((260, 400), 'קוטר כלונס', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
         draw.text((260, 420), pile_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
         # draw.text((500, 500), 'fff', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
-        if testing:
-            im.show()
+        if html:
+            file_name = 'static\\img\\' + file_name
+            im.save('C:\\Server\\' + file_name)
         else:
+            file_name = configs.net_print_dir + "Picture\\" + file_name
             im.save(file_name)
         return file_name
 
     @staticmethod
-    def create_mesh_plot(data):
+    def create_mesh_plot(data, html=False):
         size = (720, 920)
         font_size = 16
         font_dir = 'C:\\Windows\\Fonts\\arial.ttf'
@@ -385,7 +391,11 @@ class Images:
         draw.line([(15, y_start), (25, y_start)], fill="black", width=1)
         draw.text((30, y_start), data['trim_y_start'].replace('.0', ''), fill="black", direction='rtl', font=ImageFont.truetype(font_dir, 12))
         # im.show()
-        im.save(configs.net_print_dir + "Picture\\" + file_name)
+        if html:
+            file_name = 'static\\img\\' + file_name
+            im.save('C:\\Server\\' + file_name)
+        else:
+            im.save(configs.net_print_dir + "Picture\\" + file_name)
         return file_name
 
 
@@ -725,7 +735,7 @@ class Bartender:
 
             temp = {}
             for key in sort_keys:
-                temp[key] = table_data[str(key).replace('.0','')]
+                temp[str(key).replace('.0', '')] = table_data[str(key).replace('.0', '')]
             table_data = temp
             to_del = []
             for key in special_sum:
@@ -819,151 +829,43 @@ class Bartender:
         return file_dir
 
 
-class Docs:
-    from docx.enum.table import WD_TABLE_DIRECTION
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-
+class Print:
     @staticmethod
-    def print_doc(order_id, disable_weight=False, select_jobs='', split=''):
+    def print_template(order_id, disable_weight, select_jobs=[], split=None):
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
-        info['order_id'] = order_id
-        if select_jobs:
-            rlen = len(rows)
-            for i in range(rlen):
-                index = rlen - 1 - i
-                if rows[index]['job_id'] not in select_jobs:
-                    rows.pop(index)
-        if not rows:
-            return ''
-        order_type = info['type']
-        if order_type != 'regular':
-            return 'static\\temp\\pdf_construct.pdf'
-        # Delete all weights data
-        if disable_weight:
-            for r in rows:
-                for i in r:
-                    if 'weight' in i:
-                        r[i] = ''
-            for i in info:
-                if 'weight' in i:
-                    info[i] = ''
-        file_name = Docs.fill_template(configs.reports_dir+'reports_templates\\default.docx', info)
-        output_file = Docs.format_tables_data(file_name, order_type, rows)
-        return output_file
+        order_summary = []
+        rows_to_print = []
+        for r in rows:
+            if r['job_id'] in select_jobs or not select_jobs:
+                rows_to_print.append(r)
+        order = {'order_id': order_id, 'rows': rows_to_print, 'info': info}
+        if info['type'] == 'regular':
+            order_summary = Print.gen_summary_data(rows, disable_weight, order['info']['costumer_id'])
+            for r in order['rows']:
+                if ((len(r['shape_data']) > 2) and (r['weight'] / int(r['quantity']) <= 2) and r['shape'] not in ['332', '49', '59']) or r['shape'] in configs.circle:
+                    r['circle'] = 'כן'
+                r['img_dir'] = Images.create_shape_plot(r['shape'], r['shape_data'], html=True)
+                r['pdf417_dir'] = Images.gen_pdf417(r)
+        elif 'rebar' in info['type']:
+            for r in order['rows']:
+                r['img_dir'] = Images.create_mesh_plot(r, html=True)
+                r['x_pitch'] = '(' + ')('.join(list(set(r['x_pitch']))) + ')'
+                r['y_pitch'] = '(' + ')('.join(list(set(r['y_pitch']))) + ')'
+        elif info['type'] == 'piles':
+            for r in order['rows']:
+                r['img_dir'] = Images.create_pile_plot(r, html=True)
+        # elif info['type'] == 'girders':
+        #     print('piles')
+        else:
+            return '', 204
+        return main.render_template('/print/page/{}.html'.format(info['type']), order_data=order, summary=order_summary, print_ts=functions.ts())
 
     @staticmethod
-    def add_summary(temp_dir, temp_dict):
-        print()
-
-    @staticmethod
-    def fill_template(temp_dir, temp_dict):
-        # Create timestamp
-        temp_dict['print_date'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-        # Merge data
-        doc = MailMerge(temp_dir)
-        doc.merge(**temp_dict)
-        file_name = configs.reports_dir+'reports_temp\\{}_{}.docx'\
-            .format(main.session['order_id'], functions.ts('file_name'))
-        doc.write(file_name)
-        return file_name
-
-    @staticmethod
-    def format_tables_data(file_name, order_type, rows):
-        import pythoncom
-        doc = docx.Document(file_name)
-        Docs.prevent_document_break(doc)
-        tb_rows = len(rows)
-        tb_cells = 4
-        table = doc.add_table(tb_rows, tb_cells)
-        table.direction = WD_TABLE_DIRECTION.RTL
-        table.style = 'Table Grid'
-        table.allow_autofit = True
-        # Add data to table
-        if order_type == 'regular':
-            for row in range(len(rows)):  # Table data
-                element = ''
-                inner_id = ''
-                if 'element' in rows[row]:
-                    element = rows[row]['element']
-                if 'inner_id' in rows[row]:
-                    inner_id = rows[row]['inner_id']
-                table.cell(row, 3).text = 'מספר שורה: {}\nאלמנט: {}\nמס.ברזל: {}\nקוטר: {}\nכמות: {}'\
-                    .format(rows[row]['job_id'], element, inner_id,
-                            rows[row]['diam'], rows[row]['quantity'])
-                table.cell(row, 2).text = 'אורך חיתוך: {}\nמשקל ק"ג: {}\nמס.צורה: {}\nחישוק: {}'\
-                    .format(rows[row]['length'], rows[row]['weight'], rows[row]['shape'], '')
-
-                img_dir = Images.gen_pdf417(rows[row])
-                paragraph = table.cell(row, 1).paragraphs[0]
-                paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                run = paragraph.add_run()
-                run.add_picture(img_dir, width=1800000, height=600000)
-
-                img_dir = Images.create_shape_plot(rows[row]['shape'], rows[row]['shape_data'])
-                paragraph = table.cell(row, 0).paragraphs[0]
-                paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                run = paragraph.add_run()
-                run.add_picture(img_dir, width=1800000, height=600000)
-
-            summary_data = Docs.gen_summary_data(rows, False)
-            doc.add_page_break()
-            tb_dictionary = {'weight': 'משקל', 'weight_per_M': 'משקל למטר', 'length': 'סה"כ אורך', 'type': 'סוג ברזל',
-                             'qnt': 'כמות', 'description': 'תיאור'}
-            for dt in summary_data:
-                header = []
-                tb_data = []
-                # Add header above table
-                table_header = 'סיכום משקל ברזל'  # todo: <---
-                if table_header:
-                    p = doc.add_paragraph()
-                    p.add_run(table_header).underline = True
-                    p.bold = True
-                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                for k in dt:
-                    temp = {'description': k}
-                    header.append(k)
-                    order_by = ['type', 'qnt', 'length', 'weight_per_M', 'weight']
-                    for o in order_by:
-                        if o in dt[k]:
-                            temp[o] = dt[k][o]
-                            header.append(o)
-                    tb_data.append(temp)
-                tb_rows = len(tb_data)
-                tb_cells = len(tb_data[0])
-                table = doc.add_table(tb_rows+1, tb_cells)
-                table.direction = WD_TABLE_DIRECTION.RTL
-                table.style = 'Table Grid'
-                table.allow_autofit = True
-                # Add data to table
-                row_keys = list(tb_data[0].keys())
-                for tbx in range(tb_cells):
-                    table.cell(0, tb_cells-tbx-1).text = header[tbx]
-                for tbi in range(tb_rows):
-                    for tbx in range(tb_cells):
-                        table.cell(tbi+1, tb_cells-tbx-1).text = str(tb_data[tbi][row_keys[tbx]])
-        # todo: if summary_datav->
-        #  page break
-        #  table
-        doc.save(file_name)
-        output_file = configs.reports_dir+'report_output\\'+os.path.basename(file_name).replace('docx', 'pdf')
-        convert(file_name, output_file, pythoncom.CoInitialize())
-        return output_file
-
-    @staticmethod
-    def prevent_document_break(document):
-        tags = document.element.xpath('//w:tr')
-        rows = len(tags)
-        for row in range(0, rows):
-            tag = tags[row]  # Specify which <w:r> tag you want
-            child = OxmlElement('w:cantSplit')  # Create arbitrary tag
-            tag.append(child)  # Append in the new tag
-
-    @staticmethod
-    def gen_summary_data(rows, disable_weight):
-        table_data = {}
-        spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
-               'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
+    def gen_summary_data(rows, disable_weight, costumer_id):
+        diams = {}
+        spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ',
+                     'תוספת_ברזל_עגול_מעל_14_ממ',
+                     'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
         special_sum = {}
         for i in spec_keys:
             special_sum[i] = {'qnt': 0, 'weight': 0}
@@ -975,75 +877,84 @@ class Docs:
                 row['bar_type'] = "מצולע"
             # Summary data
             quantity = int(row['quantity'])
-            if row['diam'] in table_data.keys():
-                table_data[row['diam']]['weight'] += row['weight']
-                table_data[row['diam']]['length'] += int(row['length']) * quantity
+            if row['diam'] in diams.keys():
+                if not disable_weight:
+                    diams[row['diam']]['weight'] += row['weight']
+                diams[row['diam']]['length'] += int(row['length']) * quantity
             else:
-                table_data[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
-                                           'weight_per_M': configs.weights[row['diam']], 'type': row['bar_type']}
+                diams[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
+                                           'kgm': configs.weights[row['diam']], 'type': row['bar_type']}
+                if disable_weight:
+                    diams[row['diam']]['kgm'] = ''
             # Special summary data
             if row['shape'] not in ["905"]:
                 if 'חיתוך' not in special_sum.keys():
                     special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
                 special_sum['חיתוך']['qnt'] += quantity
-                special_sum['חיתוך']['weight'] += row['weight']
+                if not disable_weight:
+                    special_sum['חיתוך']['weight'] += row['weight']
             if row['shape'] not in ["1", "905"]:
                 if 'כיפוף' not in special_sum.keys():
                     special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
                 special_sum['כיפוף']['qnt'] += quantity
-                special_sum['כיפוף']['weight'] += row['weight']
+                if not disable_weight:
+                    special_sum['כיפוף']['weight'] += row['weight']
             if row['shape'] in ['332']:
                 if 'ספירלים' not in special_sum.keys():
                     special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                 special_sum['ספירלים']['qnt'] += quantity
-                special_sum['ספירלים']['weight'] += row['weight']
-            elif row['shape'] in ['49','59']:
+                if not disable_weight:
+                    special_sum['ספירלים']['weight'] += row['weight']
+            if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
+                if 'חישוק מיוחד' not in special_sum.keys():
+                    special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
+                special_sum['חישוק מיוחד']['qnt'] += quantity
+                if not disable_weight:
+                    special_sum['חישוק מיוחד']['weight'] += row['weight']
+            elif row['shape'] in ['49', '59']:
                 if 'ספסלים' not in special_sum.keys():
                     special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
                 special_sum['ספסלים']['qnt'] += quantity
-                special_sum['ספסלים']['weight'] += row['weight']
-            elif (len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
+                if not disable_weight:
+                    special_sum['ספסלים']['weight'] += row['weight']
+            elif ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) and costumer_id not in ['143']) \
                     or row['shape'] in configs.circle:
                 if 'חישוק' not in special_sum.keys():
                     special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
                 special_sum['חישוק']['qnt'] += quantity
-                special_sum['חישוק']['weight'] += row['weight']
+                if not disable_weight:
+                    special_sum['חישוק']['weight'] += row['weight']
             if int(row['length']) > 1600:
                 if 'ברזל_ארוך' not in special_sum.keys():
                     special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
                 special_sum['ברזל_ארוך']['qnt'] += quantity
-                special_sum['ברזל_ארוך']['weight'] += row['weight']
+                if not disable_weight:
+                    special_sum['ברזל_ארוך']['weight'] += row['weight']
             if float(row['diam']) >= 28:
                 if 'תוספת_ברזל_28_ממ_ומעלה' not in special_sum.keys():
                     special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
                 special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
-                special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
+                if not disable_weight:
+                    special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
             if row['bar_type'] == 'חלק':
                 if int(row['diam']) <= 12:
                     if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
                         special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
                     special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
-                    special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
+                    if not disable_weight:
+                        special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
                 elif int(row['diam']) >= 14:
                     if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
                         special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
                     special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
-                    special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
-            # Reorder diam summary list
-            sort_keys = list(map(float, list(table_data.keys())))
-            sort_keys.sort()
-            temp = {}
-            for k in sort_keys:
-                key = str(k).replace('.0','')
-                temp[key] = table_data[key]
-            table_data = temp
-            special_sum_keys = list(special_sum.keys())
-            for key in special_sum_keys:
-                if special_sum[key]['qnt'] == 0:
-                    del special_sum[key]
-        return table_data, special_sum
+                    if not disable_weight:
+                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
+        li = list(diams.keys())
+        sort_keys = list(map(float, li))
+        sort_keys.sort()
 
-
-if __name__ == '__main__':
-    orderr = main.mongo.read_collection_one('orders', {'order_id':'1605'})
-    print(Docs.gen_summary_data(orderr['rows'], False))
+        temp = {}
+        for key in sort_keys:
+            temp[str(key).replace('.0', '')] = diams[str(key).replace('.0', '')]
+        diams = temp
+        return {'diams': diams, 'work': special_sum}

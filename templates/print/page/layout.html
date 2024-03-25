@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tzomet ERP">
+    <meta name="author" content="Margolis Systems">
+
+    <title>Tzomet ERP</title>
+
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+
+</head>
+
+<body>
+<style>
+    @media print {
+        table tr {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .pagebreak { min-height: 1px; page-break-before: always; }
+        @page {size: A4 portrait;}
+        }
+    }
+    table.print-friendly tr td, table.print-friendly tr th {
+        page-break-inside: avoid;
+        font-family: Arial;
+    }
+</style>
+<table width="95%" class="print-friendly">
+    <thead>
+        <tr>
+            <td colspan="2" style="text-align:right;vertical-align: top;font-size:24px;" width="40%"><b>צומת ברזל לבניין בע"מ</b></td>
+            <td style="text-align:right;vertical-align: top;font-size:24px;"><b>תוכנית יצור מס': {{order_data.order_id}}</b></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="3" width="60%">
+                לקוח:<b> {{order_data.info.costumer_name}}</b><br>
+                אתר:<b> {{order_data.info.costumer_site}}</b><br>
+                הערות:<b> {{order_data.info.comment}}</b><br>
+            </td>
+            <td width="15%" style="text-align:right;vertical-align: top;">
+                <b>
+                    {% if split %}
+                     משלוח מספר: {{split}}
+                    {% endif %}
+                </b>
+            </td>
+            <td width="25%" style=";vertical-align: top;font-size:10px;">
+                תאריך הדפסה:<b> {{print_ts}}</b><br>
+                תאריך קבלה:<b> {{order_data.info.date_created}}</b><br>
+                תאריך אספקה:<b> {{order_data.info.date_delivery}}</b><br>
+                מספר דף:<b> </b><br>
+            </td>
+        </tr>
+    </thead>
+{% block body %}
+{% endblock %}
+
+</table>
+</body>
+
+</html>

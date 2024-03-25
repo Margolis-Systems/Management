@@ -389,7 +389,7 @@ if __name__ == '__main__':
 
     app.secret_key = 'dffd$%23E3#@1FG'
     if production:
-        if os.getlogin() != 'baruch':
+        if not os.path.isdir('h:'):
             functions.send_sms('שרת צומת ברזל הופעל מחדש')
         with open('pid.txt', 'w') as pid:
             pid.write(str(os.getpid()))

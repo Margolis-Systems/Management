@@ -1,0 +1,44 @@
+{% extends "print/page/layout.html" %}
+{% block body %}
+<tbody>
+    <tr>
+        <td style="border: 1px solid;text-align: center;font-weight: bold;">שורה</td>
+        <td style="border: 1px solid;text-align: center;font-weight: bold;">תיאור</td>
+        <td style="border: 1px solid;text-align: center;font-weight: bold;">מקט</td>
+        <td style="border: 1px solid;text-align: center;font-weight: bold;">כמות</td>
+        <td style="border: 1px solid;text-align: center;font-weight: bold;">משקל</td>
+        <!--<td style="border: 1px solid;text-align: center;font-weight: bold;">משקל תיאורטי ק"ג</td>-->
+    </tr>
+    {% set weight=namespace(total=0) %}
+    {% for row in order_data.rows %}
+    {% set weight.total=weight.total+row['weight'] %}
+    <tr style="text-align: center;">
+        <td style="border: 1px solid;text-align: center;">{{row.job_id}}</td>
+        <td style="border: 1px solid;text-align: center;font-size: 10px;">
+            תיאור שורה <br>
+            {{row.description}}
+        </td>
+        <td style="border: 1px solid;text-align: center;">{{row.mkt}}</td>
+        <td style="border: 1px solid;text-align: center;">{{row.quantity}}</td>
+        <td style="border: 1px solid;text-align: center;">
+            יחידה: {{row.unit_weight}} ק"ג<br>
+            כולל: {{row.weight}} ק"ג
+        </td>
+        <!--<td style="border: 1px solid;text-align: center;">{{row.weight}}</td>-->
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="3"></td>
+        <td colspan="2" style="text-align: center;font-weight: bold;">סה"כ: {{weight.total}} ק"ג</td>
+    </tr>
+    {% for row in order_data.rows %}
+    <tr class="pagebreak">
+        <td style="vertical-align: top;font-weight: bold;font-size: 14px;">שורה:{{row.job_id}}<br>כמות:{{row.quantity}}</td>
+        <td colspan="5"><img src="{{row.img_dir}}" width="95%"></td>
+    </tr>
+    <tr><td style="text-align: left;font-weight: bold;" colspan="5">LW{{row.y_bars}} X ⌀{{row.diam_y}}@{{row.y_pitch}}↕</td></tr>
+    <tr><td style="text-align: left;font-weight: bold;" colspan="5">CW{{row.x_bars}} X ⌀{{row.diam_x}}@{{row.x_pitch}} ↔</td></tr>
+    <tr><td style="text-align: center;font-weight: bold;" colspan="5">{{row.description}}</td></tr>
+    {% endfor %}
+</tbody>
+{% endblock %}

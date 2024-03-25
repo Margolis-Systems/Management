@@ -254,8 +254,8 @@ def new_order_row():
         new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
         new_row['y_weight'] = calc_weight(new_row['diam_y'], new_row['length'], bars_y)
         new_row['description'] = "H" + str(new_row['width']) + "X" + str(bars_x) + "X" + str(new_row['diam_x']) + \
-                                 "WBX" + x_pitch + " V" + str(new_row['length']) + "X" + str(bars_y) + "X" + \
-                                 str(new_row['diam_y']) + "WBX" + y_pitch
+                                 "WBX" + y_pitch + " V" + str(new_row['length']) + "X" + str(bars_y) + "X" + \
+                                 str(new_row['diam_y']) + "WBX" + x_pitch
         new_row['unit_weight'] = round(new_row['x_weight'] + new_row['y_weight'], 2)
         new_row['weight'] = round(new_row['unit_weight'] * int(new_row['quantity']), 2)
         if 'הזמנת_ייצור' in new_row:

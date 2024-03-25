@@ -1,0 +1,72 @@
+{% extends "print/page/layout.html" %}
+{% block body %}
+<tbody>
+    {% set weight=namespace(total=0) %}
+    {% for row in order_data.rows %}
+    {% set weight.total=weight.total+row['weight'] %}
+    <tr>
+        <td style="border: 1px solid;font-size:12px;">
+            שורה: {{row.job_id}}<br>
+            אלמנט: {{row.element}}<br>
+            מס ברזל: {{row.inner_id}}<br>
+            קוטר: {{row.diam}}<br>
+            כמות: {{row.quantity}}<br>
+        </td>
+        <td style="border: 1px solid;font-size:12px;">
+            אורך חיתוך: {{row.length}}<br>
+            משקל ק"ג: {{row.weight}}<br>
+            מס צורה: {{row.shape}}<br>
+            חישוק: {{row.circle}}<br>
+        </td>
+        <td style="border: 1px solid;text-align: center;" width="200px"><img src="{{row.pdf417_dir}}" width="95%"></td>
+        <td colspan="2" style="border: 1px solid;text-align: center;" height="70px"><img src="{{row.img_dir}}" height="95%"></td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="3"></td>
+        <td colspan="2" style="text-align: center;font-weight: bold;">סה"כ: {{weight.total}} ק"ג</td>
+    </tr>
+    <tr class="pagebreak"><td height="20px"></td></tr>
+    <tr style="background-color:LightGray !important;">
+        <td colspan="5" style="text-align: center;font-weight: bold;border: 1px solid;">סיכום משקל ברזל</td>
+    </tr>
+    <tr style="text-align: center;font-weight: bold;">
+        <td style="border: 1px solid;">סוג ברזל</td>
+        <td style="border: 1px solid;">קוטר ברזל</td>
+        <td style="border: 1px solid;">סה"כ אורך ס"מ</td>
+        <td style="border: 1px solid;">משקל למטר</td>
+        <td style="border: 1px solid;">משקל תיאורטי ק"ג</td>
+    </tr>
+    {% for t in summary.diams %}
+    <tr style="text-align: center;">
+        <td style="border: 1px solid;">{{summary.diams[t].type}}</td>
+        <td style="border: 1px solid;">{{t}}</td>
+        <td style="border: 1px solid;">{{summary.diams[t].length}}</td>
+        <td style="border: 1px solid;">{{summary.diams[t].kgm}}</td>
+        <td style="border: 1px solid;">{{summary.diams[t].weight}}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="4"></td>
+        <td style="text-align: center;font-weight: bold;border: 1px solid;">סה"כ: {{weight.total}} ק"ג</td>
+    </tr>
+    <tr><td height="20px"></td></tr>
+    <tr style="background-color:LightGray !important;">
+        <td colspan="5" style="text-align: center;font-weight: bold;border: 1px solid;">סיכום עבודה</td>
+    </tr>
+    <tr style="text-align: center;font-weight: bold;">
+        <td colspan="3" style="border: 1px solid;">תיאור</td>
+        <td style="border: 1px solid;">כמות</td>
+        <td style="border: 1px solid;">משקל ק"ג</td>
+    </tr>
+    {% for t in summary.work %}
+    {% if summary.work[t].qnt > 0 %}
+    <tr style="text-align: center;">
+        <td colspan="3" style="border: 1px solid;">{{t}}</td>
+        <td style="border: 1px solid;">{{summary.work[t].qnt}}</td>
+        <td style="border: 1px solid;">{{summary.work[t].weight}}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+</tbody>
+{% endblock %}

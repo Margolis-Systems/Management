@@ -130,8 +130,14 @@ def shape_editor():
 
 def choose_printer():
     copies = 1
+    order = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id']})
     if main.request.form:
         req_form = dict(main.request.form)
+        printer = req_form['printer']
+        if 'copies' in req_form:
+            if req_form['copies']:
+                copies = int(req_form['copies'])
+        # ------------------------------------------
         split = ''
         select_jobs = []
         if 'split' in req_form:
@@ -153,18 +159,16 @@ def choose_printer():
         disable_weight = False
         if 'disable_weight' in req_form:
             disable_weight = True
-        printer = req_form['printer']
         print_type = req_form['print_type']
         if 'sub_type' in req_form:
             if req_form['sub_type']:
                 print_type = req_form['sub_type']
-        if 'copies' in req_form:
-            if req_form['copies']:
-                copies = int(req_form['copies'])
+        # ------------------------------------------------
+        if print_type == 'pdf':
+            return reports.Print.print_template(order['order_id'], disable_weight, select_jobs=select_jobs, split=split)
         for r in range(copies):
             # If not asked for specific split, print all parts
             if not split:
-                order = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id']})
                 _split = []
                 if order:
                     for ro in order['rows']:
@@ -173,35 +177,19 @@ def choose_printer():
                                 _split.append(str(ro['order_split']))
                 if _split:
                     for i in range(len(_split)):
-                        if print_type == 'pdf':
-                            file = reports.Docs.print_doc(main.session['order_id'], disable_weight,
-                                                          select_jobs=select_jobs, split=_split[i])
-                            return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=False)
-                        else:
-                            reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                        reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
                                                         select_jobs=select_jobs, split=_split[i])
                 else:
-
-                    if print_type == 'pdf':
-                        file = reports.Docs.print_doc(main.session['order_id'], disable_weight, select_jobs=select_jobs)
-                        return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=False)
-                    else:
-                        reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
                                                     select_jobs=select_jobs)
 
             else:
-
-                if print_type == 'pdf':
-                    file = reports.Docs.print_doc(main.session['order_id'], disable_weight, select_jobs=select_jobs, split=split)
-                    return main.send_from_directory(os.path.dirname(file), os.path.basename(file), as_attachment=False)
-                else:
-                    reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
+                reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
                                                 select_jobs=select_jobs, split=split)
-        if main.request.form['print_type'] == 'label':
+        if print_type == 'label':
             orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
     else:
-        order = main.mongo.read_collection_one('orders', {'order_id': main.session['order_id']})
         split = []
         if order:
             for r in order['rows']:

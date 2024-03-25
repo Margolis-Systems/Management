@@ -5,7 +5,7 @@
 {% endif %}
 <table class="table table-striped" dir="rtl" align="center">
     <tr>
-        <form method=POST id="input_form" autocomplete="off" action="{{ url_for('new_order') }}" onsubmit="input_form.disabled = true; return true;">
+        <form method=POST id="input_form" autocomplete="off" action="{{ url_for('new_order') }}" onsubmit=";document.getElementById('submit_btn').disabled=true;input_form.disabled = true; return true">
             <td>
                 <label>סוג הזמנה</label>
 
@@ -41,7 +41,7 @@
                     {% endfor %}
                     </datalist>
                 {% endif %}
-                <button type="submit" class="btn btn-primary btn-block" onclick="refreshWindow()">אישור</button>
+                <button type="submit" id="submit_btn" class="btn btn-primary btn-block" onclick="refreshWindow()">אישור</button>
             </form>
         </td>
     </tr>
