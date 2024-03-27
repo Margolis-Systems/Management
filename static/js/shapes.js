@@ -75,38 +75,12 @@ function findTotal2(src, target, inputId){
         document.getElementById(target).value = tot;
     }
 }
-var temp = 0
-function _addInput(div_id, val){
-    var container = document.getElementById(div_id);
-    var input = document.createElement("input");
-    input.type = "number";
-    input.name = div_id.replace('_container', temp);
-    input.id = div_id.replace('_container', temp);
-    temp += 1
-    input.setAttribute('class', 'form-control');
-    input.setAttribute('onkeydown', "return event.key != 'Enter';");
-    input.setAttribute('onkeyup', "");
-    if(val){
-        input.setAttribute('value', val);
-    }
-    if(div_id.includes("pitch")){
-        input.setAttribute('placeholder', 'פסיעה');
-    }
-    if(div_id.includes("length")){
-        input.setAttribute('placeholder', 'אורך');
-    }
-    if(div_id.includes("width")){
-        input.setAttribute('placeholder', 'רוחב');
-    }
-    container.appendChild(input);
-}
 
 function addInput(vect){
     all_in = document.getElementsByClassName(vect+'_length');
     for(i=0;i<all_in.length;i++){
         if(all_in[i].hidden){
             all_in[i].hidden = false;
-            console.log(vect+'_pitch'+i)
             document.getElementById(vect+'_pitch'+(i+1)).hidden = false;
             break;
         }
@@ -172,7 +146,7 @@ function focusNext(inputIndex) {
     inputNames = dtd_order;
     if (event.keyCode === 13){
         var safety = 0;
-        while (safety < 20){
+        while (safety < 80){
             form = document.getElementById("input_form");
             if (form.checkValidity() && do_once==0){
                 do_once = 1;
@@ -191,7 +165,10 @@ function focusNext(inputIndex) {
                 //}
 
             }
-            if (datatodisp[inputNames[inputIndex]] != 2 && document.getElementById(inputNames[inputIndex]) !== null){
+            element = document.getElementById(inputNames[inputIndex])
+
+            console.log(element)
+            if (datatodisp[inputNames[inputIndex]] != 2 && element !== null && element.hidden == false){
                 inputName = inputNames[inputIndex];
                 break
             }

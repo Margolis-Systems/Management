@@ -1,0 +1,44 @@
+{% extends "print/page/layout.html" %}
+{% block body %}
+<tbody>
+{% for r in order_data.rows %}
+<tr>
+  <td>{{r.job_id}}</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+{% endfor %}
+{% for r in order_data.rows %}
+  <tr class="pagebreak">
+    <td style="border: 1px solid;text-align: center;">
+      <b>נתונים כלליים</b><br>
+      מס' שורה: {{order}}
+    </td>
+    <td style="border: 1px solid;text-align: center;">
+      <b>מידות הכלונס</b><br>
+    </td>
+    <td style="border: 1px solid;text-align: center;">
+      <b>חוטי אורך</b><br>
+    </td>
+    <td style="border: 1px solid;text-align: center;">
+      <b>טבעות</b><br>
+    </td>
+    <td style="border: 1px solid;text-align: center;">
+      <b>צינורות</b><br>
+    </td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid;text-align: center;">
+      <b>מקטעים</b><br>
+    </td>
+    <td colspan="3" style="border: 1px solid;text-align: center;">הערות</td>
+    <td><img src="{{r.pdf417_dir}}" width="200px"></td>
+  </tr>
+  <tr>
+    <td colspan="5"><img src="{{r.img_dir}}"></td>
+  </tr>
+{% endfor %}
+</tbody>
+{% endblock %}

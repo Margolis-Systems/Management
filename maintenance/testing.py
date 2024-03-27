@@ -9,9 +9,10 @@ sys.path.insert(1, 'C:\\Server')
 import configs
 
 mongo = configs.mongo
-all_orders = list(mongo.read_collection_list('orders', {'info.costumer_id': {'$ne': '58'}, 'info.type':'rebar_special','info.status': {'$in':['NEW','Processed','Production','Inproduction']}}))
-# all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
+# all_orders = list(mongo.read_collection_list('orders', {'info.costumer_id': {'$ne': '58'}, 'info.type':'rebar_special','info.status': {'$in':['NEW','Processed','Production','Inproduction']}}))
+all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
+
 
 def find_not_updated():
     hist = []
@@ -65,4 +66,5 @@ def csv_for_yosi_azulai():
     with open('c:\\Server\\1.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
-print(os.path.isdir('h:'))
+
+

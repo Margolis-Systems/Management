@@ -837,27 +837,37 @@ class Print:
         rows_to_print = []
         for r in rows:
             if r['job_id'] in select_jobs or not select_jobs:
+                if info['type'] == 'regular':
+                    order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
+                    # for r in order['rows']:
+                    if ((len(r['shape_data']) > 2) and (r['weight'] / int(r['quantity']) <= 2) and r['shape'] not in ['332', '49', '59']) or r['shape'] in configs.circle:
+                        r['circle'] = 'כן'
+                    r['img_dir'] = Images.create_shape_plot(r['shape'], r['shape_data'], html=True)
+                elif 'rebar' in info['type']:
+                    r['img_dir'] = Images.create_mesh_plot(r, html=True)
+                    r['x_pitch'] = '(' + ')('.join(list(set(r['x_pitch']))) + ')'
+                    r['y_pitch'] = '(' + ')('.join(list(set(r['y_pitch']))) + ')'
+                    bends = []
+                    if 'bend1' in r:
+                        bends.append(int(r['bend1']))
+                    if 'bend2' in r:
+                        bends.append(int(r['bend2']))
+                    if 'bend3' in r:
+                        bends.append(int(r['bend3']))
+                    if bends:
+                        if len(bends) == 2:
+                            r['bend_img_dir'] = Images.create_shape_plot('405', bends, html=True)
+                        elif len(bends) == 3:
+                            r['bend_img_dir'] = Images.create_shape_plot('404', bends, html=True)
+                elif info['type'] == 'piles':
+                    r['img_dir'] = Images.create_pile_plot(r, html=True)
+                elif info['type'] == 'girders':
+                    r['img_dir'] = Images.create_shape_plot(r['shape'], [r['shape']], html=True)
+                else:
+                    return '', 204
+                r['pdf417_dir'] = Images.gen_pdf417(r)
                 rows_to_print.append(r)
         order = {'order_id': order_id, 'rows': rows_to_print, 'info': info}
-        if info['type'] == 'regular':
-            order_summary = Print.gen_summary_data(rows, disable_weight, order['info']['costumer_id'])
-            for r in order['rows']:
-                if ((len(r['shape_data']) > 2) and (r['weight'] / int(r['quantity']) <= 2) and r['shape'] not in ['332', '49', '59']) or r['shape'] in configs.circle:
-                    r['circle'] = 'כן'
-                r['img_dir'] = Images.create_shape_plot(r['shape'], r['shape_data'], html=True)
-                r['pdf417_dir'] = Images.gen_pdf417(r)
-        elif 'rebar' in info['type']:
-            for r in order['rows']:
-                r['img_dir'] = Images.create_mesh_plot(r, html=True)
-                r['x_pitch'] = '(' + ')('.join(list(set(r['x_pitch']))) + ')'
-                r['y_pitch'] = '(' + ')('.join(list(set(r['y_pitch']))) + ')'
-        elif info['type'] == 'piles':
-            for r in order['rows']:
-                r['img_dir'] = Images.create_pile_plot(r, html=True)
-        # elif info['type'] == 'girders':
-        #     print('piles')
-        else:
-            return '', 204
         return main.render_template('/print/page/{}.html'.format(info['type']), order_data=order, summary=order_summary, print_ts=functions.ts())
 
     @staticmethod

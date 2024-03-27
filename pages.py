@@ -325,10 +325,9 @@ def order_files():
     msg = ""
     if main.request.method == 'POST':
         try:
-            if 'file' in main.request.files:
-                save_file(order_id, main.request.files['file'], description)
-                return main.redirect('/order_files')
-            else:
+            if main.request.files:
+                if save_file(order_id, main.request.files['file'], description):
+                    return main.redirect('/order_files')
                 return '', 204
         except Exception as e:
             print('order_files', e)
@@ -346,6 +345,8 @@ def save_file(order_id, f, description):
     if order_id == '0':
         scanner = file_name.replace('.pdf', '') + '_scanner'
         temp = main.mongo.read_collection_one('attachments', {'name': scanner})
+        if not temp:
+            return False
         order_id = temp['order_id']
         main.mongo.delete_many('attachments', {'name': scanner})
     attach_dir = os.getcwd() + '\\attachments\\orders'
@@ -361,6 +362,7 @@ def save_file(order_id, f, description):
     doc = {'name': file_name, 'timestamp': functions.ts(), 'user': username, 'id': gen_file_id(),
            'description': description, 'link': file, 'order_id': order_id}
     main.mongo.insert_collection_one('attachments', doc)
+    return True
 
 
 def download_attachment():

@@ -13,23 +13,23 @@
                 <tr>
                     <td id="x_length_container">
                         רוחב
-                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="x_length" id="x_length" class="form-control" placeholder="רוחב" value="{{defaults['x_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(13)' required>
                         {% for p in range(19) %}
                         {% if defaults['x_length_'+loop.index|string] %}
-                        <input type="number" name="x_length{{loop.index}}" id="x_length{{loop.index}}" class="form-control x_length" placeholder="רוחב" value="{{defaults['x_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        <input type="number" name="x_length{{loop.index}}" id="x_length{{loop.index}}" class="form-control x_length" placeholder="רוחב" value="{{defaults['x_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{13+loop.index*2}})' >
                         {% else %}
-                        <input type="number" name="x_length{{loop.index}}" id="x_length{{loop.index}}" class="form-control x_length" placeholder="רוחב" value="{{defaults['x_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        <input type="number" name="x_length{{loop.index}}" id="x_length{{loop.index}}" class="form-control x_length" placeholder="רוחב" value="{{defaults['x_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{13+loop.index*2}})' hidden>
                         {% endif %}
                         {% endfor %}
                         </td>
                     <td id="x_pitch_container">
                         פסיעה
-                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="x_pitch" id="x_pitch" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(14)' required>
                         {% for p in range(19) %}
                         {% if defaults['x_pitch_'+loop.index|string] %}
-                        <input type="number" name="x_pitch{{loop.index}}" id="x_pitch{{loop.index}}" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        <input type="number" name="x_pitch{{loop.index}}" id="x_pitch{{loop.index}}" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{14+loop.index*2}})' >
                         {% else %}
-                        <input type="number" name="x_pitch{{loop.index}}" id="x_pitch{{loop.index}}" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        <input type="number" name="x_pitch{{loop.index}}" id="x_pitch{{loop.index}}" class="form-control" placeholder="פסיעה אורכית" value="{{defaults['x_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{14+loop.index*2}})' hidden>
                         {% endif %}
                         {% endfor %}
                     </td>
@@ -62,7 +62,7 @@
         <td width="80"></td>
         <td>
             <table class="table table-striped" dir="rtl" align="center">
-                {% set focus_index = 22 %}
+                {% set focus_index = 53 %}
                 <tr>
                     <td>
                         <input type="number" step=".1" name="trim_y_start" id="trim_y_start" class="form-control" placeholder="קוץ אורך התחלה" value="{{defaults['trim_y_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
@@ -73,23 +73,23 @@
                 <tr>
                     <td id="y_length_container">
                         אורך
-                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="y_length" id="y_length"  class="form-control" placeholder="אורך" value="{{defaults['y_length']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(55)' required>
                         {% for p in range(19) %}
                         {% if defaults['y_length_'+loop.index|string] %}
-                        <input type="number" name="y_length{{loop.index}}" id="y_length{{loop.index}}"  class="form-control y_length" placeholder="אורך" value="{{defaults['y_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        <input type="number" name="y_length{{loop.index}}" id="y_length{{loop.index}}"  class="form-control y_length" placeholder="אורך" value="{{defaults['y_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{55+loop.index*2}})' >
                         {% else %}
-                        <input type="number" name="y_length{{loop.index}}" id="y_length{{loop.index}}"  class="form-control y_length" placeholder="אורך" value="{{defaults['y_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        <input type="number" name="y_length{{loop.index}}" id="y_length{{loop.index}}"  class="form-control y_length" placeholder="אורך" value="{{defaults['y_length_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{55+loop.index*2}})' hidden>
                         {% endif %}
                         {% endfor %}
                     </td>
                     <td id="y_pitch_container">
                         פסיעה
-                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
+                        <input type="number" name="y_pitch" id="y_pitch" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(56)' required>
                         {% for p in range(19) %}
                         {% if defaults['y_pitch_'+loop.index|string] %}
-                        <input type="number" name="y_pitch{{loop.index}}" id="y_pitch{{loop.index}}" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' >
+                        <input type="number" name="y_pitch{{loop.index}}" id="y_pitch{{loop.index}}" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{56+loop.index*2}})' >
                         {% else %}
-                        <input type="number" name="y_pitch{{loop.index}}" id="y_pitch{{loop.index}}" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' hidden>
+                        <input type="number" name="y_pitch{{loop.index}}" id="y_pitch{{loop.index}}" class="form-control" placeholder="פסיעה רוחבית" value="{{defaults['y_pitch_'+loop.index|string]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{56+loop.index*2}})' hidden>
                         {% endif %}
                         {% endfor %}
                     </td>
@@ -120,9 +120,9 @@
             </table>
         </td>
         <td>
-            <input class="form-control" name="bend1" id="bend1" placeholder="כיפוף1" value="{{defaults['bend1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(32)'>
-            <input class="form-control" name="bend2" id="bend2" placeholder="כיפוף2" value="{{defaults['bend2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(33)'>
-            <input class="form-control" name="bend3" id="bend3" placeholder="כיפוף3" value="{{defaults['bend3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(34)'>
+            <input class="form-control" name="bend1" id="bend1" placeholder="כיפוף1" value="{{defaults['bend1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(95)'>
+            <input class="form-control" name="bend2" id="bend2" placeholder="כיפוף2" value="{{defaults['bend2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(96)'>
+            <input class="form-control" name="bend3" id="bend3" placeholder="כיפוף3" value="{{defaults['bend3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(0)'>
         </td>
     </tr>
 </table>

@@ -148,12 +148,24 @@ def fix_job_id():
     mongo.update_one('orders', {'order_id': ord_id}, order, '$set')
 
 
+def restore_order(path, order_id):
+    with open(os.path.join(path, 'orders.bson'), 'rb+') as f:
+        data = f.read()
+        all_orders = bson.decode_all(data)
+        for order in all_orders:
+            if order['order_id'] == str(order_id):
+                del order['_id']
+                mongo.update_one('orders', {'order_id': order_id}, order, '$set', upsert=True)
+                print(order)
+
+
 if __name__ == '__main__':
-    mongo_backup()
+    # mongo_backup()
+    restore_order('C:\\Server', 4531)
     # fix_weight_integ_ord()
     # add_ang()
     # update_orders_total_weight()
-    mongo.restore('C:\\DB_backup\\12-03-2024_20-00-04-329469', col='data_lists.bson')
+    # mongo.restore('C:\\DB_backup\\12-03-2024_20-00-04-329469', col='data_lists.bson')
     # order_id = 10
     # mongo.delete_many('orders', {})
     # mesh_description()

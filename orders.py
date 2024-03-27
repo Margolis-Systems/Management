@@ -197,7 +197,7 @@ def new_order_row():
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
                 if item.replace('length', 'pitch') not in req_form_data:
                     new_row[item[:item.find('h') + 1].replace('length', 'pitch')].append(req_form_data[item])
-                elif req_form_data[item.replace('length', 'pitch')] == '0':
+                elif req_form_data[item.replace('length', 'pitch')] in ['0', '']:
                     new_row[item[:item.find('h') + 1].replace('length', 'pitch')].append(req_form_data[item])
                 else:
                     new_row[item[:item.find('h') + 1].replace('length', 'pitch')].append(req_form_data[item.replace('length', 'pitch')])
@@ -440,9 +440,13 @@ def edit_order_data():
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
         order_data['dtd_order'].extend(
-            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch', 'x_length0', 'x_pitch0', 'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2',
-             'trim_y_start', 'trim_y_end', 'y_length', 'y_pitch', 'y_length0', 'y_pitch0', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
-             'bend1', 'bend2', 'bend3'])
+            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch']) #'x_length0', 'x_pitch0', 'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2',
+        for i in range(19):
+            order_data['dtd_order'].extend(['x_length{}'.format(i+1), 'x_pitch{}'.format(i+1)])
+        order_data['dtd_order'].extend(['trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])#, 'y_length0', 'y_pitch0', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
+        for i in range(19):
+            order_data['dtd_order'].extend(['y_length{}'.format(i+1), 'y_pitch{}'.format(i+1)])
+        order_data['dtd_order'].extend(['bend1', 'bend2', 'bend3'])
     elif info['type'] == 'piles':
         order_data['include'] = 'piles_editor.html'
         order_data['dtd_order'].extend(
@@ -533,7 +537,8 @@ def update_order_status(new_status, order_id, job_id="", force=False):
     while ' ' in new_status:
         new_status = new_status.replace(' ', '')
     # ---------- over protection ------------------------
-    if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed']):
+    # if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed']):
+    if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed', 'Production']):
         return
     flag = True
     # todo: DISABLED 23.01.2024
@@ -660,6 +665,7 @@ def peripheral_orders(add_orders, order_id, orig_job_id, indicator="R"):
     for row in rows:
         total_weight += row['weight']
     info['total_weight'] = round(total_weight)
+    info['rows'] = len(rows)
     update_order = {'order_id': order_id, 'rows': rows, 'info': info}
     main.mongo.update_one('orders', {'order_id': order_id},
                           update_order, '$set', upsert=True)
