@@ -68,7 +68,7 @@ circle = ['6', '8', '9', '10', '11', '16', '20', '35', '36', '37', '39', '40', '
            '216', '331', '925', '965', '966']
 _circle = ['925', '966', '215', '216', '78', '79', '119', '68', '36', '44', '16', '6', '331', '161', '82', '120']
 phones_to_notify = ['0509595953', '0509393938', '0528008018', '0515907228', '0509393934']
-order_types = ['regular', 'rebar', 'R', 'girders', 'piles']
+order_types = ['regular', 'rebar_special', 'rebar', 'R', 'girders', 'piles']
 new_order_types = ['regular', 'rebar', 'rebar_special', 'piles', 'girders']
 order_statuses = ['NEW', 'Processed', 'Production', 'Finished', 'Loaded', 'PartlyDelivered', 'Delivered',
                   'PartlyDeliveredClosed', 'Outsource', 'canceled']

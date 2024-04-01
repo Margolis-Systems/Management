@@ -601,7 +601,7 @@ def close_order():
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
                 order['info']['total_weight'] += order['rows'][i]['weight']
-                if int(order['rows'][i]['job_id']) > int(main.session['job_id']) and 'R' not in order_id:
+                if int(order['rows'][i]['job_id']) > int(main.session['job_id']) and ('R' not in order_id and 'K' not in order_id):
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
                 elif int(order['rows'][i]['job_id']) == int(main.session['job_id']):
                     indx_to_del = i
@@ -870,8 +870,12 @@ def manual_pile_peripheral_order(order_id):
 
 def cancel_row(order_id, job_id):
     order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+    total = 0
     for r in range(len(order['rows'])):
         if order['rows'][r]['job_id'] == job_id:
             main.mongo.update_one('orders', {'order_id': order_id}, {'rows.{}.weight'.format(str(r)): 0}, '$set')
             main.mongo.update_one('orders', {'order_id': order_id}, {'rows.{}.status'.format(str(r)): 'Canceled'}, '$set')
             main.mongo.update_one('orders', {'order_id': order_id}, {'rows.{}.length'.format(str(r)): '0'}, '$set')
+        else:
+            total += int(order['rows'][r]['weight'])
+    main.mongo.update_one('orders', {'order_id': order_id}, {'info.total_weight': str(total)}, '$set')

@@ -81,7 +81,6 @@
         </td>
         {% endfor %}
         <td width="5%"  style="outline: thin solid;text-align: center"></td>
-        <!--<td width="5%"  style="outline: thin solid;text-align: center"></td>-->
     </tr>
     {% for order in orders %}
     <tr bgcolor="{{dictionary.html_colors[order.status]}}">
@@ -96,20 +95,11 @@
         {% else %}
             {{ order[item] }}
         {% endif %}
-            <!--  and order['rows']|int > order['finished'] -->
         {% if item == 'rows' and order['finished'] > 0 %}
         ( {{order['finished']}} )
         {% endif %}
         </td>
-        {% endfor %}<!--
-        <td height="50" style="outline: thin solid;text-align: center">
-            {% if order['in_use'] and order['in_use'] != 0 %}
-            בשימוש על ידי: {{order['in_use']}}
-            {% else %}
-            <button type="button" onclick='openNewWindow("\change_order_status?order_id={{order["order_id"]}}")'>שנה סטטוס</button></td>
-            {% endif %}
-        <td height="50" style="outline: thin solid;text-align: center">
-            <button type="button" onclick="openNewWindow('\order_files?order_id={{order.order_id}}')">צפיה בקבצים</button></td>-->
+        {% endfor %}
         <td height="50" style="outline: thin solid;text-align: center">
             <table>
                 <tr><td><button type="button" style="margin-top=10px!important" onclick='openNewWindow("\change_order_status?order_id={{order["order_id"]}}")'>שנה סטטוס</button></td></tr>

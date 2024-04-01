@@ -477,6 +477,9 @@ class Bartender:
             el_buf = []
             _rows = []
             for row in rows:
+                if 'status' in row:
+                    if row['status'] == 'Canceled':
+                        continue
                 if 'CFA' in row:
                     if 'bend' in row:
                         row['bend'] += '+ CFA'
