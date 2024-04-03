@@ -1,8 +1,9 @@
 import os
 
-directory = 'H:\\NetCode\\Picture\\'
-for filename in os.listdir(directory):
-    f = os.path.join(directory, filename)
-    if os.path.isfile(f):
-        if 'png' in f and f.replace(directory, '') not in ['1.png', 'kora.png']:
-            os.remove(f)
+directory = ['H:\\NetCode\\Picture\\', 'C:\\Server\\static\\img']
+for dirr in directory:
+    for filename in os.listdir(dirr):
+        f = os.path.join(dirr, filename)
+        if os.path.isfile(f):
+            if 'png' in f and f.replace(dirr, '') not in ['1.png', 'kora.png']:
+                os.remove(f)

@@ -28,7 +28,11 @@
         אתר לקוח<br>
         <select class="form-control" id="site" name="site" autofocus="autofocus" required>
             {% for s in sites_list %}
+            {% if site == s %}
+            <option value="{{s}}" selected>{{s}}</option>
+            {% else %}
             <option value="{{s}}">{{s}}</option>
+            {% endif %}
             {% endfor %}
         </select>
         כמות העתקים<br>

@@ -480,6 +480,8 @@ class Bartender:
                 if 'status' in row:
                     if row['status'] == 'Canceled':
                         continue
+                    elif print_type == 'label' and row['status'] not in ['NEW', 'Processed', 'Production', 'InProduction']:
+                        continue
                 if 'CFA' in row:
                     if 'bend' in row:
                         row['bend'] += '+ CFA'

@@ -439,14 +439,28 @@ def edit_order_data():
     #     order_data['include_data'] = additional
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
-        order_data['dtd_order'].extend(
-            ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch']) #'x_length0', 'x_pitch0', 'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2',
-        for i in range(19):
-            order_data['dtd_order'].extend(['x_length{}'.format(i+1), 'x_pitch{}'.format(i+1)])
-        order_data['dtd_order'].extend(['trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])#, 'y_length0', 'y_pitch0', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
-        for i in range(19):
-            order_data['dtd_order'].extend(['y_length{}'.format(i+1), 'y_pitch{}'.format(i+1)])
-        order_data['dtd_order'].extend(['bend1', 'bend2', 'bend3'])
+        # order_data['dtd_order'].extend(
+        #     ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch']) #'x_length0', 'x_pitch0', 'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2',
+        # for i in range(19):
+        #     order_data['dtd_order'].extend(['x_length{}'.format(i+1), 'x_pitch{}'.format(i+1)])
+        # order_data['dtd_order'].extend(['trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])#, 'y_length0', 'y_pitch0', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
+        # for i in range(19):
+        #     order_data['dtd_order'].extend(['y_length{}'.format(i+1), 'y_pitch{}'.format(i+1)])
+        # order_data['dtd_order'].extend(['bend1', 'bend2', 'bend3'])
+        order_data['dtd_order'] = ['job_id', 'mkt', 'quantity', 'הזמנת_ייצור', 'חיתוך', 'diam_x', 'diam_y', 'length',
+                                   'width', 'weight', 'pack_quantity', 'trim_x_start', 'trim_x_end', 'x_length', 'x_pitch',
+                                   'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2', 'x_length3', 'x_pitch3', 'x_length4',
+                                   'x_pitch4', 'x_length5', 'x_pitch5', 'x_length6', 'x_pitch6', 'x_length7', 'x_pitch7',
+                                   'x_length8', 'x_pitch8', 'x_length9', 'x_pitch9', 'x_length10', 'x_pitch10', 'x_length11',
+                                   'x_pitch11', 'x_length12', 'x_pitch12', 'x_length13', 'x_pitch13', 'x_length14',
+                                   'x_pitch14', 'x_length15', 'x_pitch15', 'x_length16', 'x_pitch16', 'x_length17',
+                                   'x_pitch17', 'x_length18', 'x_pitch18', 'x_length19', 'x_pitch19', 'trim_y_start',
+                                   'trim_y_end', 'y_length', 'y_pitch', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
+                                   'y_length3', 'y_pitch3', 'y_length4', 'y_pitch4', 'y_length5', 'y_pitch5', 'y_length6',
+                                   'y_pitch6', 'y_length7', 'y_pitch7', 'y_length8', 'y_pitch8', 'y_length9', 'y_pitch9',
+                                   'y_length10', 'y_pitch10', 'y_length11', 'y_pitch11', 'y_length12', 'y_pitch12', 'y_length13',
+                                   'y_pitch13', 'y_length14', 'y_pitch14', 'y_length15', 'y_pitch15', 'y_length16', 'y_pitch16',
+                                   'y_length17', 'y_pitch17', 'y_length18', 'y_pitch18', 'y_length19', 'y_pitch19', 'bend1', 'bend2', 'bend3']
     elif info['type'] == 'piles':
         order_data['include'] = 'piles_editor.html'
         order_data['dtd_order'].extend(
@@ -456,6 +470,8 @@ def edit_order_data():
     dictionary = pages.get_dictionary()
     if 'total_weight' not in info:
         info['total_weight'] = 0
+    for i in order_data['dtd_order']:
+        print(i)
     return order_data, [lists, patterns, dictionary]
 
 
@@ -538,8 +554,9 @@ def update_order_status(new_status, order_id, job_id="", force=False):
         new_status = new_status.replace(' ', '')
     # ---------- over protection ------------------------
     # if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed']):
-    if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed', 'Production']):
-        return
+    if not force:
+        if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed', 'Production']):
+            return
     flag = True
     # todo: DISABLED 23.01.2024
     # if new_status == 'Loaded':
@@ -675,6 +692,7 @@ def copy_order():
     client_list, sites_list = clients.gen_client_list()
     order_id = ''
     client = ''
+    site = ''
     if main.request.form:
         req_form = dict(main.request.form)
         order_id = req_form['order_id']
@@ -684,6 +702,7 @@ def copy_order():
             print('w')
         else:
             client, sites_list = clients.gen_client_list(order['info']['costumer_name'])
+            site = order['info']['costumer_site']
             # client_list = [client_list]
         if 'copies' in req_form:
             copies = int(req_form['copies'])
@@ -704,9 +723,9 @@ def copy_order():
                         del row['status_updated_by']
                     # todo: if הזמנת ייצור
                 main.mongo.insert_collection_one('orders', order)
-                update_order_status('NEW', new_id)
+                update_order_status('NEW', new_id, force=True)
             return '', 204
-    return main.render_template('/copy_order.html', order_id=order_id, client_list=client_list, sites_list=sites_list, client=client)
+    return main.render_template('/copy_order.html', order_id=order_id, client_list=client_list, sites_list=sites_list, client=client, site=site)
 
 
 def split_order():

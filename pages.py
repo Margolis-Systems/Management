@@ -146,7 +146,7 @@ def choose_printer():
             try:
                 if '-' in req_form['print_select']:
                     temp = req_form['print_select'].split('-')
-                    select_jobs = list(range(int(temp[0]), int(temp[1])))
+                    select_jobs = list(range(int(temp[0]), int(temp[1])+1))
                 elif ',' in req_form['print_select']:
                     temp = req_form['print_select'].split(',')
                     for t in temp:
@@ -227,6 +227,7 @@ def scan():
     job_id = ""
     msg = ""
     status = ""
+    quantity = ''
     decode = {}
     user = main.session['username']
     user_data = users.get_user_data()
@@ -253,9 +254,13 @@ def scan():
         order_id = req_form['order_id']
         job_id = req_form['job_id']
         status = req_form['status'].replace('order_status_', '')
-        orders.update_order_status(status, order_id, job_id)
         for spl in job_id.split(','):
             req_form['job_id'] = spl
+            main.mongo.update_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
+                             {'rows.$.qnt_done': int(req_form['quantity'])}, '$inc')
+            rows, info = orders.get_order_data(order_id)
+            if int(rows[0]['quantity']) == rows[0]['qnt_done']:
+                orders.update_order_status(status, order_id, job_id)
             production_log(req_form)
         return main.redirect('/scan')
     if order_id:
@@ -278,32 +283,46 @@ def scan():
                     row = r
         row['status'] = row['status'].replace('order_status_', '')
         if 'status' in row and 'operator' in main.session['username']:
-            if 'InProduction' in row['status']:
-                status = "Start"
-            elif 'Production' in row['status']:
+            # if 'InProduction' in row['status']:
+            #     status = "Start"
+            # elif 'Production' in row['status']:
+            #     orders.update_order_status('InProduction', order_id)
+            #     status = "Start"
+            # elif "Start" in row['status']:
+            #     status = "Finished"
+            # elif "Processed" in row['status']:
+            #     orders.update_order_status('InProduction', order_id)
+            #     status = "Start"
+            # elif main.session['username'] in ['operator34'] and "Finished" in row['status']:
+            #     if main.session['username'] not in row['status_updated_by']:
+            #         status = "Start"
+            #     else:
+            #         msg = row['status']
+            #         order_id = ''
+            if row['status'] in ['Production', 'Processed']:
+                row['status'] = 'InProduction'
                 orders.update_order_status('InProduction', order_id)
-                status = "Start"
-            elif "Start" in row['status']:
-                status = "Finished"
-            elif "Processed" in row['status']:
-                orders.update_order_status('InProduction', order_id)
-                status = "Start"
+            if row['status'] in ['InProduction']:
+                status = 'Finished'
             elif main.session['username'] in ['operator34'] and "Finished" in row['status']:
                 if main.session['username'] not in row['status_updated_by']:
-                    status = "Start"
+                    status = 'Finished'
                 else:
                     msg = row['status']
                     order_id = ''
             else:
                 msg = row['status']
                 order_id = ''
+            quantity = row['quantity']
+            if 'qnt_done' in row:
+                quantity = int(quantity) - row['qnt_done']
         elif row['status'] == 'Finished' and 'amasa' in main.session['username']:
             status = 'Loaded'
         else:
             msg = row['status']
             order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
-                                dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']})
+                                dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']}, quantity=quantity)
 
 
 def get_defaults():
@@ -641,17 +660,23 @@ def delete_attachment():
 
 
 def production_log(form_data):
+    print('form_data:\n', form_data, '\n')
     log = form_data.copy()
     job_data, info = orders.get_order_data(log['order_id'], log['job_id'])
     keys_to_log = ['weight', 'length', 'quantity', 'diam']
     machine_data = main.mongo.read_collection_one('machines', {'username': main.session['username']})
     if not machine_data:
         return
+    if 'quantity' in log:
+        log['weight'] = job_data[0]['weight'] * int[log]['quantity']/int(job_data[0]['quantity'])
     for item in keys_to_log:
-        if item in job_data[0]:
+        if item in job_data[0] and item not in log:
             log[item] = job_data[0][item]
         else:
             print('production log \nitem not found: ', item)
     log.update(machine_data)
-    log[form_data['status']+'_ts'] = functions.ts()
+    # log[form_data['status']+'_ts'] = functions.ts()
+    log['Start_ts'] = functions.ts()
+    log['Finish_ts'] = functions.ts()
+    print('log:\n', log, '\n')
     main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id']}, log, '$set', upsert=True)

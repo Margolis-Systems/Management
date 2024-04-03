@@ -68,16 +68,4 @@ def csv_for_yosi_azulai():
         writer = csv.writer(f)
         writer.writerows(data)
 
-for order in all_orders:
-    total =0
-    if order['rows']:
-        for r in order['rows']:
-            total += float(r['weight'])
-    else:
-        continue
-    total = math.floor(total)
-    if 'total_weight' not in order['info']:
-        print('no total', order['order_id'])
-        continue
-    if total+len(order['rows']) < int(order['info']['total_weight']):
-        print(order['order_id'], total, order['info']['total_weight'])
+mongo.update_one('orders', {'order_id': '3747', 'rows': {"$elemMatch": {"job_id": {"$eq": '1'}}}}, {'rows.$.qnt_done':60}, '$inc')

@@ -12,6 +12,7 @@
             <label style="font-size:50px;">{{dictionary['job_id']}}: {{job}}</label>
             <input type="hidden" name="order_id" value="{{order}}">
             <input type="hidden" name="job_id" value="{{job}}">
+            <div class="input-group input-group-lg"><span class="input-group-text">{{quantity}} /</span><input type="number" class="form-control" name="quantity" value="{{quantity}}" min="1" max="{{quantity}}"><span class="input-group-text">{{dictionary['quantity']}}</span></div>
             {% if status and job %}
             <button type="submit" class="btn btn-success btn-block btn-lg" name="status" value="{{status}}">{{dictionary['order_status_'+status]}}</button>
             {% endif %}

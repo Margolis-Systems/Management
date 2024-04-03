@@ -91,7 +91,7 @@ div {
         {% for item in order_data.data_to_display %}
         <td>
             {% if item in row %}
-            {{ row[item] }}
+            {{ row[item] }} {% if item == 'quantity' and 'qnt_done' in row %} [{{row.qnt_done}}] {% endif %}
             {% else %}
             ---
             {% endif %}
