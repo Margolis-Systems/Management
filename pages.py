@@ -258,7 +258,7 @@ def scan():
             req_form['job_id'] = spl
             main.mongo.update_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
                              {'rows.$.qnt_done': int(req_form['quantity'])}, '$inc')
-            rows, info = orders.get_order_data(order_id)
+            rows, info = orders.get_order_data(order_id, job_id)
             if int(rows[0]['quantity']) == rows[0]['qnt_done']:
                 orders.update_order_status(status, order_id, job_id)
             production_log(req_form)
@@ -304,7 +304,7 @@ def scan():
                 orders.update_order_status('InProduction', order_id)
             if row['status'] in ['InProduction']:
                 status = 'Finished'
-            elif main.session['username'] in ['operator34'] and "Finished" in row['status']:
+            elif main.session['username'] in configs.oper_multi_scan and "Finished" in row['status']:
                 if main.session['username'] not in row['status_updated_by']:
                     status = 'Finished'
                 else:
@@ -660,7 +660,7 @@ def delete_attachment():
 
 
 def production_log(form_data):
-    print('form_data:\n', form_data, '\n')
+    # print('form_data:\n', form_data, '\n')
     log = form_data.copy()
     job_data, info = orders.get_order_data(log['order_id'], log['job_id'])
     keys_to_log = ['weight', 'length', 'quantity', 'diam']
@@ -668,15 +668,15 @@ def production_log(form_data):
     if not machine_data:
         return
     if 'quantity' in log:
-        log['weight'] = job_data[0]['weight'] * int[log]['quantity']/int(job_data[0]['quantity'])
+        log['weight'] = job_data[0]['weight'] * int(log['quantity'])/int(job_data[0]['quantity'])
     for item in keys_to_log:
         if item in job_data[0] and item not in log:
             log[item] = job_data[0][item]
-        else:
-            print('production log \nitem not found: ', item)
+        # else:
+        #     print('production log \nitem not found: ', item)
     log.update(machine_data)
     # log[form_data['status']+'_ts'] = functions.ts()
     log['Start_ts'] = functions.ts()
     log['Finish_ts'] = functions.ts()
-    print('log:\n', log, '\n')
+    # print('log:\n', log, '\n')
     main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id']}, log, '$set', upsert=True)

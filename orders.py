@@ -470,8 +470,8 @@ def edit_order_data():
     dictionary = pages.get_dictionary()
     if 'total_weight' not in info:
         info['total_weight'] = 0
-    for i in order_data['dtd_order']:
-        print(i)
+    # for i in order_data['dtd_order']:
+    #     print(i)
     return order_data, [lists, patterns, dictionary]
 
 

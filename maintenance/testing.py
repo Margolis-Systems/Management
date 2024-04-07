@@ -67,5 +67,62 @@ def csv_for_yosi_azulai():
     with open('c:\\Server\\1.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
+from PIL import Image, ImageDraw,ImageFont
+def create_shape_plot(shape, text=[], enable_text_plot=True, html=False):
+    size = (200, 60)
+    font_size = 16
+    font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
+    font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
+    if shape.isdigit():
+        _positions = []#configs.shapes[shape]['draw_positions']
+        im = Image.new('RGBA', size, 'white')
+    else:
+        im = Image.open(os.getcwd()+'\\static\\images\\specials\\girders.png')
+        _positions = [[0, 25], [200, 25]]
+    draw = ImageDraw.Draw(im)
+    positions = []
+    for i in _positions:
+        positions.append(tuple(i))
+    if not text:
+        text = list(range(1, len(positions)))
+    if shape.isdigit():
+        if shape in ['331', '332']:
+            draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
+            positions = [(10,30),(20,30),(200,30)]
+        elif shape in ['000']:
+            draw.arc([(15,30),(185,50)], 170, 360, fill='black', width=3)
+            text.append('')
+            text[0] = 'L = 1'
+            text[1] = 'R = 2'
+            # text[2] = ''
+            positions = [(15,10),(100,10),(185,10),(50,90)]
+        else:
+            draw.line(positions, fill="black", width=3)
+    if enable_text_plot:
+        text_pos = []
+        for i in range(len(positions) - 1):
+            if i >= len(text):
+                break
+            position = ((positions[i][0] + positions[i + 1][0] - len(str(text[i])) * 6) / 2,
+                        (positions[i][1] + positions[i + 1][1]) / 2 - 6)
+            bbox = draw.textbbox((position[0] - 1, position[1]-2), str(text[i]), font=ImageFont.truetype(font_dir, font_size + 4))
+            draw.rectangle(bbox, fill="white")
+            draw.text(position, str(text[i]), fill="black", font=ImageFont.truetype(font_dir, font_size))
+            text_pos.append(position)
+    im.save('c:\\server\\static\\images\\shapes\\340.png')
+    # if html:
+    #     file_name = "static\\img\\" + functions.ts(mode="file_name") + ".png"
+    #     im.save('C:\\Server\\'+file_name)
+    # else:
+    #     file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
+    #     im.save(file_name)
+    # return file_name
+def calc_hypotenuse(length, radius):
+    length = int(length)
+    radius = int(radius)
+    ang = 180*length/(math.pi*radius)
+    hyp = radius*math.sin(math.radians(ang))/math.sin(math.radians((180-ang)/2))
+    return int(hyp)
 
-mongo.update_one('orders', {'order_id': '3747', 'rows': {"$elemMatch": {"job_id": {"$eq": '1'}}}}, {'rows.$.qnt_done':60}, '$inc')
+
+create_shape_plot('000', ['', ''])

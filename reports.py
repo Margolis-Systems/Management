@@ -85,11 +85,18 @@ class Images:
         if not text:
             text = list(range(1, len(positions)))
         if shape.isdigit():
-            if shape not in ['331', '332']:
-                draw.line(positions, fill="black", width=3)
-            else:
+            if shape in ['331', '332']:
                 draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
                 positions = [(10,30),(20,30),(200,30)]
+            elif shape in ['340']:
+                draw.arc([(15,30),(185,50)], 170, 360, fill='black', width=3)
+                text.append(Images.calc_hypotenuse(text[0],text[1]))
+                text[0] = 'L = {}'.format(text[0])
+                text[1] = 'R = {}'.format(text[1])
+                text[2] = 'PtP = {}'.format(text[2])
+                positions = [(15,10),(100,10),(185,10),(50,90)]
+            else:
+                draw.line(positions, fill="black", width=3)
         if enable_text_plot:
             text_pos = []
             for i in range(len(positions) - 1):
@@ -397,6 +404,14 @@ class Images:
         else:
             im.save(configs.net_print_dir + "Picture\\" + file_name)
         return file_name
+
+    @staticmethod
+    def calc_hypotenuse(length, radius):
+        length = int(length)
+        radius = int(radius)
+        ang = 180 * length / (math.pi * radius)
+        hyp = radius * math.sin(math.radians(ang)) / math.sin(math.radians((180 - ang) / 2))
+        return int(hyp)
 
 
 class Bartender:
