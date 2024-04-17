@@ -117,6 +117,7 @@ def create_shape_plot(shape, text=[], enable_text_plot=True, html=False):
     #     file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
     #     im.save(file_name)
     # return file_name
+
 def calc_hypotenuse(length, radius):
     length = int(length)
     radius = int(radius)
@@ -125,4 +126,3 @@ def calc_hypotenuse(length, radius):
     return int(hyp)
 
 
-create_shape_plot('000', ['', ''])

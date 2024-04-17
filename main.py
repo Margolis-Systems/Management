@@ -156,6 +156,7 @@ def link_order():
 
 @app.route('/order_file_upload', methods=['POST', 'GET'])
 def order_file_upload():
+    #curl -i -X POST -H "Content-Type: multipart/form-data" -F "file=@C:\Users\user\Downloads\1.csv;filename=1.csv" 10.0.0.25:5000/order_file_upload
     return pages.order_files()
 
 

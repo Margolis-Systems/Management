@@ -89,6 +89,9 @@ def shape_editor():
             shape_data['tot_len'] = int(main.request.form['1']) * 3.14 + 30
         elif main.request.form['shape_data'] == '330':
             shape_data['tot_len'] = int(main.request.form['1']) * 3.14 / 2 + 20
+        elif main.request.form['shape_data'] == '340':
+            shape_data['tot_len'] = int(main.request.form['1'])
+            shape_data['shape_data'] = '{},{}'.format(main.request.form['1'],main.request.form['2'])
         else:
             for item in range(1, int(main.configs.shapes[shape_data['shape']]['edges']) + 1):
                 shape_data['tot_len'] += int(float(main.request.form[str(item)]))
@@ -256,10 +259,20 @@ def scan():
         status = req_form['status'].replace('order_status_', '')
         for spl in job_id.split(','):
             req_form['job_id'] = spl
-            main.mongo.update_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
-                             {'rows.$.qnt_done': int(req_form['quantity'])}, '$inc')
+            main.mongo.update_one('orders',
+                                  {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
+                                  {'rows.$.qnt_done_'+main.session['username']: int(req_form['quantity'])}, '$inc')
+            job, info = orders.get_order_data(order_id, job_id)
+            qnt_done = 0
+            for k in job[0]:
+                if 'qnt_done_' in k:
+                    if job[0][k] > qnt_done:
+                        qnt_done = job[0][k]
+            main.mongo.update_one('orders',
+                                  {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
+                                  {'rows.$.qnt_done': qnt_done}, '$set')
             rows, info = orders.get_order_data(order_id, job_id)
-            if int(rows[0]['quantity']) == rows[0]['qnt_done']:
+            if int(rows[0]['quantity']) <= rows[0]['qnt_done']:
                 orders.update_order_status(status, order_id, job_id)
             production_log(req_form)
         return main.redirect('/scan')
@@ -283,22 +296,6 @@ def scan():
                     row = r
         row['status'] = row['status'].replace('order_status_', '')
         if 'status' in row and 'operator' in main.session['username']:
-            # if 'InProduction' in row['status']:
-            #     status = "Start"
-            # elif 'Production' in row['status']:
-            #     orders.update_order_status('InProduction', order_id)
-            #     status = "Start"
-            # elif "Start" in row['status']:
-            #     status = "Finished"
-            # elif "Processed" in row['status']:
-            #     orders.update_order_status('InProduction', order_id)
-            #     status = "Start"
-            # elif main.session['username'] in ['operator34'] and "Finished" in row['status']:
-            #     if main.session['username'] not in row['status_updated_by']:
-            #         status = "Start"
-            #     else:
-            #         msg = row['status']
-            #         order_id = ''
             if row['status'] in ['Production', 'Processed']:
                 row['status'] = 'InProduction'
                 orders.update_order_status('InProduction', order_id)
@@ -313,12 +310,24 @@ def scan():
             else:
                 msg = row['status']
                 order_id = ''
-            quantity = row['quantity']
-            if 'qnt_done' in row:
-                quantity = int(quantity) - row['qnt_done']
+            quantity = int(row['quantity'])
+            if 'status_updated_by' not in row:
+                row['status_updated_by'] = ''
+            # if 'qnt_done' in row:# and main.session['username'] in row['status_updated_by']:
+            #     quantity = quantity - row['qnt_done']
+            if 'qnt_done_'+main.session['username'] in row:
+                quantity = quantity - row['qnt_done_'+main.session['username']]
+            # elif 'qnt_done' in row and main.session['username'] not in configs.oper_multi_scan:  #todo: remove?
+            #     quantity = quantity - row['qnt_done']
+            if 'pack_quantity' in row:
+                if quantity >= int(row['pack_quantity']):
+                    quantity = decode['quantity']
         elif row['status'] == 'Finished' and 'amasa' in main.session['username']:
             status = 'Loaded'
         else:
+            msg = row['status']
+            order_id = ''
+        if quantity == 0:
             msg = row['status']
             order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
@@ -351,7 +360,13 @@ def order_files():
         except Exception as e:
             print('order_files', e)
             msg = "Internal Error"
-    files = main.mongo.read_collection_list('attachments', {'order_id': order_id})
+    ord_ids = [order_id]
+    rows, info = orders.get_order_data(order_id)
+    if 'linked_orders' in info:
+        for li in info['linked_orders']:
+            if li['order_id'] not in ord_ids:
+                ord_ids.append(li['order_id'])
+    files = main.mongo.read_collection_list('attachments', {'order_id': {'$in': ord_ids}})
     return main.render_template('/order_files.html', files=files, message=msg, order_id=order_id, no_upload=no_upload)
 
 
@@ -430,7 +445,7 @@ def reports_page():
         machines_id = []
         machine_list = []
         if report == 'production':
-            query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
+            query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to']+' 23:59:59'}}
             detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length', 'diam',
                         'Start_ts', 'Finished_ts', 'order_id', 'job_id', 'work_time']
             data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
@@ -457,11 +472,12 @@ def reports_page():
                     line = temp_report_data[i]
                     if machine_total['machine_id'] in machines_id:
                         machines_id.remove(machine_total['machine_id'])
+                    #todo: fix!!!
                     if line['order_id'] not in doubles:
                         doubles[line['order_id']] = [line['job_id']]
                     elif line['job_id'] not in doubles[line['order_id']]:
                         doubles[line['order_id']].append(line['job_id'])
-                    else:
+                    elif line['machine_id'] in [34, 17, 18]:
                         double_total['weight'] += float(line['weight']) / 1000
                         double_total['quantity'] += int(line['quantity'])
                         double_total['lines'] += 1
@@ -478,14 +494,11 @@ def reports_page():
                         machine_id = line['machine_id']
                         machine_total = {'weight': 0, 'quantity': 0, 'machine_id': line['machine_id'], 'machine_name': line['machine_name'],
                                  'username': line['username'], 'operator': line['operator'], 'work_time': time0, 'lines': 0}
-                    try:
-                        line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
-                        if machine_total['lines'] > 0:
-                            temp = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(temp_report_data[i-1]['Finished_ts'], '%Y-%m-%d %H:%M:%S')
-                            if temp > line['work_time']:
-                                line['work_time'] = temp
-                    except:
-                        continue
+                    line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                    if machine_total['lines'] > 0:
+                        temp = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(temp_report_data[i-1]['Finished_ts'], '%Y-%m-%d %H:%M:%S')
+                        if temp > line['work_time']:
+                            line['work_time'] = temp
                     report_data.append(line)
                     machine_total['weight'] += float(line['weight'])
                     machine_total['quantity'] += int(line['quantity'])
@@ -677,6 +690,12 @@ def production_log(form_data):
     log.update(machine_data)
     # log[form_data['status']+'_ts'] = functions.ts()
     log['Start_ts'] = functions.ts()
-    log['Finish_ts'] = functions.ts()
+    log['Finished_ts'] = functions.ts()
     # print('log:\n', log, '\n')
-    main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id']}, log, '$set', upsert=True)
+    if 'quantity' in log:
+        if int(log['quantity']) < int(job_data[0]['quantity']):
+
+            main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],
+                                                     'machine_id': machine_data['machine_id']}, {}, '$set')
+    main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id'], 'Start_ts': log['Start_ts']}, log, '$set', upsert=True)
+    # main.mongo.insert_collection_one('production_log', log)

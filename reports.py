@@ -34,7 +34,9 @@ class Images:
 
     @staticmethod
     def format_qr_data(data):
-        formatted = 'BF2D@Hj @r' + data['order_id'] + '@i@p' + data['job_id']
+        ids = main.mongo.read_collection_one('data_lists', {'name': 'ids'})
+        formatted = 'BF2D@Hj @r{}@i{}@p{}'.format(data['order_id'], ids['labels'], data['job_id'])
+        main.mongo.update_one('data_lists', {'name': 'ids'}, {'labels': 1}, '$inc')
         if 'length' in data.keys():
             formatted += '@l' + str(int(float(data['length'])*10))
         if 'quantity' in data.keys():
@@ -518,26 +520,32 @@ class Bartender:
                     continue
                 if info['type'] == 'piles' and 'label' in print_type:
                     row['pack_quantity'] = 1
-                if 'pack_quantity' in row and 'label' in print_type:
+                if 'pack_quantity' in row:
+                    if int(row['pack_quantity']) < 1:
+                        del row['pack_quantity']
+                if 'pack_quantity' in row and ('label' in print_type or info['type'] == 'regular'):
                     pack_rows = []
                     row['quantity'] = int(row['quantity'])
                     if not disable_weight:
-                        unit_weight = round(float(row['weight']) / int(row['quantity']))
+                        unit_weight = float(row['weight']) / int(row['quantity'])
                     row['pack_quantity'] = int(row['pack_quantity'])
                     total_packs = math.ceil(row['quantity']/row['pack_quantity'])
                     pack_index = 1
                     while row['quantity'] > 0:
                         pack_row = row.copy()
+                        if 'unit_weight' not in pack_row and not disable_weight:
+                            pack_row['unit_weight'] = round(unit_weight)
                         if row['quantity'] - row['pack_quantity'] >= 0:
                             pack_row['quantity'] = row['pack_quantity']
-                            if 'unit_weight' not in pack_row and not disable_weight:
-                                pack_row['unit_weight'] = unit_weight
-                            pack_row['weight'] = round(float(pack_row['unit_weight'])*row['pack_quantity'])
+                            # if 'unit_weight' not in pack_row and not disable_weight:
+                            #     pack_row['unit_weight'] = unit_weight
+                            if not disable_weight:
+                                pack_row['weight'] = round(unit_weight*row['pack_quantity'])
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                         else:
                             pack_row['pack_num'] = '{}/{}'.format(pack_index, total_packs)
                             if not disable_weight:
-                                pack_row['weight'] = round(float(pack_row['unit_weight'])*row['quantity'])
+                                pack_row['weight'] = round(unit_weight*row['quantity'])
                         pack_rows.append(pack_row)
                         pack_index += 1
                         row['quantity'] -= row['pack_quantity']
@@ -609,6 +617,8 @@ class Bartender:
                         line['z19'] = 1
                 index += 1
                 print_data.append(line.copy())
+        if not print_data:
+            return
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:

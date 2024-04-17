@@ -617,6 +617,8 @@ def close_order():
             indx_to_del = None
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
+                if 'job_id' not in main.session:
+                    return main.redirect('/orders')
                 order['info']['total_weight'] += order['rows'][i]['weight']
                 if int(order['rows'][i]['job_id']) > int(main.session['job_id']) and ('R' not in order_id and 'K' not in order_id):
                     order['rows'][i]['job_id'] = str(int(order['rows'][i]['job_id']) - 1)
@@ -721,6 +723,9 @@ def copy_order():
                     row['date_created'] = order['info']['date_created']
                     if 'status_updated_by' in row:
                         del row['status_updated_by']
+                        for key in list(row.keys()):
+                            if 'qnt_done' in key:
+                                del row[key]
                     # todo: if הזמנת ייצור
                 main.mongo.insert_collection_one('orders', order)
                 update_order_status('NEW', new_id, force=True)

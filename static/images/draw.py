@@ -71,12 +71,23 @@ def print_keys():
     print(keys)
 
 
+def next_available_key():
+    with open('C:\\Server\\lists\\shapes.json', 'r', encoding='utf-8') as shapes_json:
+        shapes = json.load(shapes_json)
+    keys = list(shapes.keys())
+    keys = sorted(keys, key=int)
+    for i in range(1, 1000):
+        if str(i) not in keys:
+            break
+    return str(i)
+
+
 if __name__ == '__main__':
     # SIZE 200 X 60
     # INPUT
     #[  185, 20  ],  [ 60,  20 ], [60, 55 ],[ 140, 55 ], [ 140, 5 ],[15, 5]]
-    # print_keys()
-    pos =[(15, 5), (185, 5), (185, 50), (40, 50), (40, 10), (70, 10)]
+    # print(next_available_key())
+    pos =[(15, 50), (185, 50), (185, 5), (90, 5), (60, 45), (100, 30)]
     # [(180,5),(20,5), (20,50), (180,50)]
-    name = '38'
+    name = '46'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')
