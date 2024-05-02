@@ -494,6 +494,18 @@ class Bartender:
             el_buf = []
             _rows = []
             for row in rows:
+                bends = []
+                if 'bend1' in row:
+                    bends.append(int(row['bend1']))
+                if 'bend2' in row:
+                    bends.append(int(row['bend2']))
+                if 'bend3' in row:
+                    bends.append(int(row['bend3']))
+                if bends:
+                    if len(bends) == 2:
+                        row['bend_img_dir'] = Images.create_shape_plot('405', bends)
+                    elif len(bends) == 3:
+                        row['bend_img_dir'] = Images.create_shape_plot('404', bends)
                 if 'status' in row:
                     if row['status'] == 'Canceled':
                         continue

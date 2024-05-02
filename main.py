@@ -154,9 +154,16 @@ def link_order():
     return orders.link_order()
 
 
+@app.route('/upload_csv', methods=['POST', 'GET'])
+def upload_csv():
+    print(request.files)
+    #curl -i -X POST -H "Content-Type: multipart/form-data" -F "file=@C:\Users\user\Downloads\1.csv;filename=1.csv" 10.0.0.25:5000/upload_csv
+    request.files['file'].save("c:\\server\\1.csv")
+    return '', 204
+
+
 @app.route('/order_file_upload', methods=['POST', 'GET'])
 def order_file_upload():
-    #curl -i -X POST -H "Content-Type: multipart/form-data" -F "file=@C:\Users\user\Downloads\1.csv;filename=1.csv" 10.0.0.25:5000/order_file_upload
     return pages.order_files()
 
 

@@ -40,6 +40,7 @@ def shape_plot(positions, file_name, text=[], enable_text_plot=True):
         im.save(file_name)
         shapes[shape] = {'description': '---', 'edges': edges, 'positions': text_pos,
                          'draw_positions': positions, 'ang': ang}
+        print('successfully saved')
         # print(list(shapes.keys()))
         with open('C:\\Server\\lists\\shapes.json', 'w', encoding='utf-8') as shapes_json:
             json.dump(shapes, shapes_json)
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     # INPUT
     #[  185, 20  ],  [ 60,  20 ], [60, 55 ],[ 140, 55 ], [ 140, 5 ],[15, 5]]
     # print(next_available_key())
-    pos =[(15, 50), (185, 50), (185, 5), (90, 5), (60, 45), (100, 30)]
+    pos =[(185,50),(15,50),(15,15),(185,15),(185,40),(60,40),(60,5)]
     # [(180,5),(20,5), (20,50), (180,50)]
-    name = '46'
+    name = '121'
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')

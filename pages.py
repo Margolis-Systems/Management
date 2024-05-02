@@ -299,7 +299,7 @@ def scan():
             if row['status'] in ['Production', 'Processed']:
                 row['status'] = 'InProduction'
                 orders.update_order_status('InProduction', order_id)
-            if row['status'] in ['InProduction']:
+            if row['status'] in ['InProduction', 'PartlyDelivered']:
                 status = 'Finished'
             elif main.session['username'] in configs.oper_multi_scan and "Finished" in row['status']:
                 if main.session['username'] not in row['status_updated_by']:

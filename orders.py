@@ -168,9 +168,6 @@ def new_order_row():
     if 'R' in order_id or 'K' in order_id:
         return
     req_form_data = dict(main.request.form)
-    # for item in req_form_data:
-    #     req_form_data[item] = req_form_data[item].strip()
-    # print(req_form_data)
     req_vals = dict(main.request.values)
     order = main.mongo.read_collection_one('orders', {'order_id': order_id, 'info': {'$exists': True}})
     if 'rows' not in order:
@@ -244,11 +241,8 @@ def new_order_row():
                 bars_x += math.floor(int(new_row['y_length'][i]) / int(new_row['y_pitch'][i]))
             else:
                 bars_x += 1
-        # print(bars_x, bars_y)
         x_pitch = '(' + ')('.join(list(set(new_row['x_pitch']))) + ')'
         y_pitch = '(' + ')('.join(list(set(new_row['y_pitch']))) + ')'
-        # x_pitch = list(set(new_row['x_pitch']))
-        # y_pitch = str(set(new_row['y_pitch']))
         new_row['x_bars'] = int(bars_x)
         new_row['y_bars'] = int(bars_y)
         new_row['x_weight'] = calc_weight(new_row['diam_x'], new_row['width'], bars_x)
@@ -470,8 +464,6 @@ def edit_order_data():
     dictionary = pages.get_dictionary()
     if 'total_weight' not in info:
         info['total_weight'] = 0
-    # for i in order_data['dtd_order']:
-    #     print(i)
     return order_data, [lists, patterns, dictionary]
 
 
@@ -485,21 +477,22 @@ def edit_row():
             main.session['job_id'] = req_vals['job_id']
         order_data, page_data = edit_order_data()
         if order_data:
-            order_data['dtd_order'] = list(order_data['data_to_display'].keys())
-            defaults = {'bar_type': 'מצולע'}
-            if 'addbefore' in req_vals:
-                defaults['addbefore'] = req_vals['addbefore']
-            else:
-                defaults.update(order_data['order_rows'][0])
-                spec_ = ['x_length', 'x_pitch', 'y_length', 'y_pitch']
-                for item in spec_:
-                    if item in defaults:
-                        for i in range(len(defaults[item])):
-                            if i > 0:
-                                defaults[item+'_'+str(i)] = defaults[item][i]
-                        defaults[item] = defaults[item][0]
-            return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
-                                        lists=page_data[0], dictionary=page_data[2], defaults=defaults)
+            if order_data['order_rows'][0]['status'] not in ['InProduction', 'Finished']:
+                order_data['dtd_order'] = list(order_data['data_to_display'].keys())
+                defaults = {'bar_type': 'מצולע'}
+                if 'addbefore' in req_vals:
+                    defaults['addbefore'] = req_vals['addbefore']
+                else:
+                    defaults.update(order_data['order_rows'][0])
+                    spec_ = ['x_length', 'x_pitch', 'y_length', 'y_pitch']
+                    for item in spec_:
+                        if item in defaults:
+                            for i in range(len(defaults[item])):
+                                if i > 0:
+                                    defaults[item+'_'+str(i)] = defaults[item][i]
+                            defaults[item] = defaults[item][0]
+                return main.render_template('/edit_row.html', order_data=order_data, patterns=page_data[1],
+                                            lists=page_data[0], dictionary=page_data[2], defaults=defaults)
     new_order_row()
     return main.redirect('/orders')
 
@@ -553,14 +546,10 @@ def update_order_status(new_status, order_id, job_id="", force=False):
     while ' ' in new_status:
         new_status = new_status.replace(' ', '')
     # ---------- over protection ------------------------
-    # if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed']):
     if not force:
-        if not order or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed', 'Production']):
+        if not order:# or (order['info']['status'] in ['InProduction', 'Finished'] and new_status in ['NEW', 'Processed', 'Production']):
             return
     flag = True
-    # todo: DISABLED 23.01.2024
-    # if new_status == 'Loaded':
-    #     order['info']['status'] = 'PartlyDelivered'
     if job_id != "":
         for spl in job_id.split(','):
             for i in range(len(order['rows'])):
@@ -599,7 +588,6 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                             costumer_name=order['info']['costumer_name'], costumer_site=order['info']['costumer_site'],
                             total_weight=order['info']['total_weight'], rows=order['info']['rows'], username=main.session['username'], type=dictionary[order['info']['type']])
                 phone_book = configs.phones_to_notify
-                # print(msg)
                 functions.send_sms(msg, phone_book)
     order['info']['last_status_update'] = ts()
     main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
@@ -614,6 +602,9 @@ def close_order():
         if additional_func == 'delete_row':
             order_id = main.session['order_id']
             order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+            for r in order['rows']:
+                if r['status'] in ['InProduction', 'Finished']:
+                    return main.redirect('/orders')
             indx_to_del = None
             order['info']['total_weight'] = 0
             for i in range(len(order['rows'])):
@@ -657,15 +648,13 @@ def peripheral_orders(add_orders, order_id, orig_job_id, indicator="R"):
         description = "הזמנת ייצור להכנת כלונסאות. מספר הזמנת מקור: " + order_id + " שורה מספר: " + orig_job_id
     else:
         description = ''
+    rows, original_info = get_order_data(order_id)
     order_id += indicator
-    order_data = main.mongo.read_collection_df('orders', query={'order_id': order_id})
-    if order_data.empty:
-        info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'],
-                'date_created': ts(), 'type': indicator, 'status': 'NEW'}
+    rows, info = get_order_data(order_id)
+    if not info:
+        info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'], 'date_created': ts(),
+                'type': indicator, 'status': 'NEW', 'costumer_site': original_info['costumer_site'], 'comment': original_info['costumer_name']}
         rows = []
-    else:
-        info = order_data['info'].to_dict()[0]
-        rows = order_data['rows'].to_dict()[0]
     for order in range(len(add_orders)):
         job_id = orig_job_id + '_' + str(order + 1)
         to_pop = []
@@ -701,7 +690,6 @@ def copy_order():
         order = main.mongo.read_collection_one('orders', {'order_id': order_id})
         if not order:
             order_id = ''
-            print('w')
         else:
             client, sites_list = clients.gen_client_list(order['info']['costumer_name'])
             site = order['info']['costumer_site']
@@ -852,6 +840,9 @@ def delete_rows():
         to_del = []
         for r in range(len(rows)):
             row = rows[r]
+            if row['status'] not in ['InProduction', 'Finished']:
+                to_del = []
+                break
             if row['job_id'] in ids:
                 to_del.append(r)
             else:

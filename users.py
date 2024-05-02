@@ -51,7 +51,6 @@ def register():
         if existing_user is None:
             form = dict(main.request.form)
             new_user = {}
-            # todo: 'username and 'group'
             for k in form:
                 if k == 'pass':
                     new_user['password'] = bcrypt.hashpw(form[k].encode('utf-8'), bcrypt.gensalt())
