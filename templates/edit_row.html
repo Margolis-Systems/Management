@@ -67,7 +67,11 @@ div {
     <tr>
         <td><button type=button class="btn btn-primary btn-block" onclick="formSubmit()">עדכן</button></td>
         <td><button onclick="location.href='\orders'" type="button" class="btn btn-primary btn-block" >חזור</button></td>
-        <td><button onclick="location.href='\close?delete_row';this.disabled=true;" type="button" class="btn btn-danger btn-block" >מחק שורה</button></td>
+        <td>{% if order_data.locked %}
+        <button onclick="location.href='\edit_row?cancel_row=Canceled';this.disabled=true;" type="button" class="btn btn-danger btn-block" >בטל שורה</button>
+        {% else %}
+        <button onclick="location.href='\close?delete_row';this.disabled=true;" type="button" class="btn btn-danger btn-block" >מחק שורה</button>
+        {% endif %}</td>
         <td></td>
         <td></td>
         <td></td>

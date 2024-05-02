@@ -362,7 +362,7 @@ def edit_order():
         defaults['3%'] = 'Yes'
         defaults['הזמנת_ייצור'] = 'Yes'
     return main.render_template('/edit_order.html', order_data=order_data, patterns=page_data[1], lists=page_data[0],
-                                dictionary=page_data[2], rebar_data={}, defaults=defaults, msg=msg, )
+                                dictionary=page_data[2], rebar_data={}, defaults=defaults, msg=msg)
 
 
 def get_order_data(order_id, job_id="", split="", reverse=True):
@@ -427,20 +427,11 @@ def edit_order_data():
         keys_to_display = main.configs.data_to_display['new_row_' + info['type']]
     if info['status'] != 'NEW':
         keys_to_display['status_updated_by'] = 2
+    locked = bool(main.mongo.read_collection_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"status": {"$in": ['Finished', 'InProduction']}}}}))
     order_data = {'info': info, 'data_to_display': keys_to_display, 'order_rows': rows,
-                  'dtd_order': list(keys_to_display.keys())}
-    # if additional:
-    #     order_data['include_data'] = additional
+                  'dtd_order': list(keys_to_display.keys()), 'locked': locked}
     if info['type'] == 'rebar_special':
         order_data['include'] = 'spec_rebar_editor.html'
-        # order_data['dtd_order'].extend(
-        #     ['trim_x_start', 'trim_x_end', 'x_length', 'x_pitch']) #'x_length0', 'x_pitch0', 'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2',
-        # for i in range(19):
-        #     order_data['dtd_order'].extend(['x_length{}'.format(i+1), 'x_pitch{}'.format(i+1)])
-        # order_data['dtd_order'].extend(['trim_y_start', 'trim_y_end', 'y_length', 'y_pitch'])#, 'y_length0', 'y_pitch0', 'y_length1', 'y_pitch1', 'y_length2', 'y_pitch2',
-        # for i in range(19):
-        #     order_data['dtd_order'].extend(['y_length{}'.format(i+1), 'y_pitch{}'.format(i+1)])
-        # order_data['dtd_order'].extend(['bend1', 'bend2', 'bend3'])
         order_data['dtd_order'] = ['job_id', 'mkt', 'quantity', 'הזמנת_ייצור', 'חיתוך', 'diam_x', 'diam_y', 'length',
                                    'width', 'weight', 'pack_quantity', 'trim_x_start', 'trim_x_end', 'x_length', 'x_pitch',
                                    'x_length1', 'x_pitch1', 'x_length2', 'x_pitch2', 'x_length3', 'x_pitch3', 'x_length4',
@@ -471,6 +462,9 @@ def edit_row():
     if not users.validate_user():
         return users.logout()
     req_vals = dict(main.request.values)
+    if 'cancel_row' in req_vals:
+        cancel_row(main.session['order_id'], main.session['job_id'])
+        return main.redirect('/orders')
     if main.request.method == 'GET':
         main.session['order_id'] = req_vals['order_id']
         if 'job_id' in req_vals:
@@ -835,12 +829,11 @@ def delete_rows():
         for item in req_form:
             if 'select_' in item:
                 ids.append(req_form[item])
-        # order = main.mongo.read_collection_one('orders', {'order_id': order_id})
         rows, info = get_order_data(order_id, reverse=False)
         to_del = []
         for r in range(len(rows)):
             row = rows[r]
-            if row['status'] not in ['InProduction', 'Finished']:
+            if row['status'] in ['InProduction', 'Finished']:
                 to_del = []
                 break
             if row['job_id'] in ids:

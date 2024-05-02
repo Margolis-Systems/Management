@@ -67,56 +67,7 @@ def csv_for_yosi_azulai():
     with open('c:\\Server\\1.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
-from PIL import Image, ImageDraw,ImageFont
-def create_shape_plot(shape, text=[], enable_text_plot=True, html=False):
-    size = (200, 60)
-    font_size = 16
-    font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
-    font_dir = 'c:\\server\\fonts\\upheavtt.ttf'
-    if shape.isdigit():
-        _positions = []#configs.shapes[shape]['draw_positions']
-        im = Image.new('RGBA', size, 'white')
-    else:
-        im = Image.open(os.getcwd()+'\\static\\images\\specials\\girders.png')
-        _positions = [[0, 25], [200, 25]]
-    draw = ImageDraw.Draw(im)
-    positions = []
-    for i in _positions:
-        positions.append(tuple(i))
-    if not text:
-        text = list(range(1, len(positions)))
-    if shape.isdigit():
-        if shape in ['331', '332']:
-            draw.ellipse([(5, 5), (55, 55)],outline='black', width=3)
-            positions = [(10,30),(20,30),(200,30)]
-        elif shape in ['000']:
-            draw.arc([(15,30),(185,50)], 170, 360, fill='black', width=3)
-            text.append('')
-            text[0] = 'L = 1'
-            text[1] = 'R = 2'
-            # text[2] = ''
-            positions = [(15,10),(100,10),(185,10),(50,90)]
-        else:
-            draw.line(positions, fill="black", width=3)
-    if enable_text_plot:
-        text_pos = []
-        for i in range(len(positions) - 1):
-            if i >= len(text):
-                break
-            position = ((positions[i][0] + positions[i + 1][0] - len(str(text[i])) * 6) / 2,
-                        (positions[i][1] + positions[i + 1][1]) / 2 - 6)
-            bbox = draw.textbbox((position[0] - 1, position[1]-2), str(text[i]), font=ImageFont.truetype(font_dir, font_size + 4))
-            draw.rectangle(bbox, fill="white")
-            draw.text(position, str(text[i]), fill="black", font=ImageFont.truetype(font_dir, font_size))
-            text_pos.append(position)
-    im.save('c:\\server\\static\\images\\shapes\\340.png')
-    # if html:
-    #     file_name = "static\\img\\" + functions.ts(mode="file_name") + ".png"
-    #     im.save('C:\\Server\\'+file_name)
-    # else:
-    #     file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
-    #     im.save(file_name)
-    # return file_name
+
 
 def calc_hypotenuse(length, radius):
     length = int(length)
@@ -126,3 +77,19 @@ def calc_hypotenuse(length, radius):
     return int(hyp)
 
 
+def check_double_print():
+    ok = []
+    to_check = []
+    logs = mongo.read_collection_list('logs', {'title':'order_status_change', 'operation.status':'Processed'})
+    for logg in logs:
+        if [logg['operation']['order_id'], logg['timestamp']] not in ok:
+            ok.append([logg['operation']['order_id'], logg['timestamp']])
+        else:
+            to_check.append({'id': logg['operation']['order_id'], 'ts':logg['timestamp']})
+    print(to_check)
+
+
+ll = mongo.read_collection_one('orders', {'order_id': '4847', 'rows': {"$elemMatch": {"status": {"$in": ['Finished', 'InProduction']}}}})
+ll2 = mongo.read_collection_one('orders', {'order_id': '4848', 'rows': {"$elemMatch": {"status": {"$in": ['Finished', 'InProduction']}}}})
+print(bool(ll))
+print(bool(ll2))
