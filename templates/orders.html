@@ -48,7 +48,7 @@
             <select onchange="location.href='/user_config?search=&info.type='+this.value;refresh();" >
                 <option style="display:none" selected>בחר סוג</option>
                 {% for opt in order_types %}
-                {% if opt in search['type'] %}
+                {% if opt in search['info.type'] %}
                 <option value="{{opt}}" selected>{{dictionary[opt]}}</option>
                 {% else %}
                 <option value="{{opt}}">{{dictionary[opt]}}</option>
@@ -56,11 +56,25 @@
                 {% endfor %}
             </select>
         </td>
+        {% if search['info.type'] == 'rebar$' %}
+        <td>
+            <select onchange="location.href='/user_config?search=&rows.mkt='+this.value;refresh();" >
+                <option style="display:none" selected>קוטר \ פסיעה</option>
+                {% for c in reb_cat %}
+                {% if c in search['rows.mkt'] %}
+                <option value="{{c}}" selected>Ø{{reb_cat[c].diam_x}} @{{reb_cat[c].x_pitch}}</option>
+                {% else %}
+                <option value="{{c}}">Ø{{reb_cat[c].diam_x}} @{{reb_cat[c].x_pitch}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </td>
+        {% endif %}
         <td>
             <select onchange="location.href='/user_config?search=&info.status='+this.value;refresh();" >
                 <option style="display:none" selected>סטטוס</option>
                 {% for opt in order_statuses %}
-                {% if opt in search['type'] %}
+                {% if opt in search['info.status'] %}
                 <option value="{{opt}}" selected>{{dictionary['order_status_'+opt]}}</option>
                 {% else %}
                 <option value="{{opt}}">{{dictionary['order_status_'+opt]}}</option>

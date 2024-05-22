@@ -506,6 +506,7 @@ class Bartender:
                         row['bend_img_dir'] = Images.create_shape_plot('405', bends)
                     elif len(bends) == 3:
                         row['bend_img_dir'] = Images.create_shape_plot('404', bends)
+                    row['bend_img_dir'] = row['bend_img_dir'].split('\\')[-1]
                 if 'status' in row:
                     if row['status'] == 'Canceled':
                         continue

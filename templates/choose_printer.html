@@ -36,7 +36,7 @@
         </tr>
         {% if print_type != 'label' %}
         <tr><td>כמות העתקים</td></tr>
-        <tr><td><input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים"></td></tr>
+        <tr><td><input type="number" class="form-control" name="copies" value="{{ defaults.copies }}" placeholder="כמות עותקים" max="4"></td></tr>
         {% endif %}
         {% else %}
         <input type="hidden" name="printer" value="{{print_type}}">

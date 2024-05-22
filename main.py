@@ -401,6 +401,6 @@ if __name__ == '__main__':
             functions.send_sms('שרת צומת ברזל הופעל מחדש')
         with open('pid.txt', 'w') as pid:
             pid.write(str(os.getpid()))
-        serve(app, host=configs.server, port=configs.server_port, threads=50)
+        serve(app, host=configs.server, port=configs.server_port, threads=100)
     else:
         app.run(debug=True, host=configs.server)  # , port=configs.server_port)

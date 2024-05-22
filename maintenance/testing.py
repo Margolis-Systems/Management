@@ -1,3 +1,4 @@
+import csv
 import math
 import sys
 from datetime import datetime
@@ -10,8 +11,8 @@ sys.path.insert(1, 'C:\\Server')
 import configs
 
 mongo = configs.mongo
-# all_orders = list(mongo.read_collection_list('orders', {'info.costumer_id': {'$ne': '58'}, 'info.type':'rebar_special','info.status': {'$in':['NEW','Processed','Production','Inproduction']}}))
-all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
+all_orders = list(mongo.read_collection_list('orders', {'info.type': 'regular', 'info.status': {'$in': ['Production', 'InProduction', 'Processed', 'PartlyDelivered']}}))
+# all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
 
@@ -89,7 +90,4 @@ def check_double_print():
     print(to_check)
 
 
-ll = mongo.read_collection_one('orders', {'order_id': '4847', 'rows': {"$elemMatch": {"status": {"$in": ['Finished', 'InProduction']}}}})
-ll2 = mongo.read_collection_one('orders', {'order_id': '4848', 'rows': {"$elemMatch": {"status": {"$in": ['Finished', 'InProduction']}}}})
-print(bool(ll))
-print(bool(ll2))
+

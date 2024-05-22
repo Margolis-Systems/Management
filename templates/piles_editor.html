@@ -47,13 +47,13 @@
         <td width="80"></td>
         <td>
             <label>טבעות</label>
-            <input class="form-control" name="rings" id="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+14}})' required>
-            <input class="form-control" name="rings_diam" id="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+15}})' required>
+            <input type="number" class="form-control" name="rings" id="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+14}})' required>
+            <input type="number" class="form-control" name="rings_diam" id="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+15}})' required>
         </td>
         <td width="80"></td>
         <td>
             <label>צינור</label>
-            <input class="form-control" name="pipes" id="pipes" placeholder="כמות" value="{{defaults['pipes']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+16}})'>
+            <input type="number" class="form-control" name="pipes" id="pipes" placeholder="כמות" value="{{defaults['pipes']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+16}})'>
             <select class="form-control" name="pipe_diam" id="pipe_diam" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+17}})'>
             {% set pile_diams = ['2', '2.5'] %}
                 <option style="display:none" value="" selected>{{dictionary['pipe_diam']}}</option>
@@ -65,7 +65,7 @@
                 {% endif %}
                 {% endfor %}
             </select>
-            <input class="form-control" name="pipe_len" id="pipe_len" placeholder="{{dictionary['pipe_length']}}" value="{{defaults['pipe_len']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+18}})'>
+            <input type="number" class="form-control" name="pipe_len" id="pipe_len" placeholder="{{dictionary['pipe_length']}}" value="{{defaults['pipe_len']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+18}})'>
             <input class="form-control" name="pipe_thick" id="pipe_thick" placeholder="{{dictionary['pipe_thick']}}" value="{{defaults['pipe_thick']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext(0)'>
         </td>
         <td width="80"></td>

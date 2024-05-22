@@ -22,8 +22,8 @@ def orders(_all=False):
         main.session['job_id'] = ""
         return main.redirect('/edit_order')
     query = {'info.type': {'$ne': 'integration'}, 'info.status': {'$nin': ['canceled', 'Delivered', 'PartlyDelivered', 'PartlyDeliveredClosed']}, 'info.costumer_id': {'$ne': '58'},
-             'info.date_created': {'$gte': functions.ts('html_date', 180), '$lte': functions.ts('html_date') + 'T23:59:59'}}
-    defaults = {'from': functions.ts('html_date', 180), 'to': functions.ts('html_date')}
+             'info.date_created': {'$gte': functions.ts('html_date', 150), '$lte': functions.ts('html_date') + 'T23:59:59'}}
+    defaults = {'from': functions.ts('html_date', 150), 'to': functions.ts('html_date')}
     if req_vals:
         if 'date_from' in req_vals:
             query['info.date_created']['$gte'] = req_vals['date_from']
@@ -48,6 +48,7 @@ def orders(_all=False):
     # Read all orders data with Info, mean that it's not including order rows
     orders_data = main.mongo.read_collection_list('orders', query)
     dictionary = pages.get_dictionary()
+    dictionary['rebar$'] = 'רשת סטנדרט'
     orders_info = []
     sites_search_list = []
     for order in orders_data:
@@ -59,26 +60,38 @@ def orders(_all=False):
             if r['status'] not in ['NEW', 'Processed', 'Production', 'InProduction']:
                 finished_cntr += 1
         row['finished'] = finished_cntr
-        if 'linked_orders' in row:
-            temp = row['linked_orders'].copy()
-            row['linked_orders'] = ''
-            row['linked_orders_tot_w'] = 0
-            for i in temp:
-                row['linked_orders_tot_w'] += int(i['total_weight'])
-                if i['order_id'] != row['order_id']:
-                    order_type = i['type']
-                    if i['type'] in dictionary:
-                        order_type = dictionary[i['type']]
-                    row['linked_orders'] += '\n[{} : {}] '.format(i['order_id'], order_type)
+        # if 'linked_orders' in row:
+        #     temp = row['linked_orders'].copy()
+        #     row['linked_orders'] = ''
+        #     row['linked_orders_tot_w'] = 0#int(row['total_weight'])
+        #     linked = []
+        #     for i in temp:
+        #         linked.append(i['order_id'])
+        #         # rows, info = get_order_data(i['order_id'])
+        #         # row['linked_orders_tot_w'] += int(info['total_weight'])
+        #         if i['order_id'] != row['order_id']:
+        #             order_type = i['type']
+        #             if i['type'] in dictionary:
+        #                 order_type = dictionary[i['type']]
+        #             row['linked_orders'] += '\n[{} : {}] '.format(i['order_id'], order_type)
+        #     linked_orders = main.mongo.read_collection_list('orders', {'order_id': {'$in': linked}})
+        #     for ll in linked_orders:
+        #         row['linked_orders_tot_w'] += int(ll['info']['total_weight'])
         orders_info.append(row)
         if 'info.costumer_name' in defaults:
             if 'costumer_site' in row:
                 if row['costumer_site'] not in sites_search_list:
                     sites_search_list.append(row['costumer_site'])
     orders_info.sort(key=lambda k: int(k['order_id'].replace('R','').replace('K','')), reverse=rev)
+    ord_types = configs.order_types.copy()
+    ord_types.insert(3, 'rebar$')
+    reb_cat = configs.rebar_catalog
+    search = {}
+    if 'search' in main.session['user_config']:
+        search = main.session['user_config']['search']
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
-                                dictionary=dictionary, defaults=defaults, search=main.session['user_config'],
-                                order_types=configs.order_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list)
+                                dictionary=dictionary, defaults=defaults, search=search,
+                                order_types=ord_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list, reb_cat=reb_cat)
 
 
 def overview():
@@ -717,7 +730,7 @@ def copy_order():
 
 def split_order():
     order_id = main.session['order_id']
-    order = main.mongo.read_collection_one('orders', {'order_id': order_id})
+    rows, info = get_order_data(order_id)
     if main.request.form:
         req_form = dict(main.request.form)
         splits = []
@@ -725,36 +738,36 @@ def split_order():
             if req_form[i] not in splits:
                 splits.append(i)
         if len(splits) < 2:
-            if 'split' in order['info']:
-                del order['info']['split']
-        for i in range(len(order['rows'])):
+            if 'split' in info:
+                del info['split']
+        for i in range(len(rows)):
             if len(splits) < 2:
-                if 'order_split' in order['rows'][i]:
-                    del order['rows'][i]['order_split']
-            elif order['rows'][i]['job_id'] in req_form:
-                if req_form[order['rows'][i]['job_id']]:
-                    order['rows'][i]['order_split'] = req_form[order['rows'][i]['job_id']]
+                if 'order_split' in rows[i]:
+                    del rows[i]['order_split']
+            elif rows[i]['job_id'] in req_form:
+                if req_form[rows[i]['job_id']]:
+                    rows[i]['order_split'] = req_form[rows[i]['job_id']]
                 else:
-                    order['rows'][i]['order_split'] = 1
+                    rows[i]['order_split'] = 1
         if 'reason' in main.request.form:
             functions.log('split_order', main.request.form['reason'])
-            order['info']['split_reason'] = main.request.form['reason']
+            info['split_reason'] = main.request.form['reason']
         else:
-            if 'split_reason' in order['info']:
-                if 'history' not in order['info']:
-                    order['info']['history'] = []
-                order['info']['history'].append('split: ' + order['info']['split_reason'])
-                del order['info']['split_reason']
-                for r in order['rows']:
+            if 'split_reason' in info:
+                if 'history' not in info:
+                    info['history'] = []
+                info['history'].append('split: ' + info['split_reason'])
+                del info['split_reason']
+                for r in rows:
                     if 'order_split' in r:
                         del r['order_split']
-        main.mongo.update_one('orders', {'order_id': order_id}, order, '$set')
+        main.mongo.update_one('orders', {'order_id': order_id}, {'info': info, 'rows': rows}, '$set')
         return '', 204
-    if 'split_reason' in order['info']:
-        split_reason = order['info']['split_reason']
+    if 'split_reason' in info:
+        split_reason = info['split_reason']
     else:
         split_reason = ''
-    return main.render_template('/split_order.html', order=order['rows'], split_reason=split_reason)
+    return main.render_template('/split_order.html', order=rows, split_reason=split_reason)
 
 
 def link_order():
@@ -802,7 +815,7 @@ def link_order():
     linked_orders = []
     if 'linked_orders' in order_info:
         linked_orders = order_info['linked_orders']
-    return main.render_template('/link_order.html', linked_orders=linked_orders, cur_order=main.session['order_id'])
+    return main.render_template('/link_order.html', linked_orders=linked_orders, cur_order=main.session['order_id'], dictionary=pages.get_dictionary())
 
 
 def get_status_history(order_id, job_id):

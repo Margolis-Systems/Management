@@ -94,22 +94,6 @@ def mesh_description():
         mongo.update_one('data_lists', {'name':'rebar_catalog'}, cat, '$set')
 
 
-def reorder_job_id():
-    order_id = '64'  # main.session['order_id']
-    job_list = list(mongo.read_collection_list('orders', {'order_id': order_id,
-                                                          'info': {'$exists': False}}))
-    rows = len(job_list)
-    index = 1
-    if job_list:
-        for job in job_list:
-            if job['job_id'] != '0':
-                mongo.update_one('orders', {'order_id': order_id, 'job_id': job['job_id']},
-                                      {'job_id': str(index)}, '$set')
-                index += 1
-        mongo.update_one('orders', {'order_id': order_id, 'info': {'$exists': True}},
-                              {'info.rows': str(rows)}, '$set')
-
-
 def send_sms(msg, _dist_numbers=[]):
     target_url = 'http://port2sms.com/Scripts/mgrqispi.dll'
     dist_numbers = ''
@@ -135,17 +119,14 @@ def fix_weight_integ_ord():
         print(ersp.matched_count)
 
 
-def fix_job_id():
-    ord_id = '763'
-    order = mongo.read_collection_one('orders', {'order_id': ord_id})
-    print(order['rows'][0].keys())
-    # orders_info.sort(key=lambda k: int(k['order_id'].replace('R', '')), reverse=True)
-    inpt = input()
-    order['rows'].sort(key=lambda k: int(k[inpt]), reverse=False)
-    for i in range(1,len(order['rows'])+1):
-        order['rows'][i-1]['job_id'] = str(i)
-        order['rows'][i-1]['order_id'] = ord_id
-    mongo.update_one('orders', {'order_id': ord_id}, order, '$set')
+def fix_job_id(order_id):
+    order = mongo.read_collection_one('orders', {'order_id': order_id})
+    order['rows'].sort(key=lambda k: int(k['job_id']))
+    i = 1
+    for r in order['rows']:
+        r['job_id'] = str(i)
+        i += 1
+    mongo.update_one('orders', {'order_id': order_id}, {'rows': order['rows']}, '$set')
 
 
 def restore_order(path, order_id):
@@ -156,20 +137,25 @@ def restore_order(path, order_id):
             if order['order_id'] == str(order_id):
                 del order['_id']
                 mongo.update_one('orders', {'order_id': order_id}, order, '$set', upsert=True)
-                print(order)
+                print('done')
+                # print(order)
+
+
+def move_rows(orig_ord, dest_ord, row_num):
+    orig = mongo.read_collection_one('orders', {'order_id': orig_ord})
+    rows_to_move = []
+    for r in orig['rows']:
+        if 'inner_id' in r:
+            if r['job_id'] == '46':
+                rows_to_move.append(r)
+    for r in rows_to_move:
+        orig['rows'].remove(r)
+        r['order_id'] = dest_ord
+    mongo.update_one('orders', {'order_id': orig_ord}, orig, '$set')
+    mongo.update_one('orders', {'order_id': dest_ord}, {'rows': rows_to_move}, '$set')
 
 
 if __name__ == '__main__':
-    # mongo_backup()
-    restore_order('C:\\Server', 4531)
-    # fix_weight_integ_ord()
-    # add_ang()
-    # update_orders_total_weight()
+    mongo_backup()
+    restore_order('C:\\DB_backup\\12-05-2024_09-28-08-714954', '6048')
     # mongo.restore('C:\\DB_backup\\12-03-2024_20-00-04-329469', col='data_lists.bson')
-    # order_id = 10
-    # mongo.delete_many('orders', {})
-    # mesh_description()
-    # resp = mongo.read_uniq('machines', 'machine_id', {'machine_name': 'MS'})
-    # print(resp)
-    # machine_list = mongo.read_collection_list('machines', {'machine_id': {'$exists': True}})
-    # print(list(machine_list))

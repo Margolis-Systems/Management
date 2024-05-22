@@ -1,25 +1,30 @@
 {% extends "print/page/layout.html" %}
 {% block body %}
-<tbody>
+<tbody style="border-spacing:10px;">
     {% set weight=namespace(total=0) %}
     {% for row in order_data.rows %}
     {% set weight.total=weight.total+row['weight'] %}
     <tr>
         <td style="border: 1px solid;font-size:12px;">
-            שורה: {{row.job_id}}<br>
-            אלמנט: {{row.element}}<br>
-            מס ברזל: {{row.inner_id}}<br>
-            קוטר: {{row.diam}}<br>
-            כמות: {{row.quantity}}<br>
+            <table>
+                <tr><td style="padding-right: 10px;">שורה:</td><td style="padding-right: 10px;">{{row.job_id}}</td></tr>
+                <tr><td style="padding-right: 10px;">אלמנט:</td><td style="padding-right: 10px;">{{row.element}}</td></tr>
+                <tr><td style="padding-right: 10px;">מס ברזל:</td><td style="padding-right: 10px;">{{row.inner_id}}</td></tr>
+                <tr><td style="padding-right: 10px;">קוטר:</td><td style="padding-right: 10px;">{{row.diam}}</td></tr>
+                <tr><td style="padding-right: 10px;">כמות:</td><td style="padding-right: 10px;">{{row.quantity}}</td></tr>
+            </table>
         </td>
-        <td style="border: 1px solid;font-size:12px;">
-            אורך חיתוך: {{row.length}}<br>
-            משקל ק"ג: {{row.weight}}<br>
-            מס צורה: {{row.shape}}<br>
-            חישוק: {{row.circle}}<br>
+        <td style="border: 1px solid;font-size:12px;padding-right: 10px;">
+            <table>
+                <tr><td style="padding-right: 10px;">אורך חיתוך:</td><td style="padding-right: 10px;">{{row.length}}</td></tr>
+                <tr><td style="padding-right: 10px;">משקל ק"ג:</td><td style="padding-right: 10px;">{{row.weight}}</td></tr>
+                <tr><td style="padding-right: 10px;">מס צורה:</td><td style="padding-right: 10px;">{{row.shape}}</td></tr>
+                <tr><td style="padding-right: 10px;">חישוק:</td><td style="padding-right: 10px;">{{row.circle}}</td></tr>
+                <tr><td style="padding-right: 10px;"></td><td style="padding-right: 10px;"></td></tr>
+            </table>
         </td>
         <td style="border: 1px solid;text-align: center;" width="200px"><img src="{{row.pdf417_dir}}" width="95%"></td>
-        <td colspan="2" style="border: 1px solid;text-align: center;" height="70px"><img src="{{row.img_dir}}" height="95%"></td>
+        <td colspan="2" style="border: 1px solid;text-align: center;" height="70px"><img src="{{row.img_dir}}" height="70px"></td>
     </tr>
     {% endfor %}
     <tr>
@@ -63,7 +68,7 @@
     {% for t in summary.work %}
     {% if summary.work[t].qnt > 0 %}
     <tr style="text-align: center;">
-        <td colspan="3" style="border: 1px solid;">{{t}}</td>
+        <td colspan="3" style="border: 1px solid;">{{t | replace('_', ' ')}}</td>
         <td style="border: 1px solid;">{{summary.work[t].qnt}}</td>
         <td style="border: 1px solid;">{{summary.work[t].weight}}</td>
     </tr>
