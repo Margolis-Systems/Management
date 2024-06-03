@@ -91,7 +91,7 @@ def orders(_all=False):
         search = main.session['user_config']['search']
     return main.render_template('orders.html', orders=orders_info, display_items=main.configs.data_to_display['orders'],
                                 dictionary=dictionary, defaults=defaults, search=search,
-                                order_types=ord_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list, reb_cat=reb_cat)
+                                order_types=ord_types, order_statuses=configs.order_statuses, sites_search_list=sites_search_list, reb_cat=reb_cat, diams=list(configs.weights.keys()))
 
 
 def overview():

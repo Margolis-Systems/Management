@@ -5,7 +5,7 @@
                 {% set focus_index = order_data.data_to_display|length %}
                 <tr>
                     <td>
-                        <input type="number" step=".1" name="trim_x_start" id="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" value="{{defaults['trim_x_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" step=".1" name="trim_x_start" id="trim_x_start" class="form-control" placeholder="קוץ רוחב התחלה" value="{{defaults['trim_x_start']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index-1}})'>
                         {% set focus_index = focus_index + 1 %}
                     </td>
                     <td colspan="2"></td>
@@ -39,7 +39,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="number" step=".1" name="trim_x_end" id="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})'>
+                        <input type="number" step=".1" name="trim_x_end" id="trim_x_end" class="form-control" placeholder="קוץ רוחב סוף" value="{{defaults['trim_x_end']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index-1}})'>
                         {% set focus_index = focus_index + 1 %}
                     </td>
                     <td colspan="2"></td>

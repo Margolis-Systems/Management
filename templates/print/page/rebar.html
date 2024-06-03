@@ -14,13 +14,16 @@
     {% set weight.total=weight.total+row['weight'] %}
     <tr style="text-align: center;font-size: 12px;">
         <td style="border: 1px solid;text-align: center;">{{row.job_id}}</td>
-        <td style="border: 1px solid;text-align: center;">
-            תיאור שורה <br>
+        <td style="border: 1px solid;text-align: center;" width="50%">
+            {% if not row.description %}
+            {% set descript="מיוחדת לפי תוכנית כוורת מרותכת דקה" %}
+            {% endif %}
+            {{descript}} {% if 'bend1' in row or 'bend2' in row or 'bend3' in row or row['כיפוף'] %} + כיפוף{% endif %}{% if row['חיתוך'] %} + חיתוך{% endif %}<br>
             {{row.description}}
         </td>
-        <td style="border: 1px solid;text-align: center;">{{row.mkt}}</td>
+        <td style="border: 1px solid;text-align: center;" width="15%">{{row.mkt}}</td>
         <td style="border: 1px solid;text-align: center;">{{row.quantity}}</td>
-        <td style="border: 1px solid;text-align: center;">
+        <td style="border: 1px solid;text-align: center;" width="25%">
             יחידה: {{row.unit_weight}} ק"ג<br>
             כולל: {{row.weight}} ק"ג
         </td>

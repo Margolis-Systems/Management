@@ -20,7 +20,7 @@ def main_page():
     if scale:
         # Current scaling info
         cur = main.session['scale']
-        if 'site' not in cur:
+        if 'site' not in cur or 'doc_id' not in cur:
             main.session['scale'] = {}
             return main.redirect('/scale')
         cur_weight = get_weight(cur['site'])
@@ -88,6 +88,7 @@ def main_page():
 def weights_page():
     products_list = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
     drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
+    print(drv_l)
     info = {'doc_id': '', 'start': '', 'end': '', 'driver': '', 'vehicle': '', 'site': '', 'client': '', 'sensor': ''}
     sensor = ''
     if 'weights_data' not in main.session:

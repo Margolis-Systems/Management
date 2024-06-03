@@ -32,12 +32,13 @@
             <input type="text" name="info.costumer_name" value="{{defaults['info.costumer_name']}}" placeholder="שם לקוח" onchange="location.href='/user_config?search=&info.costumer_name='+this.value;refresh();" >
             {% if sites_search_list %}
             <select name="info.costumer_site" onchange="location.href='/user_config?search=&info.costumer_site='+this.value;refresh();" >
-                <option></option>
+                <option>בחר אתר</option>
                 {% for opt in sites_search_list %}
                 <option>{{opt}}</option>
                 {% endfor %}
             </select>
             {% endif %}
+            <input type="text" name="info.comment" value="{{defaults['info.comment']}}" placeholder="מלל בהערות" onchange="location.href='/user_config?search=&info.comment='+this.value;refresh();" >
             <!--<button type="submit">חפש</button>-->
             <button type="button" onclick="location.href='/user_config?search=&reverse=';refresh();">הפוך סדר מיון</button>
             <button type="button" onclick="location.href='/user_config?search=';refresh();">איפוס</button>
@@ -65,6 +66,20 @@
                 <option value="{{c}}" selected>Ø{{reb_cat[c].diam_x}} @{{reb_cat[c].x_pitch}}</option>
                 {% else %}
                 <option value="{{c}}">Ø{{reb_cat[c].diam_x}} @{{reb_cat[c].x_pitch}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </td>
+        {% endif %}
+        {% if search['info.type'] == 'regular' %}
+        <td>
+            <select onchange="location.href='/user_config?search=&rows.diam='+this.value;refresh();" >
+                <option style="display:none" selected>קוטר</option>
+                {% for d in diams %}
+                {% if d in search['rows.diam'] %}
+                <option value="{{d}}" selected>Ø{{d}}</option>
+                {% else %}
+                <option value="{{d}}">Ø{{d}}</option>
                 {% endif %}
                 {% endfor %}
             </select>
