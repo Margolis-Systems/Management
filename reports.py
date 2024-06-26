@@ -478,8 +478,10 @@ class Bartender:
                             template_row["tb" + str(6 + i)] = round(row['weight'] / int(row['quantity']), 2)
                     if 'bend1' in row or 'bend2' in row or 'bend3' in row or 'כיפוף' in row:
                         template_row["tb" + str(3 + i)] += ' + כיפוף'
+                        bt_format = configs.bartender_formats['rebar_special'][print_type]
                     if 'חיתוך' in row:
                         template_row["tb" + str(3 + i)] += ' + חיתוך'
+                        bt_format = configs.bartender_formats['rebar_special'][print_type]
                     if disable_weight:
                         template_row["tb" + str(7 + i)] = '---'
                         total_weight = '---'
@@ -760,12 +762,12 @@ class Bartender:
                     special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
                     special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
                 if row['bar_type'] == 'חלק':
-                    if int(row['diam']) <= 12:
+                    if float(row['diam']) <= 12:
                         if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
                             special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
                         special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
                         special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
-                    elif int(row['diam']) >= 14:
+                    elif float(row['diam']) >= 14:
                         if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
                             special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
                         special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
@@ -878,10 +880,13 @@ class Print:
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
         order_summary = []
         rows_to_print = []
+        if info['type'] == 'regular':
+            order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
+            print(order_summary)
         for r in rows:
             if r['job_id'] in select_jobs or not select_jobs:
                 if info['type'] == 'regular':
-                    order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
+                    # order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
                     # for r in order['rows']:
                     if ((len(r['shape_data']) > 2) and (r['weight'] / int(r['quantity']) <= 2) and r['shape'] not in ['332', '49', '59']) or r['shape'] in configs.circle:
                         r['circle'] = 'כן'
@@ -909,6 +914,10 @@ class Print:
                 else:
                     return '', 204
                 r['pdf417_dir'] = Images.gen_pdf417(r)
+                if disable_weight:
+                    for k in r:
+                        if 'weight' in k:
+                            r[k] = ''
                 rows_to_print.append(r)
         order = {'order_id': order_id, 'rows': rows_to_print, 'info': info}
         return main.render_template('/print/page/{}.html'.format(info['type']), order_data=order, summary=order_summary, print_ts=functions.ts())
@@ -922,9 +931,12 @@ class Print:
         special_sum = {}
         for i in spec_keys:
             special_sum[i] = {'qnt': 0, 'weight': 0}
+            if disable_weight:
+                special_sum[i]['weight'] = ''
         total_weight = 0
         for row in rows:
-            total_weight += row['weight']
+            if not disable_weight:
+                total_weight += row['weight']
             row['length'] = int(float(row['length']))
             if 'bar_type' not in row:
                 row['bar_type'] = "מצולע"
@@ -938,6 +950,7 @@ class Print:
                 diams[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
                                            'kgm': configs.weights[row['diam']], 'type': row['bar_type']}
                 if disable_weight:
+                    diams[row['diam']]['weight'] = ''
                     diams[row['diam']]['kgm'] = ''
             # Special summary data
             if row['shape'] not in ["905"]:
@@ -970,7 +983,7 @@ class Print:
                 special_sum['ספסלים']['qnt'] += quantity
                 if not disable_weight:
                     special_sum['ספסלים']['weight'] += row['weight']
-            elif ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) and costumer_id not in ['143']) \
+            elif ((len(row['shape_data']) > 2) and (int(row['weight']) / int(row['quantity']) <= 2) and costumer_id not in ['143']) \
                     or row['shape'] in configs.circle:
                 if 'חישוק' not in special_sum.keys():
                     special_sum['חישוק'] = {'qnt': 0, 'weight': 0}

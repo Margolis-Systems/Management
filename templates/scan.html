@@ -13,7 +13,7 @@
             <input type="hidden" name="order_id" value="{{order}}">
             <input type="hidden" name="job_id" value="{{job}}">
             <input type="hidden" name="status" value="{{status}}">
-            <div class="input-group input-group-lg"><span class="input-group-text">{{quantity}} /</span><input type="number" class="form-control" name="quantity" value="{{quantity}}" min="1" max="{{quantity}}"><span class="input-group-text">{{dictionary['quantity']}}</span></div>
+            <div class="input-group input-group-lg"><span class="input-group-text">{{quantity}} /</span><input type="number" class="form-control" name="quantity" value="{{quantity}}" min="1" max="{{quantity}}" required><span class="input-group-text">{{dictionary['quantity']}}</span></div>
             {% if status and job %}
             <button type="submit" class="btn btn-success btn-block btn-lg" id="sbmt_btn">{{dictionary['order_status_'+status]}}</button>
             {% endif %}

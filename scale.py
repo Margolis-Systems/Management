@@ -88,7 +88,7 @@ def main_page():
 def weights_page():
     products_list = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
     drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
-    print(drv_l)
+    # print(drv_l)
     info = {'doc_id': '', 'start': '', 'end': '', 'driver': '', 'vehicle': '', 'site': '', 'client': '', 'sensor': ''}
     sensor = ''
     if 'weights_data' not in main.session:
@@ -99,7 +99,7 @@ def weights_page():
         main.session.modified = True
     if main.request.values:
         cmd = dict(main.request.values)
-        print(cmd)
+        # print(cmd)
         if 'new' in cmd:
             del main.session['weights_data']
             main.session.modified = True
@@ -257,31 +257,28 @@ def print_scale():
         if item in bartender_format:
             bartender_format[item] = doc[item]
     # Add lines
-    last_line = 0
+    last_line = 1
     total_weight = 0
     lines_qnt = len(doc['lines'])
     report_data = []
-    i = 0
-    # TODO: multi page
-    while i == 0:
-        new_line = bartender_format.copy()
-        for line in range(lines_qnt):
-            l_st = str(line + 1)
-            new_line['line'+l_st] = l_st
-            new_line['weight'+l_st] = doc['lines'][line]['weight']
-            if 'description' in doc['lines'][line]:
-                new_line['ts'+l_st] = doc['lines'][line]['description']
-            else:
-                new_line['ts'+l_st] = "---"
-            new_line['product'+l_st] = doc['lines'][line]['product']
-            total_weight += int(doc['lines'][line]['weight'])
-            last_line = str(line + 2)
-        if True:
-            new_line['ts' + last_line] = "סהכ משקל:"
-            new_line['product' + last_line] = str(total_weight)
-            report_data.append(new_line)
-            break
-        report_data.append(new_line)
+    new_line = bartender_format.copy()
+    for line in range(lines_qnt):
+        new_line['line'+str(last_line)] = str(last_line)
+        new_line['weight'+str(last_line)] = doc['lines'][line]['weight']
+        if 'description' in doc['lines'][line]:
+            new_line['ts'+str(last_line)] = doc['lines'][line]['description']
+        else:
+            new_line['ts'+str(last_line)] = "---"
+        new_line['product'+str(last_line)] = doc['lines'][line]['product']
+        total_weight += int(doc['lines'][line]['weight'])
+        if last_line == 10:
+            report_data.append(new_line.copy())
+            new_line = bartender_format.copy()
+            last_line = 0
+        last_line += 1
+    new_line['ts' + str(last_line)] = "סהכ משקל:"
+    new_line['product' + str(last_line)] = str(total_weight)
+    report_data.append(new_line)
     reports.Bartender.bt_create_print_file(req['printer'], 'scaling_report', report_data)
 
 

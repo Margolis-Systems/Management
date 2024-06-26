@@ -27,16 +27,16 @@
   bottom: 0;
 }
 
-#checkboxes {
+.checkboxes {
   display: none;
   border: 1px #dadada solid;
 }
 
-#checkboxes label {
+.checkboxes label {
   display: block;
 }
 
-#checkboxes label:hover {
+.checkboxes label:hover {
   background-color: #1e90ff;
 }
 </style>
@@ -65,13 +65,13 @@
             {% if statuses %}
         <td>
           <div class="multiselect">
-            <div class="selectBox" onclick="showCheckboxes()">
+            <div class="selectBox" onclick="showCheckboxes('chkbx')">
               <select>
                 <option>בחירת סטטוסים</option>
               </select>
               <div class="overSelect"></div>
             </div>
-            <div id="checkboxes">
+            <div class="checkboxes" id="chkbx">
                 {% for status in statuses %}
               <label for="status{{loop.index}}">
                 <input type="checkbox" id="status{{loop.index}}" name="status{{loop.index}}" value="{{status}}" />{{dictionary['order_status_'+status]}}</label>
@@ -80,6 +80,23 @@
                 </div>
              </div>
             </td>
+            <td>
+              <div class="multiselect">
+                <div class="selectBox" onclick="showCheckboxes('chkbx2')">
+                  <select>
+                    <option>בחירת סוג הזמנות</option>
+                  </select>
+                  <div class="overSelect"></div>
+                </div>
+                <div class="checkboxes" id="chkbx2">
+                    {% for type in types %}
+                  <label for="type{{loop.index}}">
+                    <input type="checkbox" id="type{{loop.index}}" name="type{{loop.index}}" value="{{type}}" />{{dictionary[type]}}</label>
+                    {% endfor %}
+                  <button>ok</button>
+                    </div>
+                 </div>
+                </td>
             {% endif %}
         </form>
         <td colspan="2">

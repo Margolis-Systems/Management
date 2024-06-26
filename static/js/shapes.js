@@ -215,8 +215,8 @@ function delete_rows(){
 
 var expanded = false;
 
-function showCheckboxes() {
-  var checkboxes = document.getElementById("checkboxes");
+function showCheckboxes(elem_id) {
+  var checkboxes = document.getElementById(elem_id);
   if (!expanded) {
     checkboxes.style.display = "block";
     expanded = true;

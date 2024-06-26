@@ -48,7 +48,9 @@ def gen_patterns(order_type='regular'):
         patterns = {'pitch': '|'.join(rebar_type), 'diam': '|'.join(diam), 'mkt': '|'.join(cat_num)}
         lists = {'pitch': rebar_type, 'diam': diam, 'mkt': list(main.configs.rebar_catalog.keys())}
     elif order_type == 'rebar_special':
-        diam = ['5.5', '6.5', '7.5', '8', '10', '12', '14', '16', '18']
+        # diam = ['5.5', '6.5', '7.5', '8', '10', '12', '14', '16', '18']
+        diam = list(main.configs.weights.keys())
+        diam.sort(key=lambda k: float(k))
         cat_num = []
         rebar_type = []
         rebar_type.sort()
@@ -423,6 +425,7 @@ def reports_page():
     report_data = []
     data_to_display = []
     statuses = []
+    ord_types = []
     report = ''
     mid = ''
     req_vals = dict(main.request.values)
@@ -550,14 +553,20 @@ def reports_page():
                     query['username'] = req_vals['username']
             elif report == 'status':
                 statuses = list(configs.order_statuses)
+                ord_types = list(configs.new_order_types)
                 query = {'info.status': 'Processed', 'info.type': 'regular',
                          'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
                 status = []
+                ord_type = []
                 for k in req_form:
                     if 'status' in k:
                         status.append(req_form[k])
+                    elif 'type' in k:
+                        ord_type.append(req_form[k])
                 if status:
                     query['info.status'] = {'$in': status}
+                if ord_type:
+                    query['info.type'] = {'$in': ord_type}
                 if 'client_name' in req_vals.keys():
                     query['client_name'] = req_vals['client_name']
                 if 'username' in req_vals.keys():
@@ -568,6 +577,8 @@ def reports_page():
                          'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
             # Read all orders data with Info, mean that it's not including order rows
             query['rows'] = {'$gt': {'size': 0}}
+            # query['info.type'] = {'$in': ['girders']}
+            # print(query)
             all_orders = list(main.mongo.read_collection_list('orders', query))
             orders_data = []
             # global_total_weight = 0
@@ -626,7 +637,7 @@ def reports_page():
             template_row['total_weight'] = round(total_weight['global'], 2)
             report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
-                                dictionary=get_dictionary(), data_to_display=data_to_display, statuses=statuses)
+                                dictionary=get_dictionary(), data_to_display=data_to_display, statuses=statuses, types=ord_types)
 
 
 def machines_page():

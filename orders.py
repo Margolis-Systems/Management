@@ -37,7 +37,7 @@ def orders(_all=False):
             if main.session['user_config']['search']:
                 del query['info.status']
                 del query['info.costumer_id']
-                #del query['info.date_created']
+                del query['info.date_created']
                 exclude = ['reverse']
                 for k in main.session['user_config']['search']:
                     if k not in exclude:
