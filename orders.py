@@ -40,7 +40,13 @@ def orders(_all=False):
                 del query['info.date_created']
                 exclude = ['reverse']
                 for k in main.session['user_config']['search']:
-                    if k not in exclude:
+                    if k == 'info.status':
+                        defaults[k] = main.session['user_config']['search'][k]
+                        if main.session['user_config']['search'][k] == 'Production':
+                            query[k] = {'$in': ['Production', 'InProduction']}
+                        else:
+                            query[k] = str(main.session['user_config']['search'][k])
+                    elif k not in exclude:
                         defaults[k] = main.session['user_config']['search'][k]
                         query[k] = {'$regex': str(main.session['user_config']['search'][k])}
                     elif k == 'reverse':
@@ -177,6 +183,7 @@ def new_order(client="", order_type=""):
 
 
 def new_order_row():
+    # new_row new row
     order_id = main.session['order_id']
     if 'R' in order_id or 'K' in order_id:
         return

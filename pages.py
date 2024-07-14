@@ -419,223 +419,223 @@ def gen_file_id():
 
 
 def reports_page():
-    report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
-    if 'report_date' in main.session:
-        report_date = main.session['report_date']
-    report_data = []
-    data_to_display = []
-    statuses = []
-    ord_types = []
-    report = ''
-    mid = ''
     req_vals = dict(main.request.values)
     req_form = dict(main.request.form)
-    # Report date handle
-    if req_form:
-        for item in req_form:
-            if 'date' in item:
-                report_date['from'] = req_form['date_from']
-                report_date['to'] = req_form['date_to']
-                if req_form['date_to'] < req_form['date_from']:
-                    report_date['to'] = req_form['date_from']
-        main.session['report_date'] = report_date
-        main.session.modified = True
     # Report type handle
+    report = ''
     if 'report' in req_vals.keys():
-        weight_multp = 1000
         report = req_vals['report']
-        query = {}
-        machines_id = []
-        machine_list = []
-        if report == 'production':
-            query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to']+' 23:59:59'}}
-            detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length', 'diam',
-                        'Start_ts', 'Finished_ts', 'order_id', 'job_id', 'work_time']
-            data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
-                               'work_time', 'ht_avg']
-            if 'machine_id' in req_vals:
-                mid = req_vals['machine_id']
-                query['machine_id'] = int(mid)
-                data_to_display = detailed
-            else:
-                machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}}))
-                for m in machine_list:
-                    machines_id.append(m['machine_id'])
-            temp_report_data = list(main.mongo.read_collection_list('production_log', query))
-            temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id', 'Start_ts'))
-            if temp_report_data:
-                machine_id = temp_report_data[0]['machine_id']
-                time0 = datetime.now() - datetime.now()
-                doubles = {}
-                total = {'weight': 0, 'quantity': 0, 'work_time': time0, 'lines': 0, 'ht_avg': 0}
-                double_total = {'weight': 0, 'quantity': 0, 'lines': 0}
-                machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
-                         'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
-                for i in range(len(temp_report_data)):
-                    line = temp_report_data[i]
-                    if machine_total['machine_id'] in machines_id:
-                        machines_id.remove(machine_total['machine_id'])
-                    #todo: fix!!!
-                    if line['order_id'] not in doubles:
-                        doubles[line['order_id']] = [line['job_id']]
-                    elif line['job_id'] not in doubles[line['order_id']]:
-                        doubles[line['order_id']].append(line['job_id'])
-                    elif line['machine_id'] in [34, 17, 18]:
-                        double_total['weight'] += float(line['weight']) / 1000
-                        double_total['quantity'] += int(line['quantity'])
-                        double_total['lines'] += 1
-                    line['weight'] = round(float(line['weight'] / 1000), 4)
-                    if line['machine_id'] != machine_id:
-                        if machine_total['work_time'].total_seconds() > 0:
-                            machine_total['ht_avg'] = round(machine_total['weight']/(machine_total['work_time'].total_seconds()/3600), 2)
-                        else:
-                            machine_total['ht_avg'] = 0
-                        for key in total:
-                            total[key] += machine_total[key]
-                        machine_total['weight'] = round(machine_total['weight'], 2)
-                        report_data.append(machine_total)
-                        machine_id = line['machine_id']
-                        machine_total = {'weight': 0, 'quantity': 0, 'machine_id': line['machine_id'], 'machine_name': line['machine_name'],
-                                 'username': line['username'], 'operator': line['operator'], 'work_time': time0, 'lines': 0}
-                    line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
-                    if machine_total['lines'] > 0:
-                        temp = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(temp_report_data[i-1]['Finished_ts'], '%Y-%m-%d %H:%M:%S')
-                        if temp > line['work_time']:
-                            line['work_time'] = temp
-                    report_data.append(line)
-                    machine_total['weight'] += float(line['weight'])
-                    machine_total['quantity'] += int(line['quantity'])
-                    machine_total['lines'] += 1
-                    if 'work_time' in line:
-                        machine_total['work_time'] += line['work_time']
-                if machine_total['work_time'].total_seconds() > 0:
-                    machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600), 2)
-                else:
-                    machine_total['ht_avg'] = 0
-                for key in total:
-                    total[key] += machine_total[key]
-                machine_total['weight'] = round(machine_total['weight'], 2)
-                report_data.append(machine_total)
-                empty_line = {'weight': 0, 'quantity': 0, 'machine_id': 'machine_id', 'machine_name': 'machine_name',
-                         'username': 'username', 'operator': 'operator', 'work_time': 0, 'lines': 0}
-                for _mid in machines_id:
-                    new_line = empty_line.copy()
-                    for m in machine_list:
-                        if m['machine_id'] == _mid:
-                            for i in m:
-                                new_line[i] = m[i]
-                            break
-                    report_data.append(new_line)
-                if 'machine_id' not in req_vals:
-                    total['operator'] = 'סה"כ לדו"ח:'
-                    total['weight'] = round(total['weight'], 2)
-                    del total['ht_avg']
-                    del total['work_time']
-                    # del total['']
-                    report_data.append(total)
-                    double_total['operator'] = 'סה"כ שורות משותפות'
-                    double_total['weight'] = round(double_total['weight'], 2)
-                    report_data.append(double_total.copy())
-                    for key in double_total:
-                        if key == 'operator':
-                            double_total[key] = 'סה"כ משקל בפועל'
-                        else:
-                            double_total[key] = round(total[key] - double_total[key], 2)
-                    report_data.append(double_total)
+    if 'report' in req_form:
+        del req_form['report']
+    weight_multp = 1000
+    report_date = {'from': functions.ts('html_date'), 'to': functions.ts('html_date')}
+    data_to_display = ['order_id', 'created_by', 'date_created', 'date_delivery', 'type', 'costumer_name',
+                       'costumer_id', 'costumer_site', 'status', 'total_weight', 'rows']
+    mid = ''
+    machines_id = []
+    machine_list = []
+    report_data = []
+    statuses = list(configs.order_statuses)
+    ord_types = list(configs.new_order_types)
+    if report == 'production':
+        statuses = []
+        query = {'Start_ts': {'$gte': report_date['from'], '$lte': report_date['to']+' 23:59:59'}}
+        if req_form:
+            for k in req_form:
+                if k in ['date_from', 'date_to']:
+                    query['Start_ts'] = {'$gte': req_form['date_from']+' 00:00:00', '$lte': req_form['date_to']+' 23:59:59'}
+                    report_date = {'from': req_form['date_from'], 'to': req_form['date_to']}
+        # print(query)
+        detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length', 'diam',
+                    'Start_ts', 'Finished_ts', 'order_id', 'job_id', 'work_time']
+        data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
+                           'work_time', 'ht_avg']
+        if 'machine_id' in req_vals:
+            mid = req_vals['machine_id']
+            query['machine_id'] = int(mid)
+            data_to_display = detailed
         else:
-            if report == 'orders':
-                query = {'info.date_created': {'$gte': report_date['from'] + ' 00:00:00', '$lte': report_date['to'] + ' 23:59:59'},
-                         'info.status': {'$ne': 'canceled'}, 'info.type': {'$ne': 'integration'},
-                         'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
-                if 'client_name' in req_vals.keys():
-                    query['client_name'] = req_vals['client_name']
-                if 'username' in req_vals.keys():
-                    query['username'] = req_vals['username']
-            elif report == 'status':
-                statuses = list(configs.order_statuses)
-                ord_types = list(configs.new_order_types)
-                query = {'info.status': 'Processed', 'info.type': 'regular',
-                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']}}
-                status = []
-                ord_type = []
-                for k in req_form:
-                    if 'status' in k:
-                        status.append(req_form[k])
-                    elif 'type' in k:
-                        ord_type.append(req_form[k])
-                if status:
-                    query['info.status'] = {'$in': status}
-                if ord_type:
-                    query['info.type'] = {'$in': ord_type}
-                if 'client_name' in req_vals.keys():
-                    query['client_name'] = req_vals['client_name']
-                if 'username' in req_vals.keys():
-                    query['username'] = req_vals['username']
-            elif report == 'open_orders':
-                query = {'info.status': {'$nin': ['Delivered', 'canceled','PartlyDeliveredClosed']}, 'info.type': {'$ne': 'integration'},
-                         'info.costumer_name': {'$nin': ['טסטים \ בדיקות', 'צומת ברזל', 'מלאי חצר']},
-                         'info.date_created': {'$gte': report_date['from'], '$lte': report_date['to']+'00:00:00'}}
-            # Read all orders data with Info, mean that it's not including order rows
-            query['rows'] = {'$gt': {'size': 0}}
-            # query['info.type'] = {'$in': ['girders']}
-            # print(query)
-            all_orders = list(main.mongo.read_collection_list('orders', query))
-            orders_data = []
-            # global_total_weight = 0
-            total_weight = {'global': 0, 'temp': 0}
-            for order in all_orders:
-                if 'order_id' in order['info']:
-                    del order['info']['order_id']
-                # order['total_weight'] = round(float(order['total_weight'] / 1000))
-                new_row = {'order_id': order['order_id']}
-                new_row.update(order['info'])
-                if 'comment' in new_row:
-                    del new_row['comment']
-                new_row['status'] = 'order_status_' + new_row['status']
-                new_row['date_created'] = datetime.strptime(new_row['date_created'], '%Y-%m-%d %H:%M:%S')
-                if 'rows' not in order:
-                    order['rows'] = []
-                if 'total_weight' not in new_row:
-                    new_row['total_weight'] = 0
-                total_weight['global'] += int(new_row['total_weight']) / weight_multp
-                type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'K': 'סהכ ייצור קלונסאות', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט', 'girders': 'סהכ מסבכונים'}
-                ord_type = type_dict[new_row['type']]
-                if ord_type not in total_weight:
-                    total_weight[ord_type] = int(new_row['total_weight']) / weight_multp
+            machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}}))
+            for m in machine_list:
+                machines_id.append(m['machine_id'])
+        temp_report_data = list(main.mongo.read_collection_list('production_log', query))
+        temp_report_data = sorted(temp_report_data, key=itemgetter('machine_id', 'Start_ts'))
+        if temp_report_data:
+            machine_id = temp_report_data[0]['machine_id']
+            time0 = datetime.now() - datetime.now()
+            doubles = {}
+            total = {'weight': 0, 'quantity': 0, 'work_time': time0, 'lines': 0, 'ht_avg': 0}
+            double_total = {'weight': 0, 'quantity': 0, 'lines': 0}
+            machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
+                     'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
+            for i in range(len(temp_report_data)):
+                line = temp_report_data[i]
+                if machine_total['machine_id'] in machines_id:
+                    machines_id.remove(machine_total['machine_id'])
+                #todo: fix!!!
+                if line['order_id'] not in doubles:
+                    doubles[line['order_id']] = [line['job_id']]
+                elif line['job_id'] not in doubles[line['order_id']]:
+                    doubles[line['order_id']].append(line['job_id'])
+                elif line['machine_id'] in [34, 17, 18]:
+                    double_total['weight'] += float(line['weight']) / 1000
+                    double_total['quantity'] += int(line['quantity'])
+                    double_total['lines'] += 1
+                line['weight'] = round(float(line['weight'] / 1000), 4)
+                if line['machine_id'] != machine_id:
+                    if machine_total['work_time'].total_seconds() > 0:
+                        machine_total['ht_avg'] = round(machine_total['weight']/(machine_total['work_time'].total_seconds()/3600), 2)
+                    else:
+                        machine_total['ht_avg'] = 0
+                    for key in total:
+                        total[key] += machine_total[key]
+                    machine_total['weight'] = round(machine_total['weight'], 2)
+                    report_data.append(machine_total)
+                    machine_id = line['machine_id']
+                    machine_total = {'weight': 0, 'quantity': 0, 'machine_id': line['machine_id'], 'machine_name': line['machine_name'],
+                             'username': line['username'], 'operator': line['operator'], 'work_time': time0, 'lines': 0}
+                line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S')
+                if machine_total['lines'] > 0:
+                    temp = datetime.strptime(line['Start_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(temp_report_data[i-1]['Finished_ts'], '%Y-%m-%d %H:%M:%S')
+                    if temp > line['work_time']:
+                        line['work_time'] = temp
+                report_data.append(line)
+                machine_total['weight'] += float(line['weight'])
+                machine_total['quantity'] += int(line['quantity'])
+                machine_total['lines'] += 1
+                if 'work_time' in line:
+                    machine_total['work_time'] += line['work_time']
+            if machine_total['work_time'].total_seconds() > 0:
+                machine_total['ht_avg'] = round(machine_total['weight'] / (machine_total['work_time'].total_seconds() / 3600), 2)
+            else:
+                machine_total['ht_avg'] = 0
+            for key in total:
+                total[key] += machine_total[key]
+            machine_total['weight'] = round(machine_total['weight'], 2)
+            report_data.append(machine_total)
+            empty_line = {'weight': 0, 'quantity': 0, 'machine_id': 'machine_id', 'machine_name': 'machine_name',
+                     'username': 'username', 'operator': 'operator', 'work_time': 0, 'lines': 0}
+            for _mid in machines_id:
+                new_line = empty_line.copy()
+                for m in machine_list:
+                    if m['machine_id'] == _mid:
+                        for i in m:
+                            new_line[i] = m[i]
+                        break
+                report_data.append(new_line)
+            if 'machine_id' not in req_vals:
+                total['operator'] = 'סה"כ לדו"ח:'
+                total['weight'] = round(total['weight'], 2)
+                del total['ht_avg']
+                del total['work_time']
+                # del total['']
+                report_data.append(total)
+                double_total['operator'] = 'סה"כ שורות משותפות'
+                double_total['weight'] = round(double_total['weight'], 2)
+                report_data.append(double_total.copy())
+                for key in double_total:
+                    if key == 'operator':
+                        double_total[key] = 'סה"כ משקל בפועל'
+                    else:
+                        double_total[key] = round(total[key] - double_total[key], 2)
+                report_data.append(double_total)
+    else:
+        if 'report_query' in main.session and not report:
+            query = main.session['report_query']
+        else:
+            query = {'info.status': {'$ne': 'canceled'}, 'info.type': {'$ne': 'integration'}, 'rows': {'$gt': {'size': 0}},
+                     'info.costumer_name': {'$nin': ['טסטים \\ בדיקות', 'צומת ברזל', 'מלאי חצר']},
+                     'info.date_created': {'$gte': report_date['from']+' 00:00:00', '$lte': report_date['to']+' 23:59:59'}}
+        if report == 'status':
+            report_date['from'] = ''
+            query['info.status'] = 'Processed'
+            query['info.type'] = 'regular'
+            if 'info.date_created' in query:
+                del query['info.date_created']
+        elif report == 'open_orders':
+            report_date['from'] = ''
+            query['info.status'] = {'$nin': ['Delivered', 'canceled','PartlyDeliveredClosed']}
+            if 'info.date_created' in query:
+                del query['info.date_created']
+        if req_form:
+            for k in req_form:
+                if k in ['date_from', 'date_to']:
+                    query['info.date_created'] = {'$gte': req_form['date_from']+' 00:00:00', '$lte': req_form['date_to']+' 23:59:59'}
+                    report_date = {'from': req_form['date_from'], 'to': req_form['date_to']}
+                elif 'type' in k:
+                    if 'info.type' in query:
+                        if '$in' in query['info.type']:
+                            query['info.type']['$in'].append(req_form[k])
+                            continue
+                    query['info.type'] = {'$in': [req_form[k]]}
+                elif 'status' in k:
+                    if 'info.status' in query:
+                        if '$in' in query['info.status']:
+                            query['info.status']['$in'].append(req_form[k])
+                            continue
+                    query['info.status'] = {'$in': [req_form[k]]}
                 else:
-                    total_weight[ord_type] += int(new_row['total_weight']) / weight_multp
-                orders_data.append(new_row)
-            orders_data.sort(key=lambda k: k['costumer_name'])
-            total_weight['temp'] = 0
-            template_row = {}
-            if orders_data:
-                last_client = orders_data[0]['costumer_name']
-                for item in orders_data[0]:
-                    template_row[item] = ''
-            template_row['costumer_name'] = 'סהכ ללקוח'
-            for row in orders_data:
-                row['total_weight'] = int(row['total_weight'])
-                row['total_weight'] = round(row['total_weight'] / weight_multp, 2)
-                if row['costumer_name'] == last_client:
-                    total_weight['temp'] += row['total_weight']
-                else:
-                    template_row['total_weight'] = round(total_weight['temp'], 2)
-                    report_data.append(template_row.copy())
-                    total_weight['temp'] = row['total_weight']
-                    last_client = row['costumer_name']
-                report_data.append(row)
-            template_row['total_weight'] = round(total_weight['temp'], 2)
-            report_data.append(template_row.copy())
-
-            for weight in total_weight:
-                if weight in ['global', 'temp']:
-                    continue
-                template_row['total_weight'] = round(total_weight[weight], 2)
-                template_row['costumer_name'] = weight
+                    if req_form[k]:
+                        query[k] = req_form[k]
+        main.session['report_query'] = query
+        main.session.modified = True
+        # print(query)
+        all_orders = list(main.mongo.read_collection_list('orders', query))
+        # todo: sort_by client_name -> move last loop inside
+        orders_data = []
+        total_weight = {'global': 0, 'temp': 0}
+        for order in all_orders:
+            if 'order_id' in order['info']:
+                del order['info']['order_id']
+            new_row = {'order_id': order['order_id']}
+            new_row.update(order['info'])
+            if 'comment' in new_row:
+                del new_row['comment']
+            new_row['status'] = 'order_status_' + new_row['status']
+            new_row['date_created'] = datetime.strptime(new_row['date_created'], '%Y-%m-%d %H:%M:%S')
+            if 'rows' not in order:
+                order['rows'] = []
+            if 'total_weight' not in new_row:
+                new_row['total_weight'] = 0
+            total_weight['global'] += int(new_row['total_weight']) / weight_multp
+            type_dict = {'regular': 'סהכ ברזל','R': 'סהכ ייצור רשת', 'K': 'סהכ ייצור קלונסאות', 'rebar': 'סהכ רשת', 'rebar_special': 'סהכ כוורת', 'piles': 'סהכ כלונסאות', 'integration':'אלי שליט', 'girders': 'סהכ מסבכונים'}
+            ord_type = type_dict[new_row['type']]
+            if ord_type not in total_weight:
+                total_weight[ord_type] = int(new_row['total_weight']) / weight_multp
+            else:
+                total_weight[ord_type] += int(new_row['total_weight']) / weight_multp
+            orders_data.append(new_row)
+        orders_data.sort(key=lambda k: k['costumer_name'])
+        total_weight['temp'] = 0
+        template_row = {}
+        if orders_data:
+            last_client = orders_data[0]['costumer_name']
+            for item in orders_data[0]:
+                template_row[item] = ''
+        template_row['costumer_name'] = 'סהכ ללקוח'
+        for row in orders_data:
+            row['total_weight'] = int(row['total_weight'])
+            row['total_weight'] = round(row['total_weight'] / weight_multp, 2)
+            if row['costumer_name'] == last_client:
+                total_weight['temp'] += row['total_weight']
+            else:
+                template_row['total_weight'] = round(total_weight['temp'], 2)
                 report_data.append(template_row.copy())
-            template_row['costumer_name'] = 'סהכ כללי'
-            template_row['total_weight'] = round(total_weight['global'], 2)
+                total_weight['temp'] = row['total_weight']
+                last_client = row['costumer_name']
+            report_data.append(row)
+        template_row['total_weight'] = round(total_weight['temp'], 2)
+        report_data.append(template_row.copy())
+
+        for weight in total_weight:
+            if weight in ['global', 'temp']:
+                continue
+            template_row['total_weight'] = round(total_weight[weight], 2)
+            template_row['costumer_name'] = weight
             report_data.append(template_row.copy())
+        template_row['costumer_name'] = 'סהכ כללי'
+        template_row['total_weight'] = round(total_weight['global'], 2)
+        report_data.append(template_row.copy())
     return main.render_template('/reports.html', date=report_date, report_data=report_data, report=report, machine_id=mid,
                                 dictionary=get_dictionary(), data_to_display=data_to_display, statuses=statuses, types=ord_types)
 

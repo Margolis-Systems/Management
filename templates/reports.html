@@ -39,21 +39,29 @@
 .checkboxes label:hover {
   background-color: #1e90ff;
 }
+
+td{
+    text-align: center;
+}
 </style>
 <table class="table table-sm" align="center" dir="rtl">
     <tr class="d-print-none">
-        <td><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
-        <td><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
-        <td><button onclick="location.href='/reports?report=status'" type="button" class="btn btn-primary btn-block">דוח סטטוס הודפס</button></td>
-        <td><button onclick="location.href='/reports?report=open_orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות פתוחות</button></td>
-        <td><button onclick="location.href='/reports?report=clear'" type="button" class="btn btn-danger btn-block">איפוס</button></td>
+        <td width="100"><button onclick="location.href='/reports?report=production'" type="button" class="btn btn-primary btn-block">דוח ייצור</button></td>
+        <td width="100"><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
+        <td width="100"><button onclick="location.href='/reports?report=status'" type="button" class="btn btn-primary btn-block">דוח סטטוס הודפס</button></td>
+        <td width="100"><button onclick="location.href='/reports?report=open_orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות פתוחות</button></td>
+        <td width="100"></td>
+        <td>
+        {% if report_data %}<button onclick="window.print();" type="button" class="btn btn-success btn-block d-print-none">הדפס</button>
+        {% endif %}
+        </td>
+
     </tr>
     <tr>
         <form method=POST id="date_form" autocomplete="off" action="{{ url_for('reports_page') }}" onsubmit="date_form.disabled = true; return true;">
             {% if machine_id %}
             <input type="hidden" name="machine_id" value="{{machine_id}}">
             {% endif %}
-            <input type="hidden" name="report" value="{{report}}">
         <td>
             <label>מיום
             <input type="date" name="date_from" value="{{date.from}}" onchange="formSubmit('date_form');"></label>
@@ -62,6 +70,11 @@
             <label>עד יום
             <input type="date" name="date_to" value="{{date.to}}" onchange="formSubmit('date_form');"></label>
         </td>
+            {% if report == 'production' %}
+            <input type="hidden" value="{{report}}" name="report">
+            {% endif %}
+        </form>
+        <form method=POST id="filter_form" autocomplete="off" action="{{ url_for('reports_page') }}" onsubmit="date_form.disabled = true; return true;">
             {% if statuses %}
         <td>
           <div class="multiselect">
@@ -71,10 +84,10 @@
               </select>
               <div class="overSelect"></div>
             </div>
-            <div class="checkboxes" id="chkbx">
+            <div class="checkboxes" id="chkbx" style="text-align: right;">
                 {% for status in statuses %}
               <label for="status{{loop.index}}">
-                <input type="checkbox" id="status{{loop.index}}" name="status{{loop.index}}" value="{{status}}" />{{dictionary['order_status_'+status]}}</label>
+                <input type="checkbox" id="status{{loop.index}}" name="status{{loop.index}}" value="{{status}}"/>{{dictionary['order_status_'+status]}}</label>
                 {% endfor %}
               <button>ok</button>
                 </div>
@@ -88,29 +101,23 @@
                   </select>
                   <div class="overSelect"></div>
                 </div>
-                <div class="checkboxes" id="chkbx2">
+                <div class="checkboxes" id="chkbx2" style="text-align: right;">
                     {% for type in types %}
                   <label for="type{{loop.index}}">
-                    <input type="checkbox" id="type{{loop.index}}" name="type{{loop.index}}" value="{{type}}" />{{dictionary[type]}}</label>
+                    <input type="checkbox" id="type{{loop.index}}" name="type{{loop.index}}" value="{{type}}"/>{{dictionary[type]}}</label>
                     {% endfor %}
                   <button>ok</button>
                     </div>
                  </div>
                 </td>
+            <td><input name="info.costumer_name" placeholder="שם לקוח" value=""></td>
             {% endif %}
         </form>
-        <td colspan="2">
-        {% if report_data %}<button onclick="window.print();" type="button" class="btn btn-success btn-block d-print-none">הדפס</button>
-        {% endif %}
-        </td>
     </tr>
 </table>
 {% if report_data %}
 <table class="table table-sm" align="center" dir="rtl">
     <tr>
-        {% if not data_to_display %}
-        {% set data_to_display=report_data[0] %}
-        {% endif %}
         {% for item in data_to_display %}
         {% if dictionary[item] %}
         {% set name = dictionary[item] %}

@@ -1,10 +1,16 @@
 {% extends "layout/layout.html" %}
 {% block body %}
 {% if machine_list %}
+<style>
+td {
+  text-align: center;
+}
+</style>
 <table class="table table-striped" align="center" dir="rtl">
     <tr>
         <td><b>מספר מכונה</b></td>
         <td><b>שם מכונה</b></td>
+        <td><b>מפעל</b></td>
         <td><b>שם משתמש מסופון</b></td>
         <td><b>שם מפעיל</b></td>
     </tr>
@@ -13,18 +19,17 @@
         <tr>
             <td>{{machine.machine_id}}</td>
             <td>{{machine.machine_name}}</td>
+            <td>{{machine.plant}}</td>
             <td>
                 <input type="hidden" name="machine" value="{{machine.machine_id}}">
-                <select list="users" name="username" onchange="form_{{machine.machine_id}}.submit()">
-                    <datalist id="users">
-                        {% for user in users_list %}
-                        {% if user == machine.username%}
-                        <option value="{{user}}" selected>{{user}}</option>
-                        {% else %}
-                        <option value="{{user}}">{{user}}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </datalist>
+                <select name="username" onchange="form_{{machine.machine_id}}.submit()">
+                    {% for user in users_list %}
+                    {% if user == machine.username%}
+                    <option value="{{user}}" selected>{{user}}</option>
+                    {% else %}
+                    <option value="{{user}}">{{user}}</option>
+                    {% endif %}
+                    {% endfor %}
             </td>
             <td>
                 <input type="text" name="operator_name" onchange="form_{{machine.machine_id}}.submit()" value="{{machine.operator}}">
@@ -37,12 +42,16 @@
             <td></td>
             <td><input type="text" name="machine_name" required></td>
             <td>
-                <select list="users2" name="username" required>
-                    <datalist id="users2">
-                        {% for user in users_list %}
-                        <option value="{{user}}">{{user}}</option>
-                        {% endfor %}
-                    </datalist>
+                <select name="plant" required>
+                    <option value="ראשי">ראשי</option>
+                    <option value="רשת">רשת</option>
+                    <option value="רומן">רומן</option>
+            </td>
+            <td>
+                <select name="username" required>
+                    {% for user in users_list %}
+                    <option value="{{user}}">{{user}}</option>
+                    {% endfor %}
             </td>
             <td>
                 <input type="text" name="operator" required>

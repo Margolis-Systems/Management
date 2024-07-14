@@ -153,13 +153,8 @@ class Images:
         draw = ImageDraw.Draw(im)
         spiral = []
         pitch = []
-        # bend = 0
-        # if 'bend' in data:
-        #     # spiral = [data['bend_len']]
-        #     bend = int(data['bend_len'])
-        #     data['spiral'] = str(int(data['spiral']) - int(data['bend_len']))
-        #     # pitch = ['']
-
+        ch_diam = 0
+        new_diam = ''
         for k in data:
             if 'spiral' in k and 'diam' not in k:
                 if data[k]:
@@ -172,38 +167,48 @@ class Images:
         cfa = 0
         if 'CFA' in data:
             cfa = 40
-            draw.line([(675-cfa, 80), (690, 135)], fill="black", width=3)
-            draw.line([(675-cfa, 200), (690, 145)], fill="black", width=3)
             # draw.text((655, 130), 'CFA', fill="black", font=ImageFont.truetype(font_dir, font_size))
         # Draw length line
         draw.line([(15, 50), (675, 50)], fill="black", width=3)
         draw.line([(15, 45), (15, 55)], fill="black", width=3)
         pos = 15
         for i in range(len(spiral)):
+            draw.line([(pos, 80 + ch_diam), (pos, 200 - ch_diam)], fill="black", width=3)
+            if 'ch_diam_'+str(i) in data:
+                if data['ch_diam_'+str(i)]:
+                    ch_diam = 20
+                    if not new_diam:
+                        new_diam = data['ch_diam_'+str(i)]
             break_line = pos+int(int(spiral[i])/int(data['length'])*660)
             if break_line > 675-cfa:
                 break_line = 675-cfa
+            draw.line([(pos, 80+ch_diam), (break_line, 80+ch_diam)], fill="black", width=3)
+            draw.line([(pos, 200-ch_diam), (break_line, 200-ch_diam)], fill="black", width=3)
             draw.text((pos+int(int(spiral[i])/int(data['length'])*660/2)-20, 30), spiral[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
             draw.text((pos+int(int(spiral[i])/int(data['length'])*660/2)-20, 60), pitch[i], fill="black", font=ImageFont.truetype(font_dir, font_size))
             draw.line([(break_line, 45), (break_line, 55)], fill="black", width=3)
+
             if pitch[i]:
                 s = pos
                 ptch = int(pitch[i][1:])
                 while s < break_line-2*ptch:
-                    draw.line([(s, 80), (s + ptch, 200)], fill="black", width=3)
+                    draw.line([(s, 80+ch_diam), (s + ptch, 200-ch_diam)], fill="black", width=3)
                     if s+2*ptch > break_line:
-                        draw.line([(s + ptch, 200), (break_line, 80)], fill="black", width=3)
+                        draw.line([(s + ptch, 200-ch_diam), (break_line, 80+ch_diam)], fill="black", width=3)
                     else:
-                        draw.line([(s + ptch, 200), (s + 2*ptch, 80)], fill="black", width=3)
+                        draw.line([(s + ptch, 200-ch_diam), (s + 2*ptch, 80+ch_diam)], fill="black", width=3)
                     s += 2*ptch
-                draw.line([(s, 80), (break_line, 200)], fill="black", width=3)
-                draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
+                draw.line([(s, 80+ch_diam), (break_line, 200-ch_diam)], fill="black", width=3)
+
             pos = break_line
-        if cfa == 0:
-            draw.line([(pos, 80), (pos, 200)], fill="black", width=3)
+        if cfa:
+            draw.line([(675-cfa, 80+ch_diam), (690, 135)], fill="black", width=3)
+            draw.line([(675-cfa, 200-ch_diam), (690, 145)], fill="black", width=3)
+        else:
+            draw.line([(pos, 80+ch_diam), (pos, 200-ch_diam)], fill="black", width=3)
         # Draw pile
-        draw.line([(15,80),(675-cfa,80)], fill="black", width=3)
-        draw.line([(15,200),(675-cfa,200)], fill="black", width=3)
+        # draw.line([(15,80),(675-cfa,80)], fill="black", width=3)
+        # draw.line([(15,200),(675-cfa,200)], fill="black", width=3)
         tot_bars = int(data['bars'])
         if 'bars_1' in data:
             tot_bars += int(data['bars_1'])
@@ -305,6 +310,9 @@ class Images:
         draw.text((90, 440), spiral_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
         draw.text((260, 400), 'קוטר כלונס', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
         draw.text((260, 420), pile_ov, fill="black", font=ImageFont.truetype(font_dir, font_size))
+        if ch_diam:
+            # draw.ellipse([(55, 360), (190, 495)], outline='black', width=2)
+            draw.text((290, 420), u'{}'.format(' \ '+new_diam), fill="black", font=ImageFont.truetype(font_dir, font_size))
         # draw.text((500, 500), 'fff', fill="black", direction='rtl', font=ImageFont.truetype(font_dir, font_size))
         if html:
             file_name = 'static\\img\\' + file_name
@@ -419,8 +427,14 @@ class Images:
 class Bartender:
     @staticmethod
     def net_print(order_id, printer, print_type, disable_weight=False, select_jobs=[], split=''):
+        from datetime import datetime, timedelta
         # Format data
         rows, info = orders.get_order_data(order_id, reverse=False, split=split)
+        if print_type == 'label':
+            if 'last_label_print' in info:
+                if info['last_label_print'] > datetime.now()-timedelta(seconds=10):
+                    return
+            main.mongo.update_one('orders', {'order_id': order_id}, {'info.last_label_print': datetime.now()}, '$set')
         info['order_split'] = split
         if select_jobs:
             rlen = len(rows)
@@ -600,10 +614,8 @@ class Bartender:
                     line['temp_select'] = 1
                 line['barcode_data'] = Images.format_qr_data(line)
                 if 'element' in line:
-                    # print(line)
                     if len(line['element']) > 0:
                         if line['element'][0] == 'ק' and line['element'] not in element_buf:# and 'label' in print_type:
-                            # print(line['element'])
                             item_to_copy = ['order_id', 'element', 'costumer_name', 'comment', 'costumer_site']
                             # kora['barcode_data'] = []
                             for item in item_to_copy:
@@ -611,7 +623,6 @@ class Bartender:
                                     kora[item] = line[item]
                             for _row in rows:
                                 if _row['element'] == line['element']:
-                                    # print(_row['job_id'])
                                     # kora['barcode_data'].append(_row['job_id'])
                                     kora['z15'] += 1
                                     kora['z16'] += _row['weight']
@@ -882,7 +893,6 @@ class Print:
         rows_to_print = []
         if info['type'] == 'regular':
             order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
-            print(order_summary)
         for r in rows:
             if r['job_id'] in select_jobs or not select_jobs:
                 if info['type'] == 'regular':

@@ -19,6 +19,13 @@
                         <input type="number" name="pitch_2" id="pitch_2" class="form-control" placeholder="מרווח" value="{{defaults['pitch_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+5}})' >
                         <input type="number" name="pitch_3" id="pitch_3" class="form-control" placeholder="מרווח" value="{{defaults['pitch_3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+7}})' >
                     </td>
+                    <td id="change_diam">
+                        מרווח
+                        <input type="number" name="ch_diam" id="ch_diam" class="form-control" onkeydown="return event.key != 'Enter';" disabled>
+                        <input type="number" name="ch_diam_1" id="ch_diam_1" class="form-control" placeholder="שנה קוטר" value="{{defaults['ch_diam_1']}}" onkeydown="return event.key != 'Enter';">
+                        <input type="number" name="ch_diam_2" id="ch_diam_2" class="form-control" placeholder="שנה קוטר" value="{{defaults['ch_diam_2']}}" onkeydown="return event.key != 'Enter';">
+                        <input type="number" name="ch_diam_3" id="ch_diam_3" class="form-control" placeholder="שנה קוטר" value="{{defaults['ch_diam_3']}}" onkeydown="return event.key != 'Enter';">
+                    </td>
                 </tr>
             </table>
         </td>

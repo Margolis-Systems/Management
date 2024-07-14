@@ -11,7 +11,7 @@ sys.path.insert(1, 'C:\\Server')
 import configs
 
 mongo = configs.mongo
-all_orders = list(mongo.read_collection_list('orders', {'info.type': 'regular', 'info.status': {'$in': ['Production', 'InProduction', 'Processed', 'PartlyDelivered']}}))
+all_orders = list(mongo.read_collection_list('orders', {'info.type': 'regular', 'info.status': {'$nin': ['Delivered', 'PartlyDeliveredClosed']}}))
 # all_orders = list(mongo.read_collection_list('orders', {'info.type': {'$ne': 'integration'}}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
@@ -90,4 +90,26 @@ def check_double_print():
     print(to_check)
 
 
+def prod_weight_count_to_csv():
+    # חישוב כמות ברזל שיוצרה במפעל ולא סופקה - דוח שנוצר לעדי
+    qry = {'Start_ts': {'$gte': '2024-01-01', '$lte': '2024-30-06 23:59:59'}, 'machine_id': {'$nin': [17,18]}}
+    prod = mongo.read_collection_list('production_log', qry, db_name='test')
+    not_del = []
+    for order in all_orders:
+        not_del.append(order['order_id'])
+    total_w = 0
+    log = []
+    for p in prod:
+        if p['order_id'] in not_del:
+            log.append(p)
+            total_w += p['weight']
 
+    with open('c:\\Server\\logg.csv', 'w', newline='') as f:
+        header = list(log[0].keys())
+        header.extend(['maintenance'])
+        writer = csv.DictWriter(f, header)
+        writer.writerows(log)
+        # writer.writerows(log)
+        writer.writerow({'weight': total_w})
+
+check_double_print()
