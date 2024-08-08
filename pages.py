@@ -233,6 +233,7 @@ def scan():
     msg = ""
     status = ""
     quantity = ''
+    label_id = ''
     decode = {}
     user = main.session['username']
     user_data = users.get_user_data()
@@ -255,6 +256,13 @@ def scan():
         if 'weight' in decode:
             if decode['weight'].isnumeric():
                 decode['weight'] = int(decode['weight'])
+        if 'label_id' in decode:
+            scanned = main.mongo.read_collection_one('scanned_labels', {'id': decode['label_id']})
+            if scanned and main.session['username'] not in configs.oper_multi_scan:
+                order_id = ''
+                msg = '^Finished^'
+            else:
+                label_id = decode['label_id']
     elif 'order_id' in req_form.keys() and 'close' not in req_form.keys():
         order_id = req_form['order_id']
         job_id = req_form['job_id']
@@ -277,6 +285,7 @@ def scan():
             if int(rows[0]['quantity']) <= rows[0]['qnt_done']:
                 orders.update_order_status(status, order_id, job_id)
             production_log(req_form)
+            main.mongo.insert_collection_one('scanned_labels', {'id': req_form['label_id']})
         return main.redirect('/scan')
     if order_id:
         rows, info = orders.get_order_data(order_id)
@@ -333,7 +342,8 @@ def scan():
             msg = row['status']
             order_id = ''
     return main.render_template('/scan.html', order=order_id, job=job_id, msg=msg, status=status, machine=machine,
-                                dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']}, quantity=quantity)
+                                dictionary=get_dictionary(), user={'name': user, 'lang': user_data['lang']},
+                                quantity=quantity, label_id=label_id)
 
 
 def get_defaults():
@@ -445,7 +455,6 @@ def reports_page():
                 if k in ['date_from', 'date_to']:
                     query['Start_ts'] = {'$gte': req_form['date_from']+' 00:00:00', '$lte': req_form['date_to']+' 23:59:59'}
                     report_date = {'from': req_form['date_from'], 'to': req_form['date_to']}
-        # print(query)
         detailed = ['machine_id', 'machine_name', 'username', 'operator', 'weight', 'quantity', 'length', 'diam',
                     'Start_ts', 'Finished_ts', 'order_id', 'job_id', 'work_time']
         data_to_display = ['machine_id', 'machine_name', 'username', 'operator', 'lines', 'quantity', 'weight',
@@ -465,11 +474,16 @@ def reports_page():
             time0 = datetime.now() - datetime.now()
             doubles = {}
             total = {'weight': 0, 'quantity': 0, 'work_time': time0, 'lines': 0, 'ht_avg': 0}
+            peripheral = {'weight': 0, 'quantity': 0, 'lines': 0, 'operator': 'מלאי חצר'}
             double_total = {'weight': 0, 'quantity': 0, 'lines': 0}
             machine_total = {'weight': 0, 'quantity': 0,'machine_id': temp_report_data[0]['machine_id'], 'machine_name': temp_report_data[0]['machine_name'],
                      'username': temp_report_data[0]['username'], 'operator': temp_report_data[0]['operator'], 'work_time': time0, 'lines': 0}
             for i in range(len(temp_report_data)):
                 line = temp_report_data[i]
+                if line['info']['costumer_name'] in ['מלאי חצר']:
+                    peripheral['weight'] += float(line['weight']) / 1000
+                    peripheral['quantity'] += int(line['quantity'])
+                    peripheral['lines'] += 1
                 if machine_total['machine_id'] in machines_id:
                     machines_id.remove(machine_total['machine_id'])
                 #todo: fix!!!
@@ -530,6 +544,8 @@ def reports_page():
                 del total['work_time']
                 # del total['']
                 report_data.append(total)
+                peripheral['weight'] = round(peripheral['weight'], 2)
+                report_data.append(peripheral)
                 double_total['operator'] = 'סה"כ שורות משותפות'
                 double_total['weight'] = round(double_total['weight'], 2)
                 report_data.append(double_total.copy())
@@ -572,14 +588,20 @@ def reports_page():
                     if 'info.status' in query:
                         if '$in' in query['info.status']:
                             query['info.status']['$in'].append(req_form[k])
+                            if req_form[k] == 'Production':
+                                query['info.status']['$in'].append('InProduction')
                             continue
                     query['info.status'] = {'$in': [req_form[k]]}
+                    if req_form[k] == 'Production':
+                        query['info.status']['$in'].append('InProduction')
+                elif k == 'info.costumer_name':
+                    if req_form[k]:
+                        query[k] = {'$regex': req_form[k]}
                 else:
                     if req_form[k]:
                         query[k] = req_form[k]
         main.session['report_query'] = query
         main.session.modified = True
-        # print(query)
         all_orders = list(main.mongo.read_collection_list('orders', query))
         # todo: sort_by client_name -> move last loop inside
         orders_data = []
@@ -684,7 +706,6 @@ def delete_attachment():
 
 
 def production_log(form_data):
-    # print('form_data:\n', form_data, '\n')
     log = form_data.copy()
     job_data, info = orders.get_order_data(log['order_id'], log['job_id'])
     keys_to_log = ['weight', 'length', 'quantity', 'diam']
@@ -696,17 +717,14 @@ def production_log(form_data):
     for item in keys_to_log:
         if item in job_data[0] and item not in log:
             log[item] = job_data[0][item]
-        # else:
-        #     print('production log \nitem not found: ', item)
+    log['info.costumer_name'] = info['costumer_name']
     log.update(machine_data)
-    # log[form_data['status']+'_ts'] = functions.ts()
     log['Start_ts'] = functions.ts()
     log['Finished_ts'] = functions.ts()
-    # print('log:\n', log, '\n')
     if 'quantity' in log:
         if int(log['quantity']) < int(job_data[0]['quantity']):
 
             main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],
                                                      'machine_id': machine_data['machine_id']}, {}, '$set')
     main.mongo.update_one('production_log', {'order_id': log['order_id'], 'job_id': log['job_id'],'machine_id': machine_data['machine_id'], 'Start_ts': log['Start_ts']}, log, '$set', upsert=True)
-    # main.mongo.insert_collection_one('production_log', log)
+

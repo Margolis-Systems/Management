@@ -9,7 +9,7 @@
     <title>Tzomet ERP</title>
     <link href="/static/css/bootstrap.css" rel="stylesheet">
 </head>
-<body>
+<body style="text-align:center">
 <form name="change_status" id="change_status" method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
 <table class="table form-floating">
     <tr>
@@ -65,11 +65,21 @@
     </tr>
 {% endfor %}
 </table>
+<h4>ביטול שורה</h4>
 <form method=POST action="{{ url_for('change_order_status') }}" onsubmit="input_form.disabled = true; return true;">
     <input type="hidden" name="order_id" value="{{order_id}}">
     <input type="hidden" name="job_id" value="{{job_id}}">
     <input type="hidden" name="cancel_row" value="Canceled">
     <button class="w-100 btn btn-lg btn-danger" type="button" ondblclick="submit();refreshWindow();">בטל שורה</button>
+</form>
+<br>
+<h4>פיצול שורה</h4>
+<form method=POST action="{{ url_for('split_row') }}" onsubmit="input_form.disabled = true; return true;">
+    <input class="form-control" type="number" name="weight" placeholder="משקל שנשאר בשורה הזו" autocomplete="off">
+    <input class="form-control" type="number" name="quantity" placeholder="כמות" autocomplete="off" disabled>
+    <input type="hidden" name="order_id" value="{{order_id}}">
+    <input type="hidden" name="job_id" value="{{job_id}}">
+    <button class="w-100 btn btn-lg btn-warning" type="button" ondblclick="submit();refreshWindow();">פצל שורה</button>
 </form>
 <script src="\static\js\shapes.js" ></script>
 </body>

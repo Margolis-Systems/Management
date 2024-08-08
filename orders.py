@@ -37,7 +37,6 @@ def orders(_all=False):
             if main.session['user_config']['search']:
                 del query['info.status']
                 del query['info.costumer_id']
-                del query['info.date_created']
                 exclude = ['reverse']
                 for k in main.session['user_config']['search']:
                     if k == 'info.status':
@@ -53,6 +52,10 @@ def orders(_all=False):
                         rev = False
     # Read all orders data with Info, mean that it's not including order rows
     orders_data = main.mongo.read_collection_list('orders', query)
+    if not orders_data:
+        if 'info.date_created' in query:
+            del query['info.date_created']
+            orders_data = main.mongo.read_collection_list('orders', query)
     dictionary = pages.get_dictionary()
     dictionary['rebar$'] = 'רשת סטנדרט'
     orders_info = []
@@ -62,10 +65,14 @@ def orders(_all=False):
         row['order_id'] = order['order_id']
         row['status'] = 'order_status_' + row['status']
         finished_cntr = 0
+        finished_weight = 0
         for r in order['rows']:
             if r['status'] not in ['NEW', 'Processed', 'Production', 'InProduction']:
                 finished_cntr += 1
+                if 'weight' in r:
+                    finished_weight += float(r['weight'])
         row['finished'] = finished_cntr
+        row['finished_weight'] = round(finished_weight,2)
         # if 'linked_orders' in row:
         #     temp = row['linked_orders'].copy()
         #     row['linked_orders'] = ''
@@ -141,6 +148,7 @@ def new_order(client="", order_type=""):
                            'info.costumer_site': req_form['site'], 'info.type': req_form['order_type']}
                     main.mongo.update_one('orders', {'order_id': main.session['order_id'], 'info': {'$exists': True}},
                                           doc, '$set')
+                    main.mongo.update_one('orders', {'order_id': '{}R'.format(main.session['order_id'])}, {'info.comment': req_form['name']}, '$set')
                     return main.render_template('/close_window.html')
             if req_form['site'] in main.session['sites_list']:
                 main.session['sites_list'] = []
@@ -666,7 +674,7 @@ def peripheral_orders(add_orders, order_id, orig_job_id, indicator="R"):
     order_id += indicator
     rows, info = get_order_data(order_id)
     if not info:
-        info = {'costumer_name': 'צומת ברזל', 'costumer_id': '0', 'created_by': main.session['username'], 'date_created': ts(),
+        info = {'costumer_name': 'מלאי חצר', 'costumer_id': '114', 'created_by': main.session['username'], 'date_created': ts(),
                 'type': indicator, 'status': 'NEW', 'costumer_site': original_info['costumer_site'], 'comment': original_info['costumer_name']}
         rows = []
     for order in range(len(add_orders)):
@@ -728,6 +736,8 @@ def copy_order():
                         for key in list(row.keys()):
                             if 'qnt_done' in key:
                                 del row[key]
+                    if 'order_split' in row:
+                        del row['order_split']
                     # todo: if הזמנת ייצור
                 main.mongo.insert_collection_one('orders', order)
                 update_order_status('NEW', new_id, force=True)
@@ -747,6 +757,8 @@ def split_order():
         if len(splits) < 2:
             if 'split' in info:
                 del info['split']
+        else:
+            info['split'] = len(splits)
         for i in range(len(rows)):
             if len(splits) < 2:
                 if 'order_split' in rows[i]:
@@ -907,3 +919,36 @@ def cancel_row(order_id, job_id):
         else:
             total += int(order['rows'][r]['weight'])
     main.mongo.update_one('orders', {'order_id': order_id}, {'info.total_weight': str(total)}, '$set')
+
+
+def split_row():
+    req_form = dict(main.request.form)
+    if req_form:
+        order_id = req_form['order_id']
+        job_id = req_form['job_id']
+        order, info = get_order_data(order_id, job_id)
+        if order:
+            order = order[0]
+            if req_form['weight']:
+                if int(req_form['weight']) >= order['weight']:
+                    return '', 204
+                remain_weight = order['weight'] - float(req_form['weight'])
+                quantity = int(int(order['quantity'])*float(req_form['weight'])/order['weight'])
+                if quantity <= 0:
+                    return '', 204
+                quantity = [quantity, int(order['quantity'])-quantity]
+                # quantity, weight, qnt_done
+                # {'rows.$.qnt_done_'+main.session['username']: int(req_form['quantity'])}
+                row_update = {'rows.$.quantity': str(quantity[0]), 'rows.$.weight': int(req_form['weight']), 'info.rows': info['rows']+1}
+                for k in order:
+                    if 'qnt_done' in k:
+                        row_update['rows.$.'+k] = quantity[0]
+                        order[k] = quantity[1]
+                main.mongo.update_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
+                                    row_update, '$set')
+                order['job_id'] = str(info['rows']+1)
+                order['weight'] = remain_weight
+                order['quantity'] = quantity[1]
+                main.mongo.update_one('orders', {'order_id': order_id}, {'rows': order}, '$push')
+    return '', 204
+

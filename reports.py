@@ -139,6 +139,8 @@ class Images:
                         decode['weight'] = item[1:]
                     elif item[0] == 'd':
                         decode['diam'] = item[1:]
+                    elif item[0] == 'i':
+                        decode['label_id'] = item[1:]
             return decode
         return {}
 
@@ -173,7 +175,6 @@ class Images:
         draw.line([(15, 45), (15, 55)], fill="black", width=3)
         pos = 15
         for i in range(len(spiral)):
-            draw.line([(pos, 80 + ch_diam), (pos, 200 - ch_diam)], fill="black", width=3)
             if 'ch_diam_'+str(i) in data:
                 if data['ch_diam_'+str(i)]:
                     ch_diam = 20
@@ -257,6 +258,7 @@ class Images:
                     draw.line([(x, y), (x1, y1)], fill="black", width=4)
             elif data['bend'] == 'טבעת חיזוק':
                 draw.line([(20, 80), (20, 200)], fill="black", width=3)
+                draw.line([(pos, 80 + ch_diam), (pos, 200 - ch_diam)], fill="black", width=3)
         # else:
         for i in range(tot_bars):
             x = round(122.5 + 67.5 * math.sin(2*math.pi*i/tot_bars))
@@ -464,6 +466,9 @@ class Bartender:
                     n = table_rows * row_n + indx
                     i = table_cells * indx
                     row = rows[n]
+                    if 'status' in row:
+                        if row['status'] == 'Canceled':
+                            continue
                     if float(row['diam_x']) > 10:
                         row['description'] = row['description'].replace("רשת סטנדרט","מיוחדת לפי תוכנית כוורת מרותכת דקה")
                     template_row["tb" + str(1 + i)] = row['job_id']
@@ -510,6 +515,9 @@ class Bartender:
             el_buf = []
             _rows = []
             for row in rows:
+                if 'status' in row:
+                    if row['status'] == 'Canceled':
+                        continue
                 bends = []
                 if 'bend1' in row:
                     bends.append(int(row['bend1']))
@@ -584,10 +592,14 @@ class Bartender:
             rows = _rows.copy()
             index = 0
             for row in rows:
+                if 'status' in row:
+                    if row['status'] == 'Canceled':
+                        continue
                 if row['job_id'] == "0":
                     break
                 line = {}
                 kora = {'temp_select': 1, 'z15': 0, 'z16': 0, 'img_dir': 'kora', 'order_split': split}
+                kora.update(info)  # Added 22.7.24 fix, when kora first row, no suply date
                 try:
                     if 'unit_weight' not in row:
                         row['unit_weight'] = int(float(row['weight']) / int(row['quantity']))
@@ -660,6 +672,9 @@ class Bartender:
         summary_data = []
         if 'rebar' in info['type']:
             for row in rows:
+                if 'status' in row:
+                    if row['status'] == 'Canceled':
+                        continue
                 if row['job_id'] == "0":
                     break
                 line = {}

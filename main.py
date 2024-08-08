@@ -224,6 +224,13 @@ def copy_order():
     return orders.copy_order()
 
 
+@app.route('/split_row', methods=['GET', 'POST'])
+def split_row():
+    if users.validate_user() < 10:
+        return '', 204
+    return orders.split_row()
+
+
 @app.route('/remove_site', methods=['POST', 'GET'])
 def remove_site():
     return clients.remove_site()
