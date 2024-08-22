@@ -12,7 +12,7 @@ import configs
 
 mongo = configs.mongo
 # all_orders = list(mongo.read_collection_list('orders', {'info.type': 'regular', 'info.status': {'$nin': ['Delivered', 'PartlyDeliveredClosed']}}))
-all_orders = list(mongo.read_collection_list('orders', {'info.split_reason': {'$exists': True}}))
+all_orders = list(mongo.read_collection_list('orders', {}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
 
@@ -23,8 +23,12 @@ def find_not_updated():
         if cur_status in ['Delivered']:
             for r in order['rows']:
                 if r['status'] not in ['Delivered', 'Finished']:
-                    if order['order_id'] not in hist and int(order['order_id']) > 679:
+                    if not order['order_id'].isnumeric():
+                        continue
+                    if order['order_id'] not in hist and int(order['order_id']) > 5000:
                         hist.append(order['order_id'])
+                    else:
+                        continue
                     print(order['order_id'], r['job_id'])
                     print(cur_status, r['status'], '\n')
     print(hist)
@@ -124,15 +128,3 @@ def check_weights():
         elif len(order['rows']) > 0:
             print('check: ', order['order_id'])
 
-
-prod_logs = mongo.read_collection_list('production_log', {'info.costumer_name': {'$exists': False}})
-print(len(prod_logs))
-skip = []
-for log in prod_logs:
-    if log['order_id'] in skip:
-        continue
-    skip.append(log['order_id'])
-    print(log['order_id'])
-    order = mongo.read_collection_one('orders', {'order_id': log['order_id']})
-    if order:
-        mongo.update_many('production_log', {'order_id': log['order_id']}, {'info.costumer_name': order['info']['costumer_name']}, '$set')

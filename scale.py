@@ -1,3 +1,5 @@
+import time
+
 from functions import ts
 import main
 from datetime import datetime, timedelta
@@ -88,7 +90,7 @@ def main_page():
 def weights_page():
     products_list = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
     drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
-    # print(drv_l)
+    print(drv_l)
     info = {'doc_id': '', 'start': '', 'end': '', 'driver': '', 'vehicle': '', 'site': '', 'client': '', 'sensor': ''}
     sensor = ''
     if 'weights_data' not in main.session:
@@ -99,7 +101,7 @@ def weights_page():
         main.session.modified = True
     if main.request.values:
         cmd = dict(main.request.values)
-        # print(cmd)
+        print(cmd)
         if 'new' in cmd:
             del main.session['weights_data']
             main.session.modified = True
@@ -132,8 +134,19 @@ def weights_page():
                 r_val = int(cmd['val'])
             station_id, sensor = cmd['reset'].split(' : ')
             main.mongo.update_one('weights', {'station_id': station_id}, {'{}.tare'.format(sensor): r_val}, '$set', db_name='Scaling')
+        else:
+            keys = list(cmd.keys())
+            for k in keys:
+                if not cmd[k]:
+                    del cmd[k]
+            if 'driver' in cmd:
+                if cmd['driver'] in drv_l:
+                    cmd.update(drv_l[cmd['driver']])
+                    # tare_scale({'station_id': station_id, 'sensors': sensor})
+            main.mongo.update_one('documents', {'doc_id': main.session['weights_data']['doc_id']}, cmd, '$set', db_name='Scaling')
         return main.redirect('/weights')
     doc = main.mongo.read_collection_one('documents', {'doc_id': main.session['weights_data']['doc_id']}, db_name='Scaling')
+    print(doc)
     data = doc['lines']
     for item in doc:
         if item in info:
@@ -309,7 +322,7 @@ def calc_weight(req):
     return {'timestamp': ret['ts'], 'weight': ret['weight'], 'product': req['product']}
 
 
-def tare_scale(site_info):
+def tare_scale(site_info, tare_val=0):
     if 'crr' in site_info:
         weights = main.mongo.read_collection_one('weights', db_name='Scaling',
                                                  query={'CRR_ID': site_info['crr'], 'error': {'$exists': False}})
@@ -318,8 +331,9 @@ def tare_scale(site_info):
             tare[sensor+'.tare'] = weights[sensor]['actual']
         main.mongo.update_one('weights', {'CRR_ID': site_info['crr']}, tare, '$set', db_name='Scaling', upsert=True)
     elif 'station_id' in site_info:
-        tare_val = main.mongo.read_collection_one('weights', db_name='Scaling', query={'station_id': site_info['station_id'],
-                                                   'error': {'$exists': False}})[site_info['sensors']]['actual']
+        if not tare_val:
+            tare_val = main.mongo.read_collection_one('weights', db_name='Scaling', query={'station_id': site_info['station_id'],
+                                                       'error': {'$exists': False}})[site_info['sensors']]['actual']
         main.mongo.update_one('weights', {'station_id': site_info['station_id']},
                               {'{}.tare'.format(site_info['sensors']): tare_val}, '$set', db_name='Scaling')
 

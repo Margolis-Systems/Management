@@ -60,10 +60,6 @@
             <input class="form-control" name="gross_weight" id="gross_weight" value="ברוטו: {{gross_weight}}" readonly>
         </td>
     </tr>
-</table>
-</form>
-<form>
-<table class="table" style="padding-top:300px;">
     <tr>
         <th class="d-print-none">
             <select name="sensor" id="sensor" class="form-control" onchange="set_sensor()">
@@ -80,6 +76,10 @@
             תעודת שקילה מספר: {{info.doc_id}}
         </th>
     </tr>
+</table>
+</form>
+<table class="table" style="padding-top:300px;">
+    <form>
     <tr>
         <th>
             כניסה: {{info.start}}
@@ -123,6 +123,8 @@
         </th>
     </tr>
     {% for r in data %}
+    </form>
+    <form>
     <tr ondblclick="split_line({{loop.index0}}, {{r}})">
         <td style="text-align: center; vertical-align: middle;">
         {% if r.gross!='' %}
@@ -154,8 +156,8 @@
         <td></td>
         <td></td>
     </tr>
+    </form>
 </table>
-</form>
 <datalist id="product">
     {% for product in products_list %}
     <option>{{ product }}</option>

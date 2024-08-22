@@ -872,6 +872,7 @@ def delete_rows():
                 to_del.append(r)
             else:
                 total_weight += row['weight']
+                # print(str(int(row['job_id'])-len(to_del)))
                 row['job_id'] = str(int(row['job_id'])-len(to_del))
         to_del.reverse()
         for i in to_del:
@@ -932,23 +933,31 @@ def split_row():
             if req_form['weight']:
                 if int(req_form['weight']) >= order['weight']:
                     return '', 204
-                remain_weight = order['weight'] - float(req_form['weight'])
+                new_weight = [int(req_form['weight']), order['weight'] - float(req_form['weight'])]
                 quantity = int(int(order['quantity'])*float(req_form['weight'])/order['weight'])
                 if quantity <= 0:
                     return '', 204
                 quantity = [quantity, int(order['quantity'])-quantity]
-                # quantity, weight, qnt_done
-                # {'rows.$.qnt_done_'+main.session['username']: int(req_form['quantity'])}
-                row_update = {'rows.$.quantity': str(quantity[0]), 'rows.$.weight': int(req_form['weight']), 'info.rows': info['rows']+1}
-                for k in order:
-                    if 'qnt_done' in k:
-                        row_update['rows.$.'+k] = quantity[0]
-                        order[k] = quantity[1]
-                main.mongo.update_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
-                                    row_update, '$set')
-                order['job_id'] = str(info['rows']+1)
-                order['weight'] = remain_weight
-                order['quantity'] = quantity[1]
-                main.mongo.update_one('orders', {'order_id': order_id}, {'rows': order}, '$push')
+            elif req_form['quantity']:
+                if int(req_form['quantity']) >= order['quantity']:
+                    return '', 204
+                quantity = [int(req_form['quantity']), order['quantity'] - int(req_form['quantity'])]
+                new_weight = [order['weight'] * quantity[0] / order['quantity']]
+                if new_weight[0] <= 0:
+                    return '', 204
+                new_weight.append(order['weight'] - new_weight[0])
+            else:
+                return '', 204
+            row_update = {'rows.$.quantity': str(quantity[0]), 'rows.$.weight': new_weight[0], 'info.rows': info['rows']+1}
+            for k in order:
+                if 'qnt_done' in k:
+                    row_update['rows.$.'+k] = quantity[0]
+                    order[k] = quantity[1]
+            main.mongo.update_one('orders', {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
+                                row_update, '$set')
+            order['job_id'] = str(info['rows']+1)
+            order['weight'] = new_weight[1]
+            order['quantity'] = quantity[1]
+            main.mongo.update_one('orders', {'order_id': order_id}, {'rows': order}, '$push')
     return '', 204
 

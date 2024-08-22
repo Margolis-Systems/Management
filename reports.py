@@ -602,7 +602,10 @@ class Bartender:
                 kora.update(info)  # Added 22.7.24 fix, when kora first row, no suply date
                 try:
                     if 'unit_weight' not in row:
-                        row['unit_weight'] = int(float(row['weight']) / int(row['quantity']))
+                        if int(row['quantity']) <= 0:
+                            row['unit_weight'] = 0
+                        else:
+                            row['unit_weight'] = int(float(row['weight']) / int(row['quantity']))
                 except Exception as e:
                     print('issue with unit weight code\n', e)
                 for obj in row:
@@ -870,10 +873,8 @@ class Bartender:
         # Bar tender btw
         header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer.upper() + ' /R=3 /P /DD\n%END%\n'
-        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".txt"
+        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".tmp"
         # --------- for testing ----------
-        if main.session['username'] in ['baruch', 'Baruch']:
-            file_dir = file_dir.replace('.txt', '.tmp')
         testing = False
         if testing:
             file_dir = "H:\\NetCode\\margolisys\\1.txt"
@@ -897,6 +898,8 @@ class Bartender:
                         print_line += '~'
                 print_file.write(print_line + "\n")
             functions.log('bt_print', '{} : {}'.format(printer, print_data[0]['order_id']))
+        if main.session['username'] not in ['baruch', 'Baruch']:
+            os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
         return file_dir
 
 
@@ -910,6 +913,9 @@ class Print:
             order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
         for r in rows:
             if r['job_id'] in select_jobs or not select_jobs:
+                if 'status' in r:
+                    if r['status'] == 'Canceled':
+                        continue
                 if info['type'] == 'regular':
                     # order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
                     # for r in order['rows']:

@@ -464,7 +464,9 @@ def reports_page():
             query['machine_id'] = int(mid)
             data_to_display = detailed
         else:
-            machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}}))
+            query['machine_id'] = {'$nin': [17, 18]}
+            # machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$exists': True}}))
+            machine_list = list(main.mongo.read_collection_list('machines', {'machine_id': {'$nin': [17, 18]}}))
             for m in machine_list:
                 machines_id.append(m['machine_id'])
         temp_report_data = list(main.mongo.read_collection_list('production_log', query))

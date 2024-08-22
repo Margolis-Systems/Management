@@ -24,12 +24,16 @@
         .pagebreak { min-height: 1px; page-break-before: always; }
         @page {size: A4 portrait;}
         }
+        .noprint {
+              display: none !important;
+           }
     }
     table.print-friendly tr td, table.print-friendly tr th {
         page-break-inside: avoid;
         font-family: Arial;
     }
 </style>
+<button class="btn btn-success" type="button" onclick="this.style.display = 'none';window.print();this.style.display = 'block';">PRINT</button>
 <table width="95%" class="print-friendly" style="margin-left: auto;margin-right: auto;">
     <thead>
         <tr>
