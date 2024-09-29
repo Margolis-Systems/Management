@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
 <script src="\static\js\shapes.js" ></script>
-<script src="\static\js\weights.js" ></script>
 <style>
 @media print {
 @page {size: landscape;margin-top:150px;};
@@ -35,6 +34,7 @@
   top: 0;
   bottom: 0;
 }
+
 </style>
 <form>
 <table class="table table-striped d-print-none">
@@ -168,4 +168,86 @@
     <option>{{ drv }}</option>
     {% endfor %}
 </datalist>
+<script>
+const drv_l = {{drv_l|tojson|safe}};
+sensor = getCookie("sensor");
+if (sensor != ""){
+    document.getElementById("sensor").options.selectedIndex = sensor;
+
+}
+
+function set_sensor(){
+    var x = 0;
+    if (document.getElementById('sensor').value == "Barzel1 : גשר גדול"){
+        x = 1;
+    }
+    setCookie("sensor", x, 100)
+}
+
+function update_weights(){
+    var data
+    $.getJSON('/scaling_weight?new', function(data) {
+        $('#result').text(data);
+        let cur_sen = document.getElementById('sensor').value;
+        let cur_weight = data[cur_sen];
+        document.getElementById('gross_weight').value = "ברוטו: "+cur_weight.actual;
+        if (parseInt(cur_weight.actual) > 0){
+            document.getElementById('weight').value = "משקל נוכחי: "+(parseInt(cur_weight.actual)-parseInt(cur_weight.tare));
+            document.getElementById('tare').value = "טארה: "+cur_weight.tare;
+            document.getElementById('tare_btn').removeAttribute("disabled");
+            document.getElementById('add_btn').removeAttribute("disabled");
+        }
+    });
+}
+
+function update_product(l_num){
+    $.post("/weights",
+    {
+        product: document.getElementById('product'+l_num).value,
+        line_num: l_num
+    });
+    setInterval(window.location.reload(),1000);
+}
+
+function tare_weight(){
+    $.post("/weights",
+    {
+        tare: document.getElementById('sensor').value
+    },
+        window.location.reload());
+}
+
+function reset_tare(val=0){
+    res = {reset: document.getElementById('sensor').value}
+    if (val != 0){
+        res['val'] = val;
+    }
+    $.post("/weights", res, window.location.reload());
+}
+
+var intervalID = setInterval(update_weights,1000);
+
+function split_line(line_num,line) {
+  let text;
+  let split_weight = parseInt(prompt("הזן משקל לפיצול שורה:", ""));
+  if (!split_weight) {
+    window.alert("הזנה שגויה");
+  }
+  else {
+    line['split'] = line_num;
+    line['split_weight'] = split_weight;
+    $.post("/weights", line);
+    setInterval(window.location.reload(),1000);
+  }
+}
+
+function update_drv(){
+    let drv = document.getElementById('driver').value;
+    if (drv in drv_l){
+        document.getElementById('vehicle').value = drv_l[drv]['plate'];
+        reset_tare(drv_l[drv]['tare']);
+    }
+}
+</script>
+
 {% endblock %}

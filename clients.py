@@ -45,6 +45,9 @@ def edit_client(client_id=""):
                     main.mongo.update_one('costumers', {'id': client_id}, {item: main.request.form[item]}, '$set')
             return main.redirect('/edit_client?'+client_id)
     client_data = main.mongo.read_collection_one('costumers', {'id': client_id})
+    if client_data:
+        if 'comment' not in client_data:
+            client_data['comment'] = {}
     return main.render_template('edit_client.html', client_data=client_data)
 
 
@@ -94,14 +97,12 @@ def remove_site():
 
 def gen_client_list(client=""):
     sites_list = ""
-    client_list = []
     if client:
         client_data = main.mongo.read_collection_one('costumers', {'name': client})
         if client_data:
+            if 'comment' not in client_data:
+                client_data['comment'] = {}
             sites_list = client_data['sites']
-            client_list = client
-            return client_list, sites_list
-    costumers = main.mongo.read_collection_df('costumers')
-    if not costumers.empty:
-        client_list = costumers['name'].to_list()
+            return client_data, sites_list
+    client_list = main.mongo.read_collection_list('costumers', {})
     return client_list, sites_list

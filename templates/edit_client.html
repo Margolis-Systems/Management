@@ -24,7 +24,13 @@
         <td><input type="text" name="contact_name" value="{{client_data['contact_name']}}" class="form-control"></td>
         <td><input type="text" name="contact_phone" value="{{client_data['contact_phone']}}" class="form-control"></td>
         <td><input type="email" name="email" value="{{client_data['email']}}" class="form-control"></td>
-    </tr>
+    </tr><!--
+    <tr>
+        <td colspan="3">
+            <label>הערות לקוח</label>
+            <textarea name="comment" class="form-control">{{client_data['comment']}}</textarea>
+        </td>
+    </tr>-->
     <tr>
         <td><button onclick="location.href='\clients'" type="button" class="btn btn-primary btn-block">סגור</button></td>
         <td><button type="submit" class="btn btn-primary btn-block">עדכן</button></td>
@@ -45,6 +51,7 @@
         <td>
             <input name="site_{{loop.index0}}" value="{{site}}" class="form-control">
         </td>
+        <td><input name="comment.{{site}}" value="{{client_data.comment[site]}}" placeholder="הוסף הערה"></td>
         <td>
             <button ondblclick="location.href='/remove_site?client_id={{client_data['id']}}&site={{site}}'" type="button">מחק</button>
         </td>

@@ -425,8 +425,8 @@ def get_order_data(order_id, job_id="", split="", reverse=True):
     return order_data.copy(), info
 
 
-def new_order_id():
-    new_id = "1"
+def _new_order_id():
+    new_id = '1'
     orders_df = main.mongo.read_collection_df('orders',
                                               query={'info': {'$exists': True}, 'info.type': {'$ne': 'integration'}})
     if orders_df.empty:
@@ -435,8 +435,14 @@ def new_order_id():
     for _id in order_ids_list:
         if _id.isdigit():
             if int(_id) >= int(new_id):
-                new_id = str(int(_id) + 1)
-    return new_id
+                new_id = int(_id) + 1
+    return str(new_id)
+
+
+def new_order_id():
+    main.mongo.update_one('data_lists', {'name': 'ids'}, {'order_id': 1}, '$inc')
+    new_id = main.mongo.read_collection_one('data_lists', {'name': 'ids'})['order_id']
+    return str(new_id)
 
 
 def edit_order_data():
@@ -915,8 +921,8 @@ def cancel_row(order_id, job_id):
     for r in range(len(order['rows'])):
         if order['rows'][r]['job_id'] == job_id:
             main.mongo.update_one('orders', {'order_id': order_id}, {'rows.{}.weight'.format(str(r)): 0}, '$set')
-            main.mongo.update_one('orders', {'order_id': order_id}, {'rows.{}.status'.format(str(r)): 'Canceled'}, '$set')
             main.mongo.update_one('orders', {'order_id': order_id}, {'rows.{}.length'.format(str(r)): '0'}, '$set')
+            update_order_status('canceled', order_id, job_id)
         else:
             total += int(order['rows'][r]['weight'])
     main.mongo.update_one('orders', {'order_id': order_id}, {'info.total_weight': str(total)}, '$set')

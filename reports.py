@@ -97,6 +97,16 @@ class Images:
                 text[1] = 'R = {}'.format(text[1])
                 text[2] = 'PtP = {}'.format(text[2])
                 positions = [(15,10),(100,10),(185,10),(50,90)]
+            elif shape == '400': # todo:
+                draw.line(positions, fill="black", width=3)
+                draw.arc([(15, 30), (185, 50)], 170, 360, fill='black', width=3)
+                draw.line(positions, fill="black", width=3)
+                positions = []
+            elif shape == '401':
+                draw.line(positions, fill="black", width=3)
+                draw.arc([(15, 30), (185, 50)], 170, 360, fill='black', width=3)
+                draw.line(positions, fill="black", width=3)
+                positions = []
             else:
                 draw.line(positions, fill="black", width=3)
         if enable_text_plot:
@@ -467,7 +477,7 @@ class Bartender:
                     i = table_cells * indx
                     row = rows[n]
                     if 'status' in row:
-                        if row['status'] == 'Canceled':
+                        if row['status'] in ['Canceled', 'canceled']:
                             continue
                     if float(row['diam_x']) > 10:
                         row['description'] = row['description'].replace("רשת סטנדרט","מיוחדת לפי תוכנית כוורת מרותכת דקה")
@@ -516,7 +526,7 @@ class Bartender:
             _rows = []
             for row in rows:
                 if 'status' in row:
-                    if row['status'] == 'Canceled':
+                    if row['status'] in ['Canceled', 'canceled']:
                         continue
                 bends = []
                 if 'bend1' in row:
@@ -532,7 +542,7 @@ class Bartender:
                         row['bend_img_dir'] = Images.create_shape_plot('404', bends)
                     row['bend_img_dir'] = row['bend_img_dir'].split('\\')[-1]
                 if 'status' in row:
-                    if row['status'] == 'Canceled':
+                    if row['status'] in ['Canceled', 'canceled']:
                         continue
                     elif print_type == 'label' and row['status'] not in ['NEW', 'Processed', 'Production', 'InProduction']:
                         continue
@@ -593,7 +603,7 @@ class Bartender:
             index = 0
             for row in rows:
                 if 'status' in row:
-                    if row['status'] == 'Canceled':
+                    if row['status'] in ['Canceled', 'canceled']:
                         continue
                 if row['job_id'] == "0":
                     break
@@ -676,7 +686,7 @@ class Bartender:
         if 'rebar' in info['type']:
             for row in rows:
                 if 'status' in row:
-                    if row['status'] == 'Canceled':
+                    if row['status'] in ['Canceled', 'canceled']:
                         continue
                 if row['job_id'] == "0":
                     break
@@ -885,6 +895,7 @@ class Bartender:
             if not testing:
                 print_file.write(header)
             for line in print_data:
+                # todo: if weight == 0 or status canceled
                 line['company_name'] = configs.company_name
                 print_line = ""
                 if btw_file in configs.print_dict.keys():
@@ -893,6 +904,7 @@ class Bartender:
                     bt_dict = configs.print_dict["default"]
                 for item in bt_dict:
                     if item in line.keys():
+                        # todo: remove new line chars
                         print_line += str(line[item]) + '~'
                     else:
                         print_line += '~'
@@ -914,7 +926,7 @@ class Print:
         for r in rows:
             if r['job_id'] in select_jobs or not select_jobs:
                 if 'status' in r:
-                    if r['status'] == 'Canceled':
+                    if r['status'] in ['Canceled', 'canceled']:
                         continue
                 if info['type'] == 'regular':
                     # order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])

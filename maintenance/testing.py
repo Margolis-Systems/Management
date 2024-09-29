@@ -124,7 +124,7 @@ def check_weights():
             for r in order['rows']:
                 tot += r['weight']
             if not float(order['info']['total_weight'])-len(order['rows']) <= tot <= float(order['info']['total_weight']) +len(order['rows']):
-                print('ID: {}, TOTAL: {}, INFO: {}'.format(order['order_id'], order['info']['total_weight'], tot))
+                print('ID: {}, TOTAL: {}, INFO: {}'.format(order['order_id'], tot, order['info']['total_weight']))
         elif len(order['rows']) > 0:
             print('check: ', order['order_id'])
 

@@ -55,7 +55,7 @@
         <td>
             <label>טבעות</label>
             <input type="number" class="form-control" name="rings" id="rings" placeholder="{{dictionary['rings']+' '+dictionary['quantity']}}" value="{{defaults['rings']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+14}})' required>
-            <input type="number" class="form-control" name="rings_diam" id="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+15}})' required>
+            <input type="number" class="form-control" pattern="5.5|6|6.5|8|10|12|14|16|18|20|22|24|25|28|32|36" name="rings_diam" id="rings_diam" placeholder="{{dictionary['rings_diam']}}" value="{{defaults['rings_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+15}})' required>
         </td>
         <td width="80"></td>
         <td>

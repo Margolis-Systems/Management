@@ -28,16 +28,16 @@
                 <input list="client_list" class="form-control" name="name" placeholder="select client" autofocus="autofocus" required>
                     <datalist id="client_list">
                     {% for item in clients %}
-                        <option value="{{ item }}">
+                        <option value="{{ item.name }}" comment="{{item.comment}}">
                     {% endfor %}
                     </datalist>
                 {% else %}
-                <label>בחר אתר לקוח / לקוח נבחר: {{clients}}</label><br>
-                <input type="hidden" name="name" value="{{clients}}">
-                <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" required>
+                <label>בחר אתר לקוח / לקוח נבחר: {{clients.name}}</label><br>
+                <input type="hidden" name="name" value="{{clients.name}}">
+                <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" onchange="comment_alert(this.value)" required>
                     <datalist id="sites_list">
                     {% for item in site %}
-                        <option value="{{ item }}">{{ item }}</option>
+                        <option value="{{ item }}" id="{{ item }}" comment="{{clients.comment[item]}}">{{ item }}</option>
                     {% endfor %}
                     </datalist>
                 {% endif %}
@@ -46,4 +46,13 @@
         </td>
     </tr>
 </table>
+<script>
+    function comment_alert(client){
+        opt = document.getElementById(client);
+        comment = opt.getAttribute('comment');
+        if (comment){
+            window.alert(comment);
+        }
+    }
+</script>
 {% endblock %}

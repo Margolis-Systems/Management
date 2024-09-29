@@ -9,6 +9,15 @@
 {% if shape_data.edges == 0 %}
 <body onload="closeWindow({{shape_data.shape}}, {{shape_data.tot_len}}, '{{shape_data.shape_data}}')">
 {% else %}
+<script>
+    function valid_shape_input(index){
+        console.log(index);
+        all_inpts = document.getElementsByTagName('input');
+        for (tag in all_inpts){
+            console.log(all_inpts[tag])
+        }
+    }
+</script>
 <table class="table table-striped" dir="rtl" align="center">
     <form id="input_form" method=POST action="{{ url_for('shape_editor') }}" onsubmit="input_form.disabled = true; return true;"  onkeydown="return event.key != 'Enter';">
         <tr>
@@ -18,7 +27,7 @@
             </td>
             <td>
             {% for edge in shape_data.edges %}
-                <input type="number" class="amount" name="{{edge}}" id="{{edge}}" value="{{defaults.edges[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}})' placeholder="{{edge}}" required autofocus>
+                <input type="number" class="amount" name="{{edge}}" id="{{edge}}" value="{{defaults.edges[loop.index0]}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{loop.index0}});' onchange="valid_shape_input({{edge}});" placeholder="{{edge}}" required autofocus>
             {% endfor %}
             </td>
             <td>
@@ -43,7 +52,7 @@
         <td><input type="number" name="search" id="search"><button type="button" onclick="search()">חיפוש</button><button type="button" onclick="window.location.reload();">איפוס</button> </td>
     </tr>
     {% for shape in shapes %}
-    <tr ondblclick="location.href='/shape_editor?{{shape}}'" class="edges_{{ shapes[shape].edges }}">
+    <tr ondblclick="location.href='/shape_editor?shape={{shape}}'" class="edges_{{ shapes[shape].edges }}">
         <td width="30%"><img src="\static\images\shapes\{{shape}}.png" title="{{shape}}"/></td>
         <td width="60%" style="text-align:center;">{{shape}}: <br> {{ shapes[shape].description }}</td>
     </tr>
@@ -69,6 +78,7 @@
 {% endif %}
 <script src="\static\js\shapes.js"></script>
 <script>
+diam_limits = JSON.parse('{{diam_limits|tojson}}');
 datatodisp = JSON.parse('{{datatodisp|tojson}}');
 dtd_order = {{dtd_order|safe}}
 </script>

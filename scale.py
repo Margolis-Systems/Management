@@ -1,3 +1,4 @@
+import json
 import time
 
 from functions import ts
@@ -390,3 +391,12 @@ def delete_report_row(index=-1):
         del doc['lines'][index]
         main.mongo.update_one('documents', {'doc_id': doc_id}, doc, '$set', db_name='Scaling')
     return '', 204
+
+
+def open_com():
+    data = {}
+
+    def resp():
+        while True:
+            yield f"id: 1\ndata: {json.dumps(data)}\nevent: weight\n\n"
+    return main.Response(resp(), mimetype='text/event-stream')

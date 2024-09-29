@@ -82,6 +82,7 @@ def shape_editor():
     shapes = {}
     datatodisp = {}
     dtd_order = []
+    diam_limits = {}
     defaults = {'edges': [], 'ang': []}
     if main.request.form:
         shape_data = {'edges': 0, 'shape': main.request.form['shape_data'], 'tot_len': 0, 'shape_data': main.request.form['1']}
@@ -100,21 +101,23 @@ def shape_editor():
                 if item > 1:
                     shape_data['shape_data'] += ',' + main.request.form[str(item)]
     else:
-        req_vals = list(main.request.values)
-        if len(req_vals) > 0:
-            if req_vals[0] in main.configs.shapes:
-                shape_conf = main.configs.shapes[req_vals[0]]
+        req_vals = dict(main.request.values)
+        if 'shape' in req_vals:
+            if req_vals['shape'] in main.configs.shapes:
+                shape_conf = main.configs.shapes[req_vals['shape']]
                 if 'ang' in shape_conf:
                     ang = shape_conf['ang']
                 else:
                     ang = []
-                shape_data = {'shape': req_vals[0], 'edges': list(range(1, shape_conf['edges'] + 1)),
-                              'img_plot': "/static/images/shapes/" + req_vals[0] + ".png",
+                shape_data = {'shape': req_vals['shape'], 'edges': list(range(1, shape_conf['edges'] + 1)),
+                              'img_plot': "/static/images/shapes/" + req_vals['shape'] + ".png",
                               'angels': ang}
                 defaults['ang'] = ang
                 dtd_order = list(map(str, shape_data['edges']))
                 for item in dtd_order:
                     datatodisp[item] = 1
+                if 'diam' in req_vals:
+                    diam_limits = {req_vals['diam']: 'test'}
             else:
                 shape_data = {'edges': 0}
         else:
@@ -122,6 +125,7 @@ def shape_editor():
                 if os.path.exists("static\\images\\shapes\\" + shape + ".png"):  # C:\\server\\
                     shapes[shape] = {'description': main.configs.shapes[shape]['description'],
                                      'edges': main.configs.shapes[shape]['edges']}
+
     if 'job_id' in main.session:
         if main.session['job_id']:
             job_data, info = orders.get_order_data(main.session['order_id'], main.session['job_id'])
@@ -130,7 +134,7 @@ def shape_editor():
                 if 'shape_data' in job_data:
                     defaults = {'edges': job_data['shape_data'], 'ang': job_data['shape_ang']}
     return main.render_template('/shape_editor.html', shapes=shapes, shape_data=shape_data, defaults=defaults,
-                                datatodisp=datatodisp, dtd_order=dtd_order)
+                                datatodisp=datatodisp, dtd_order=dtd_order, diam_limits=diam_limits)
 
 
 def choose_printer():

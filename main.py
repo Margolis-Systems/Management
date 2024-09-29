@@ -1,7 +1,7 @@
 # Server
 import sys
 
-from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory, make_response
+from flask import Flask, render_template, url_for, request, session, redirect, flash, send_from_directory, make_response, Response
 from waitress import serve
 from werkzeug.utils import secure_filename
 import os

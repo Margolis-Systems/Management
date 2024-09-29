@@ -18,15 +18,15 @@
         שם לקוח<br>
         <select class="form-control" id="client" name="client" onchange="update_sites();" autofocus="autofocus" required>
             {% for i in client_list %}
-            {% if i==client %}
-            <option value="{{i}}" selected>{{i}}</option>
+            {% if i.name==client.name %}
+            <option value="{{i.name}}" selected>{{i.name}}</option>
             {% else %}
-            <option value="{{i}}">{{i}}</option>
+            <option value="{{i.name}}">{{i.name}}</option>
             {% endif %}
             {% endfor %}
         </select>
         אתר לקוח<br>
-        <select class="form-control" id="site" name="site" autofocus="autofocus" required>
+        <select class="form-control" id="site" name="site" autofocus="autofocus" onchange="comment_alert(this.value)" required>
             {% for s in sites_list %}
             {% if site == s %}
             <option value="{{s}}" selected>{{s}}</option>
@@ -61,9 +61,23 @@
             {
 	        var option = document.createElement("option");
             option.text = data.sites[i];
+            option.id = data.sites[i];
+            comment = "";
+            if (data.clients.comment[data.sites[i]])
+                comment = data.clients.comment[data.sites[i]];
+            option.setAttribute('comment', comment);
             site_select.add(option);
             }
+            comment_alert(data.sites[0]);
         });
+    }
+
+    function comment_alert(client){
+        opt = document.getElementById(client);
+        comment = opt.getAttribute('comment');
+        if (comment){
+            window.alert(comment);
+        }
     }
 </script>
 </body>
