@@ -277,6 +277,8 @@ def scan():
                                   {'order_id': order_id, 'rows': {"$elemMatch": {"job_id": {"$eq": job_id}}}},
                                   {'rows.$.qnt_done_'+main.session['username']: int(req_form['quantity'])}, '$inc')
             job, info = orders.get_order_data(order_id, job_id)
+            if not job:
+                break
             qnt_done = 0
             for k in job[0]:
                 if 'qnt_done_' in k:

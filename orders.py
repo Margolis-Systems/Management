@@ -215,8 +215,10 @@ def new_order_row():
         new_row['y_pitch'] = []
     for item in req_form_data:
         req_form_data[item] = req_form_data[item].strip()
-        if req_form_data[item].isnumeric():
-            req_form_data[item] = str(int(req_form_data[item]))
+        if item in configs.html_no_float and '.' in req_form_data[item]:
+            req_form_data[item] = str(int(float(req_form_data[item])))
+        # if req_form_data[item].isnumeric():
+        #     req_form_data[item] = str(int(req_form_data[item]))
         if req_form_data[item] not in ['---', ''] and '_hid' not in item:
             if '_length' in item:
                 new_row[item[:item.find('h') + 1]].append(req_form_data[item])
