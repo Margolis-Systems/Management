@@ -38,9 +38,9 @@ def edit_client(client_id=""):
                 if item == 'new_site':
                     new_site = main.request.form[item].strip()
                     if new_site and new_site not in client_data['sites']:
-                        main.mongo.update_one('costumers', {'id': client_id}, {'sites': new_site}, '$push')  # , upsert=True)
+                        main.mongo.update_one('costumers', {'id': client_id}, {'sites': {'name': new_site, 'id': gen_site_id(), 'comment': ''}}, '$push')
                 elif 'site_' in item:
-                    main.mongo.update_one('costumers', {'id': client_id}, {'sites.{}'.format(item[5:]): main.request.form[item]}, '$set')
+                    main.mongo.update_one('costumers', {'id': client_id, 'sites': {'$elemMatch': {'id': item[5:]}}}, {'sites.$.name': main.request.form[item]}, '$set')
                 elif item not in ['return_to', 'order_type', 'id']:
                     main.mongo.update_one('costumers', {'id': client_id}, {item: main.request.form[item]}, '$set')
             return main.redirect('/edit_client?'+client_id)
@@ -52,14 +52,25 @@ def edit_client(client_id=""):
 
 
 def gen_client_id():
-    new_client_id = "1"
-    costumers_df = main.mongo.read_collection_df('costumers')
-    if costumers_df.empty:
-        return new_client_id
-    costumers_df['id'] = costumers_df['id'].astype('int')
-    costumers_df.sort_values(by='id', inplace=True)
-    last_id = costumers_df.iloc[-1]['id']
-    return str(last_id + 1)
+    ids = main.mongo.read_collection_one('data_lists', {'name': 'ids'})
+    if not ids:
+        return '1'
+    if 'client_id' not in ids:
+        main.mongo.update_one('data_lists', {'name': 'ids'}, {'client_id': 1}, '$set')
+        return '1'
+    main.mongo.update_one('data_lists', {'name': 'ids'}, {'client_id': 1}, '$inc')
+    return str(ids['client_id'] + 1)
+
+
+def gen_site_id():
+    ids = main.mongo.read_collection_one('data_lists', {'name': 'ids'})
+    if not ids:
+        return '1'
+    if 'site_id' not in ids:
+        main.mongo.update_one('data_lists', {'name': 'ids'}, {'site_id': 1}, '$set')
+        return '1'
+    main.mongo.update_one('data_lists', {'name': 'ids'}, {'site_id': 1}, '$inc')
+    return str(ids['site_id'] + 1)
 
 
 def add_new_client(client_name):

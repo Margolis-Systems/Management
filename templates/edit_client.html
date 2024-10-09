@@ -49,9 +49,9 @@
     {% for site in client_data['sites'] %}
     <tr>
         <td>
-            <input name="site_{{loop.index0}}" value="{{site}}" class="form-control">
+            <input name="site_{{site.id}}" value="{{site.name}}" class="form-control">
         </td>
-        <td><input name="comment.{{site}}" value="{{client_data.comment[site]}}" placeholder="הוסף הערה"></td>
+        <td><input name="comment.{{site.id}}" value="{{client_data.comment[site.id|string]}}" placeholder="הוסף הערה"></td>
         <td>
             <button ondblclick="location.href='/remove_site?client_id={{client_data['id']}}&site={{site}}'" type="button">מחק</button>
         </td>

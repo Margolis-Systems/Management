@@ -185,7 +185,10 @@ def new_order(client="", order_type=""):
     if user_group > 50:
         permission = True
     if sites_list:
-        main.session['sites_list'] = sites_list
+        sites = []
+        for s in sites_list:
+            sites.append(s['name'])
+        main.session['sites_list'] = sites
     return main.render_template('/pick_client.html', clients=client_list, site=sites_list, order_type=order_type,
                                 permission=permission, dictionary=pages.get_dictionary(), types=types, order_id=order_id)
 
@@ -760,22 +763,22 @@ def split_order():
         req_form = dict(main.request.form)
         splits = []
         for i in req_form:
-            if req_form[i] not in splits:
-                splits.append(i)
+            if req_form[i] not in splits and req_form[i].isnumeric():
+                splits.append(req_form[i])
         if len(splits) < 2:
             if 'split' in info:
                 del info['split']
         else:
             info['split'] = len(splits)
         for i in range(len(rows)):
-            if len(splits) < 2:
-                if 'order_split' in rows[i]:
-                    del rows[i]['order_split']
-            elif rows[i]['job_id'] in req_form:
+            if rows[i]['job_id'] in req_form:
                 if req_form[rows[i]['job_id']]:
                     rows[i]['order_split'] = req_form[rows[i]['job_id']]
                 else:
                     rows[i]['order_split'] = 1
+            elif len(splits) < 2:
+                if 'order_split' in rows[i]:
+                    del rows[i]['order_split']
         if 'reason' in main.request.form:
             functions.log('split_order', main.request.form['reason'])
             info['split_reason'] = main.request.form['reason']
@@ -880,7 +883,6 @@ def delete_rows():
                 to_del.append(r)
             else:
                 total_weight += row['weight']
-                # print(str(int(row['job_id'])-len(to_del)))
                 row['job_id'] = str(int(row['job_id'])-len(to_del))
         to_del.reverse()
         for i in to_del:

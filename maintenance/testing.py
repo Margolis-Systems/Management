@@ -11,7 +11,7 @@ sys.path.insert(1, 'C:\\Server')
 import configs
 
 mongo = configs.mongo
-# all_orders = list(mongo.read_collection_list('orders', {'info.type': 'regular', 'info.status': {'$nin': ['Delivered', 'PartlyDeliveredClosed']}}))
+# all_orders = list(mongo.read_collection_list('orders', {'order_id': '9341'}))
 all_orders = list(mongo.read_collection_list('orders', {}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
@@ -117,14 +117,20 @@ def prod_weight_count_to_csv():
         writer.writerow({'weight': total_w})
 
 
-def check_weights():
+def check_weights(fix=False):
     for order in all_orders:
         if 'total_weight' in order['info']:
             tot = 0
             for r in order['rows']:
                 tot += r['weight']
-            if not float(order['info']['total_weight'])-len(order['rows']) <= tot <= float(order['info']['total_weight']) +len(order['rows']):
+            if not float(order['info']['total_weight'])-1 <= tot <= float(order['info']['total_weight']) +1:
+            # if not float(order['info']['total_weight']) == tot:
                 print('ID: {}, TOTAL: {}, INFO: {}'.format(order['order_id'], tot, order['info']['total_weight']))
+                if fix:
+                    mongo.update_one('orders', {'order_id': order['order_id']}, {'info.total_weight': round(tot, 2)}, '$set')
         elif len(order['rows']) > 0:
             print('check: ', order['order_id'])
+
+
+
 

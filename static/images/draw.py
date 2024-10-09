@@ -9,7 +9,7 @@ from configs import mongo
 config = {'size': (200, 60), 'text_en': True, 'update_mongo': False, 'update_file': True}
 
 
-def shape_plot(positions, file_name, text=[], enable_text_plot=True):
+def shape_plot(positions, file_name, text=[], enable_text_plot=True, descript=''):
     if not text:
         text = list(range(1, len(positions)))
     shape = file_name.split('\\')[-1].replace('.png', '')
@@ -40,6 +40,8 @@ def shape_plot(positions, file_name, text=[], enable_text_plot=True):
         im.save(file_name)
         shapes[shape] = {'description': '---', 'edges': edges, 'positions': text_pos,
                          'draw_positions': positions, 'ang': ang}
+        if descript:
+            shapes[shape]['description'] = descript
         print('successfully saved')
         # print(list(shapes.keys()))
         with open('C:\\Server\\lists\\shapes.json', 'w', encoding='utf-8') as shapes_json:
@@ -88,10 +90,11 @@ if __name__ == '__main__':
     # INPUT
     #[  185, 20  ],  [ 60,  20 ], [60, 55 ],[ 140, 55 ], [ 140, 5 ],[15, 5]]
     # print(next_available_key())
+    # inp = input()
     # pos =[(50,5),(50,50),(15,50),(15,15),(120,15),(145,50),(185,50)]
-    pos =[[15,5],[70,5],[90,55],[165,55],[185,5]]
+    pos = []
     for i in range(len(pos)):
         pos[i] = (pos[i][0],pos[i][1])
     # [(40,5),(20,5), (20,50), (180,50)]
-    name = '53'
-    shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png')
+    name = '64'
+    shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png', descript='')

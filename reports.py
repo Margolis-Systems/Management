@@ -8,6 +8,7 @@ import configs
 
 import math
 import os
+import shutil
 from collections import OrderedDict
 from datetime import datetime
 from mailmerge import MailMerge
@@ -895,7 +896,6 @@ class Bartender:
             if not testing:
                 print_file.write(header)
             for line in print_data:
-                # todo: if weight == 0 or status canceled
                 line['company_name'] = configs.company_name
                 print_line = ""
                 if btw_file in configs.print_dict.keys():
@@ -904,14 +904,14 @@ class Bartender:
                     bt_dict = configs.print_dict["default"]
                 for item in bt_dict:
                     if item in line.keys():
-                        # todo: remove new line chars
                         print_line += str(line[item]) + '~'
                     else:
                         print_line += '~'
                 print_file.write(print_line + "\n")
             functions.log('bt_print', '{} : {}'.format(printer, print_data[0]['order_id']))
         if main.session['username'] not in ['baruch', 'Baruch']:
-            os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
+            shutil.copyfile(file_dir, file_dir.replace('.tmp', '.txt'))
+            # os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
         return file_dir
 
 
@@ -929,8 +929,6 @@ class Print:
                     if r['status'] in ['Canceled', 'canceled']:
                         continue
                 if info['type'] == 'regular':
-                    # order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
-                    # for r in order['rows']:
                     if ((len(r['shape_data']) > 2) and (r['weight'] / int(r['quantity']) <= 2) and r['shape'] not in ['332', '49', '59']) or r['shape'] in configs.circle:
                         r['circle'] = 'כן'
                     r['img_dir'] = Images.create_shape_plot(r['shape'], r['shape_data'], html=True)
@@ -968,7 +966,7 @@ class Print:
     @staticmethod
     def gen_summary_data(rows, disable_weight, costumer_id):
         diams = {}
-        spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ',
+        spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'ספסלים', 'מדרגה', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ',
                      'תוספת_ברזל_עגול_מעל_14_ממ',
                      'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
         special_sum = {}
@@ -1012,6 +1010,12 @@ class Print:
                 if 'ספירלים' not in special_sum.keys():
                     special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                 special_sum['ספירלים']['qnt'] += quantity
+                if not disable_weight:
+                    special_sum['ספירלים']['weight'] += row['weight']
+            if row['shape'] in ['55']:
+                if 'מדרגה' not in special_sum.keys():
+                    special_sum['מדרגה'] = {'qnt': 0, 'weight': 0}
+                special_sum['מדרגה']['qnt'] += quantity
                 if not disable_weight:
                     special_sum['ספירלים']['weight'] += row['weight']
             if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:

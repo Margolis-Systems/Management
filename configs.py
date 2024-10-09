@@ -14,7 +14,7 @@ shapes = {}
 
 
 def read_shapes():
-    with open(main_dir+'lists\\shapes.json') as shapes_file:
+    with open(main_dir+'lists\\shapes.json', encoding="utf-8") as shapes_file:
         shapes_json = json.load(shapes_file)
         global shapes
         shapes = dict(OrderedDict(sorted(shapes_json.items(), key=lambda t: int(t[0]))))

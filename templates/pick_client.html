@@ -35,9 +35,9 @@
                 <label>בחר אתר לקוח / לקוח נבחר: {{clients.name}}</label><br>
                 <input type="hidden" name="name" value="{{clients.name}}">
                 <input list="sites_list" class="form-control" name="site" placeholder="select site" autofocus="autofocus" autocomplete="off" onchange="comment_alert(this.value)" required>
-                    <datalist id="sites_list">
+                <datalist id="sites_list">
                     {% for item in site %}
-                        <option value="{{ item }}" id="{{ item }}" comment="{{clients.comment[item]}}">{{ item }}</option>
+                        <option value="{{ item.name }}" id="{{ item.name }}" comment="{{clients.comment[item.id|string]}}">{{ item.name }}</option>
                     {% endfor %}
                     </datalist>
                 {% endif %}
