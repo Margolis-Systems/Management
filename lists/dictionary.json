@@ -128,7 +128,8 @@
       "bend_len": "אורך כיפוף",
       "bend": "כיפוף",
       "pipe_weight": "משקל צינור",
-      "last_status_update": "עדכון סטטוס אחרון"
+      "last_status_update": "עדכון סטטוס אחרון",
+      "work_days": "ימי עבודה"
     },
     "ru": {
       "costumer_id": "номер клиента",

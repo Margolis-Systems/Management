@@ -3,7 +3,7 @@
 <style>
 @media print {
   table {
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 .multiselect {
@@ -50,6 +50,7 @@ td{
         <td width="100"><button onclick="location.href='/reports?report=orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות</button></td>
         <td width="100"><button onclick="location.href='/reports?report=status'" type="button" class="btn btn-primary btn-block">דוח סטטוס הודפס</button></td>
         <td width="100"><button onclick="location.href='/reports?report=open_orders'" type="button" class="btn btn-primary btn-block">דוח הזמנות פתוחות</button></td>
+        <td width="100"><button onclick="location.href='/reports?report=month_prod'" type="button" class="btn btn-warning btn-block">דוח ייצור רמי</button></td>
         <td width="100"></td>
         <td>
         {% if report_data %}<button onclick="window.print();" type="button" class="btn btn-success btn-block d-print-none">הדפס</button>
@@ -70,12 +71,29 @@ td{
             <label>עד יום
             <input type="date" name="date_to" value="{{date.to}}" onchange="formSubmit('date_form');"></label>
         </td>
-            {% if report == 'production' %}
-            <input type="hidden" value="{{report}}" name="report">
-            {% endif %}
+        {% if report in ['production', 'month_prod'] %}
+        <input type="hidden" value="{{report}}" name="report">
+        <td>
+          <div class="multiselect">
+            <div class="selectBox" onclick="showCheckboxes('chkbx')">
+              <select>
+                <option>בחירת מפעל</option>
+              </select>
+              <div class="overSelect"></div>
+            </div>
+            <div class="checkboxes" id="chkbx" style="text-align: right;">
+              <label for="plant1">
+                <input type="checkbox" id="plant1" name="plant1" value="ראשי" onchange="set_cookie('plant1')"/>ראשי</label>
+              <label for="plant2">
+                <input type="checkbox" id="plant2" name="plant2" value="רשת" onchange="set_cookie('plant2')"/>רשת</label>
+              <button>ok</button>
+            </div>
+          </div>
+        </td>
+        {% endif %}
         </form>
         <form method=POST id="filter_form" autocomplete="off" action="{{ url_for('reports_page') }}" onsubmit="date_form.disabled = true; return true;">
-            {% if statuses %}
+        {% if statuses %}
         <td>
           <div class="multiselect">
             <div class="selectBox" onclick="showCheckboxes('chkbx')">
@@ -130,7 +148,7 @@ td{
         {% endfor %}
     </tr>
     {% for line in report_data %}
-        {% if report == 'production' %}
+        {% if report in ['production', 'month_prod'] %}
             {% if line['order_id'] and not machine_id %}
             <tr ondblclick="location.href='/reports?report=production&machine_id={{line.machine_id}}'" class="d-print-none">
             {% else %}
@@ -164,5 +182,29 @@ td{
 function formSubmit(formName){
     document.getElementById(formName).submit();
 }
+
+function set_cookie(elem_id){
+    elem = document.getElementById(elem_id);
+    document.cookie = elem_id+'='+elem.checked
+}
+
+function update_from_cookie(){
+    all_cookies = document.cookie.split("; ");
+    console.log(all_cookies);
+    for (c in all_cookies){
+        console.log();
+        i = all_cookies[c].split('=');
+        elem = document.getElementById(i[0]);
+        if (elem){
+            if (i[1] == 'true'||i[1] == 'false'){
+                elem.checked = i[1];
+            }
+            else{
+                elem.value = i[1];
+            }
+        }
+    }
+}
+update_from_cookie()
 </script>
 {% endblock %}

@@ -91,7 +91,7 @@ def main_page():
 def weights_page():
     products_list = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
     drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
-    print(drv_l)
+    # print(drv_l)
     info = {'doc_id': '', 'start': '', 'end': '', 'driver': '', 'vehicle': '', 'site': '', 'client': '', 'sensor': ''}
     sensor = ''
     if 'weights_data' not in main.session:
@@ -102,7 +102,7 @@ def weights_page():
         main.session.modified = True
     if main.request.values:
         cmd = dict(main.request.values)
-        print(cmd)
+        # print(cmd)
         if 'new' in cmd:
             del main.session['weights_data']
             main.session.modified = True
@@ -147,7 +147,7 @@ def weights_page():
             main.mongo.update_one('documents', {'doc_id': main.session['weights_data']['doc_id']}, cmd, '$set', db_name='Scaling')
         return main.redirect('/weights')
     doc = main.mongo.read_collection_one('documents', {'doc_id': main.session['weights_data']['doc_id']}, db_name='Scaling')
-    print(doc)
+    # print(doc)
     data = doc['lines']
     for item in doc:
         if item in info:

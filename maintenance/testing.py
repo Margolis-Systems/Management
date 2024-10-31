@@ -12,7 +12,7 @@ import configs
 
 mongo = configs.mongo
 # all_orders = list(mongo.read_collection_list('orders', {'order_id': '9341'}))
-all_orders = list(mongo.read_collection_list('orders', {}))
+all_orders = list(mongo.read_collection_list('orders', {'order_id':{'$gte':'10000'}}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
 
@@ -132,5 +132,31 @@ def check_weights(fix=False):
             print('check: ', order['order_id'])
 
 
+def prod_lod_dbl_label_id():
+    prod_logs = mongo.read_collection_list('production_log', {'Start_ts': {'$gte': '2024-10-29 00:00:00'}})
+    l_id = []
+    for ll in prod_logs:
+        if ll['label_id'] not in l_id:
+            l_id.append(ll['label_id'])
+        else:
+            if ll['machine_id'] not in [17, 18, 34]:
+                print(ll['label_id'], ll['machine_id'])
 
 
+for order in all_orders:
+    flag = True
+    for r in range(len(order['rows'])):
+        row = order['rows'][r]
+        if row['status'] != 'Finished':
+            flag = False
+    if flag and order['info']['status'] in ['InProduction', 'Production']:
+        print(order['order_id'], order['info']['status'])
+
+# for order in all_orders:
+#     i = 0
+#     for r in order['rows']:
+#         if 'qnt_done' in r:
+#             if r['qnt_done'] in [0, '8']:
+#                 mongo.update_one('orders', {'order_id': r['order_id']}, {'rows.{}.qnt_done'.format(str(i)): int(r['quantity']), 'rows.{}.status'.format(str(i)): 'Finished'}, '$set')
+#         i += 1
+# mongo.update_one('orders', {'order_id': '9673'}, {'rows.2.qnt_done': '8', 'rows.2.status': 'Finished'}, '$set')

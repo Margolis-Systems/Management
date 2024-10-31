@@ -28,10 +28,10 @@
         אתר לקוח<br>
         <select class="form-control" id="site" name="site" autofocus="autofocus" onchange="comment_alert(this.value)" required>
             {% for s in sites_list %}
-            {% if site == s %}
-            <option value="{{s}}" selected>{{s}}</option>
+            {% if site == s.name %}
+            <option value="{{s.name}}" selected>{{s.name}}</option>
             {% else %}
-            <option value="{{s}}">{{s}}</option>
+            <option value="{{s.name}}">{{s.name}}</option>
             {% endif %}
             {% endfor %}
         </select>
