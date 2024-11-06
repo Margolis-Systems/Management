@@ -16,6 +16,7 @@ import users
 import orders
 import scale
 import plot_edit
+import scan as scans
 from operator import itemgetter
 
 mongo = db_handler.DBHandle()
@@ -116,7 +117,7 @@ def delete_rows():
 
 @app.route('/scan', methods=['POST', 'GET'])
 def scan():
-    return pages.scan()
+    return scans.scan()
 
 
 @app.route('/shape_editor', methods=['POST', 'GET'])

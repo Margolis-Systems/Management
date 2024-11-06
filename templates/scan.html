@@ -21,11 +21,24 @@
             {% endif %}
             <button type="button" class="btn btn-danger btn-block btn-lg" onclick="location.href='/scan'">{{dictionary['cancel']}}</button>
             {% else %}
+            {% if 'operator' not in user.name %}
+            <select  class="form-control"name="user" onchange="scan_en(false);" required>
+                <option style="display:none" selected>בחר מפעיל</option>
+                {% for op in operators %}
+                <option value="{{op.username}}">{{op.machine_id}} | {{op.machine_name}} | {{op.operator}}</option>
+                {% endfor %}
+            </select>
+            <input class="form-control" type="number" name="order_id" placeholder="מספר הזמנה" required>
+            <input class="form-control" type="number" name="job_id" placeholder="מספר שורה" required>
+            <input type="hidden" name="status" value="Finished">
+            <button class="btn btn-success btn-block btn-lg">ok</button>
+            {% else %}
             <label>{{dictionary['scan_barcode']}}</label>
             <input type="text" class="form-control" id="scan" name="scan" placeholder="{{dictionary['scan_barcode']}}" onfocusout="scanFocus();" onkeyup="scanSubmit();" autocomplete="off" autofocus>
+            {% endif %}
+            {% endif %}
         </td>
     </tr>
-    {% endif %}
     {% if msg != "" %}
     <tr>
         <td>
@@ -44,6 +57,12 @@
         if (scanVal.includes('BF2D')){
             document.getElementById('form').submit();
         }
+    }
+
+    function scan_en(bool){
+        e = document.getElementById('scan');
+        console.log(e);
+        e.disabled = bool;
     }
 </script>
 {% endblock %}
