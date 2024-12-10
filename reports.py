@@ -71,7 +71,7 @@ class Images:
         return formatted
 
     @staticmethod
-    def create_shape_plot(shape, text=[], enable_text_plot=True, html=False):
+    def create_shape_plot(shape, text=[], enable_text_plot=True, html=False, file_name=''):
         size = (200, 60)
         font_size = 16
         font_dir = os.getcwd()+'\\fonts\\upheavtt.ttf'
@@ -122,11 +122,13 @@ class Images:
                 draw.text(position, str(text[i]), fill="black", font=ImageFont.truetype(font_dir, font_size))
                 text_pos.append(position)
         if html:
-            file_name = "static\\img\\" + functions.ts(mode="file_name") + ".png"
-            im.save('C:\\Server\\'+file_name)
-        else:
-            file_name = configs.net_print_dir + "Picture\\" + functions.ts(mode="file_name") + ".png"
-            im.save(file_name)
+            file_name = "C:\\Server\\static\\img\\{}.png".format(functions.ts(mode="file_name"))
+            # im.save({}'.format(file_name))
+        elif not file_name:
+            file_name = configs.net_print_dir + "Picture\\{}.png".format(functions.ts(mode="file_name"))
+        im.save(file_name)
+        if html:
+            file_name = file_name.replace('C:\\Server', '')
         return file_name
 
     @staticmethod
@@ -630,12 +632,14 @@ class Bartender:
                     else:
                         line[obj] = info[obj]
                 if 'shape_data' in line:
-                    line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data']).split('\\')[-1].replace('.png', '')
+                    file_name = configs.net_print_dir + "Picture\\{}_{}_{}.png".format(functions.ts(mode="file_name"), order_id, line['job_id'])
+                    line['img_dir'] = Images.create_shape_plot(line['shape'], line['shape_data'], file_name=file_name).split('\\')[-1].replace('.png', '')
                     if ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) \
                             and row['shape'] not in ['332', '49', '59']) or row['shape'] in configs.circle:
                         line['circle'] = 'כן'
                 elif 'shape' in line:
-                    line['img_dir'] = Images.create_shape_plot(line['shape'], [line['shape']]).split('\\')[
+                    file_name = configs.net_print_dir + "Picture\\{}_{}_{}.png".format(functions.ts(mode="file_name"), order_id, line['job_id'])
+                    line['img_dir'] = Images.create_shape_plot(line['shape'], [line['shape']], file_name=file_name).split('\\')[
                         -1].replace('.png', '')
                     line['temp_select'] = 1
                 line['barcode_data'] = Images.format_qr_data(line)
@@ -775,7 +779,8 @@ class Bartender:
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
                     special_sum['ספירלים']['weight'] += row['weight']
-                if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
+                if row['shape'] in ['200', '201', '202', '203', '204', '205', '206', '64'] \
+                        or (row['shape'] == '34' and row['bar_type'] == 'חלק'):
                     if 'חישוק מיוחד' not in special_sum.keys():
                         special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק מיוחד']['qnt'] += quantity

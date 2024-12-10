@@ -377,7 +377,7 @@ def reports_page():
         report_data = production_reports.report(query, detaile=False)
         report_data.insert(0, {'operator': 'דוח חודשי', 'machine_name': '---------', 'quantity': '---------', 'weight': '---------', 'order_id': '0'})
         report_data.append({'operator': 'דוח יומי', 'machine_name': '---------', 'quantity': '---------', 'weight': '---------', 'order_id': '0'})
-        query['Start_ts'] = {'$gte': today, '$lte': today+' 23:59:59'}
+        query['Start_ts'] = {'$gte': today+' 00:00:00', '$lte': today+' 23:59:59'}
         temp_report_data = production_reports.report(query, detaile=False)
         report_data.extend(temp_report_data)
         data_to_display = ['machine_id', 'machine_name', 'operator', 'quantity', 'weight',

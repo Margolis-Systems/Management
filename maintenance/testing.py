@@ -142,21 +142,3 @@ def prod_lod_dbl_label_id():
             if ll['machine_id'] not in [17, 18, 34]:
                 print(ll['label_id'], ll['machine_id'])
 
-
-for order in all_orders:
-    flag = True
-    for r in range(len(order['rows'])):
-        row = order['rows'][r]
-        if row['status'] != 'Finished':
-            flag = False
-    if flag and order['info']['status'] in ['InProduction', 'Production']:
-        print(order['order_id'], order['info']['status'])
-
-# for order in all_orders:
-#     i = 0
-#     for r in order['rows']:
-#         if 'qnt_done' in r:
-#             if r['qnt_done'] in [0, '8']:
-#                 mongo.update_one('orders', {'order_id': r['order_id']}, {'rows.{}.qnt_done'.format(str(i)): int(r['quantity']), 'rows.{}.status'.format(str(i)): 'Finished'}, '$set')
-#         i += 1
-# mongo.update_one('orders', {'order_id': '9673'}, {'rows.2.qnt_done': '8', 'rows.2.status': 'Finished'}, '$set')

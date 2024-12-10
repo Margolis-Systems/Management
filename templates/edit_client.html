@@ -53,7 +53,7 @@
         </td>
         <td><input name="comment.{{site.id}}" value="{{client_data.comment[site.id|string]}}" placeholder="הוסף הערה"></td>
         <td>
-            <button ondblclick="location.href='/remove_site?client_id={{client_data['id']}}&site={{site}}'" type="button">מחק</button>
+            <button ondblclick="location.href='/remove_site?client_id={{client_data['id']}}&site_id={{site.id}}'" type="button">מחק</button>
         </td>
     </tr>
     {% endfor %}

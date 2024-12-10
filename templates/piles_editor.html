@@ -40,8 +40,8 @@
                     </td>
                     <td id="bars_diam_container">
                         קוטר
-                        <input type="number" name="bars_diam" id="bars_diam" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+9}})' required>
-                        <input type="number" name="bars_diam_1" id="bars_diam_1" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+12}})' >
+                        <input type="number" name="bars_diam" pattern="5.5|6|6.5|8|10|12|14|16|18|20|22|24|25|28|32|36" id="bars_diam" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+9}})' required>
+                        <input type="number" name="bars_diam_1" pattern="5.5|6|6.5|8|10|12|14|16|18|20|22|24|25|28|32|36" id="bars_diam_1" class="form-control" placeholder="קוטר" value="{{defaults['bars_diam_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+12}})' >
                     </td>
                     <td id="bars_len_container">
                         אורך

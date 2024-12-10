@@ -218,6 +218,11 @@ def new_order_row():
         new_row['y_pitch'] = []
     for item in req_form_data:
         req_form_data[item] = req_form_data[item].strip()
+        if '\n' in req_form_data[item]:
+            spl = req_form_data[item].split('\n')
+            req_form_data[item] = "".join(spl)
+            spl = req_form_data[item].split('\r')
+            req_form_data[item] = " ".join(spl)
         if item in configs.html_no_float and '.' in req_form_data[item]:
             req_form_data[item] = str(int(float(req_form_data[item])))
         # if req_form_data[item].isnumeric():
@@ -663,15 +668,6 @@ def close_order():
 
 def calc_weight(diam, length, qnt):
     return round(float(length) * float(qnt) * main.configs.weights[str(diam)] / 100, 2)
-
-# def calc_weight(diam, length, qnt, ang=None):
-#     if ang:
-#         for a in ang:
-#             length -= main.configs.bend_diam[diam]*(2-math.pi*int(a)/180)
-#     weight = round(float(length) * float(qnt) * main.configs.weights[str(diam)] / 100, 2)
-#     if ang:
-#         return weight, length
-#     return weight
 
 
 def peripheral_orders(add_orders, order_id, orig_job_id, indicator="R"):

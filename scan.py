@@ -27,7 +27,6 @@ def scan():
     if not machine:
         msg = 'לא הוקצתה מכונה למפעיל'
         operators = main.mongo.read_collection_list('machines', {})
-        print(operators)
     # ----------- Dual scan (start and stop) ------------------------
     order = main.mongo.read_collection_one('orders', {'rows': {'$elemMatch': {'status': 'Start',
                                            'status_updated_by': {'$regex': user}}}})

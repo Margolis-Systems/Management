@@ -10,6 +10,7 @@ import data_logger
 import configs
 import db_handler
 import functions
+import mesh
 import pages
 import clients
 import users
@@ -157,9 +158,16 @@ def link_order():
 
 @app.route('/upload_csv', methods=['POST', 'GET'])
 def upload_csv():
-    print(request.files)
     #curl -i -X POST -H "Content-Type: multipart/form-data" -F "file=@C:\Users\user\Downloads\1.csv;filename=1.csv" 10.0.0.25:5000/upload_csv
-    request.files['file'].save("c:\\server\\1.csv")
+    if request.files:
+        src = list(request.files.keys())[0]
+        file_name = request.files[src].filename
+        file_name = os.path.basename(file_name)
+        if not os.path.exists("c:\\server\\csv\\{}\\".format(src)):
+            os.mkdir("c:\\server\\csv\\{}\\".format(src))
+        request.files[src].save("c:\\server\\csv\\{}\\{}".format(src, file_name))
+        if src == 'Reshet_Roman':
+            mesh.reshet_csv_data(file_name)
     return '', 204
 
 

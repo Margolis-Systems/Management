@@ -100,8 +100,9 @@ def remove_site():
         return users.logout()
     elif user_group > 70:
         client_id = main.request.values['client_id']
-        site = main.request.values['site']
-        main.mongo.update_one('costumers', {'id': client_id}, {'sites': site}, '$pull')
+        site_id = main.request.values['site_id']
+        main.mongo.update_one('costumers', {'id': client_id, 'sites': {'$elemMatch': {'id': site_id}}}, {'sites.$': 1}, '$unset')
+        main.mongo.update_one('costumers', {'id': client_id}, {'sites': None}, '$pull')
         return edit_client(client_id)
     return '', 204
 

@@ -60,6 +60,7 @@ read_shapes()
 read_mongo_conf()
 # todo: read from mongo
 reports_dir = os.getcwd()+'\\reports\\'
+csv_dir = 'c:/server/csv/Reshet_Roman'
 print_dicts = {'regular': {}, 'rebar': {}, 'pile': {}, 'girders': {}}
 
 printers = mongo.read_collection_one('data_lists', {'name': 'printers'})['data']
