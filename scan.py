@@ -63,7 +63,6 @@ def scan():
                     continue
                 elif 'status_updated_by' not in job:
                     pass
-                    pass
                 elif user in job['status_updated_by']:
                     order_id = ''
                     msg = '^Finished^'
@@ -122,6 +121,9 @@ def scan():
                 orders.update_order_status('InProduction', order_id)
             if row['status'] in ['InProduction', 'PartlyDelivered']:
                 status = 'Finished'
+            elif row['status'] == 'NEW' and info['status'] != 'NEW':
+                status = 'Finished'
+                orders.update_order_status('InProduction', order_id, job_id)
             elif user in configs.oper_multi_scan and "Finished" in row['status']:
                 if 'status_updated_by' not in row:
                     status = 'Finished'

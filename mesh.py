@@ -4,7 +4,7 @@ import main
 
 def reshet_csv_data(csv_dir):
     out = []
-    mach_info = main.mongo.read_collection_one('machines', {'machine_id': 35})
+    mach_info = main.mongo.read_collection_one('machines', {'machine_id': 33})
     cur_order = ''
     idx = -1
     with open('{}/{}'.format(main.configs.csv_dir, csv_dir), 'r', newline='') as f:

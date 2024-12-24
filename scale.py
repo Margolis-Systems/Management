@@ -72,7 +72,7 @@ def main_page():
     if permission > 50:
         perm = True
         doc_df = main.mongo.read_collection_df_sort('documents', 'doc_id', 'Scaling',
-                                                    {'$where': "this.lines.length > 0", 'driver': {'$exists': True}}, 50).to_dict('index')
+                                                    {'$where': "this.lines.length > 0", 'driver': {'$exists': True}, 'doc_id': {'$exists' :True}}, 50).to_dict('index')
         for doc in doc_df:
             doc_info = {}
             for item in doc_df[doc]:
@@ -88,7 +88,7 @@ def main_page():
                                 dictionary=pages.get_dictionary(), doc_list=doc_list, perm=perm)
 
 
-def weights_page():
+def _weights_page():
     products_list = main.mongo.read_collection_one('data_lists', {'name': 'product_types'}, 'Scaling')['data']
     drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
     # print(drv_l)
@@ -188,7 +188,7 @@ def overview():
     return main.render_template('/scale_overview.html', weights=weights, dictionary=pages.get_dictionary(), site=site)
 
 
-def get_weight(site_info):
+def get_weight(site_info):  # todo: combine
     ret = ['', '0', '', '0']
     if 'crr' in site_info:
         crr, sensors = site_info['crr'], site_info['sensors']
@@ -226,7 +226,7 @@ def get_weight(site_info):
     return ret
 
 
-def form_request(req_form):
+def form_request(req_form):  # todo?
     scale_data = {'doc_id': gen_id()}
     for item in req_form:
         if item == 'site':

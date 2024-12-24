@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>תעודת שקילה</title>
+</head>
+<body>
+<style>
+div{
+    font-size: 40px;
+}
+.btn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+button {
+    font-size:100px;
+    width: 500px;
+    height: 200px;
+    background-color: orange;
+}
+@media print {
+@page {size: portrait;};
+    div {
+        font-size: 8px !important;
+    }
+    .print {
+        font-size: 8px !important;
+    }
+    select{
+      border: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      }
+    button{
+        display: none !important;
+    }
+}
+</style>
+<div class="print">
+    צומת ברזל לבניין
+    <br>
+    תעודת שקילה מספר: {{doc.doc.id}}
+    <br>
+    תאריך ושעת כניסה:
+    24.12.24 10:01:03 <!--{{doc.doc.lines[0].ts}}-->
+    <br>
+    תאריך ושעת יציאה:
+    <br>
+    24.12.24 10:01:03 <!--{{doc.doc.lines[-1].ts}}-->
+    <br>
+    שם נהג:
+    {{doc.driver}}
+    <br>
+    מספר רכב:
+    <br>
+    {{doc.plate}}
+    <br>
+    משקל כולל:
+    <br>
+    {{doc.doc.total}}
+</div>
+<!--<table dir="rtl" width="100%">
+    <tr>
+        <th colspan="4" style="text-align: center;">צומת ברזל לבניין</th>
+    </tr>
+    <tr style="text-align: center;">
+        <th colspan="2">תעודת שקילה מספר: {{doc.doc.id}}</th>
+        <th colspan="2">{% if doc.order_id %}הזמנה מספר: {{doc.order_id}}{% endif %}</th>
+    </tr>
+    <tr>
+        <th>תאריך ושעת כניסה:</th>
+        <th>{{doc.doc.lines[0].ts}}</th>
+        <th>תאריך ושעת יציאה:</th>
+        <th>{{doc.doc.lines[-1].ts}}</th>
+    </tr>
+    <tr>
+        <th>שם נהג:</th>
+        <th>{{doc.driver}}</th>
+        <th>מספר רכב:</th>
+        <th>{{doc.plate}}</th>
+    </tr>
+    <tr>
+        <th>שם לקוח:</th>
+        <th>{{doc.costumer}}</th>
+        <th>אתר לקוח:</th>
+        <th>{{doc.site}}</th>
+    </tr>
+</table>
+<table border="1" width="80%">
+    <tr>
+        <th>מס שורה</th>
+        <th>סוג חומר</th>
+        <th>משקל</th>
+        <th>טארה</th>
+        <th>נטו</th>
+    </tr>
+    {% for line in doc.doc.lines %}
+    <tr>
+        <td>{{loop.index}}</td>
+        <td>{{line.type}}</td>
+        <td>{{line.gross}}</td>
+        <td>{{line.tare}}</td>
+        <td>{{line.net}}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="3"></td>
+        <th>סהכ:</th>
+        <th>{{doc.doc.total}}</th>
+    </tr>
+
+</table>
+<br><br>
+<div>חתימת מפעיל: _________________________   חתימת נהג: _________________________</div>-->
+<div class="d-print-none btn"><button type="button" onclick="window.print()">הדפס</button></div>
+<br>
+<div class="d-print-none btn"><button type="button" style="background-color: red;" onclick="window.close()">סגור</button></div>
+</body>
+</html>

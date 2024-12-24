@@ -17,6 +17,7 @@ import users
 import orders
 import scale
 import plot_edit
+import weights
 import scan as scans
 from operator import itemgetter
 
@@ -251,8 +252,14 @@ def scaling():
 
 
 @app.route('/weights', methods=['POST', 'GET'])
-def weights():
-    return scale.weights_page()
+def weights_page():
+    return weights.main_page()
+
+
+@app.route('/weights_history', methods=['POST', 'GET'])
+def weights_history():
+    history = mongo.read_collection_list('documents', {'doc.id': {'$exists': True}, 'doc.lines.0': {'$exists': True}}, 'Scaling')
+    return render_template('/weight/history.html', data=history)
 
 
 @app.route('/scaleov', methods=['POST', 'GET'])
@@ -269,7 +276,14 @@ def productionov():
 def scaling_weight():
     req_vals = dict(request.values)
     if 'new' in req_vals:
-        return scale.read_weights()
+        if 'weights' in session:
+            if 'selected' in session['weights']:
+                selected = session['weights']['selected'].split(' : ')
+                site = selected[0]
+                sensor = selected[1]
+                return weights.get_weights_data(site, sensor)
+        return {}
+        # return scale.read_weights()
     if 'scale' not in session:
         session['scale'] = {'site': {'crr': '1', 'sensors': ['3c1b', '3c1c']}}
         # return {}

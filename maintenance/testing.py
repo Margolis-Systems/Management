@@ -12,7 +12,7 @@ import configs
 
 mongo = configs.mongo
 # all_orders = list(mongo.read_collection_list('orders', {'order_id': '9341'}))
-all_orders = list(mongo.read_collection_list('orders', {'order_id':{'$gte':'10000'}}))
+all_orders = list(mongo.read_collection_list('orders', {}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
 
@@ -141,4 +141,5 @@ def prod_lod_dbl_label_id():
         else:
             if ll['machine_id'] not in [17, 18, 34]:
                 print(ll['label_id'], ll['machine_id'])
+
 

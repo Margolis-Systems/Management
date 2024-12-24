@@ -1,0 +1,155 @@
+{% extends "layout/layout.html" %}
+{% block body %}
+<script src="\static\js\shapes.js" ></script>
+<table>
+    <tr>
+        <td>
+            <select title="בחר משקל" id="sensor" class="form-control" onchange="location.href='/weights?func=select&sensor='+this.value">
+                <option style="display:none" value="" selected>בחר משקל</option>
+            {% for site in weights %}
+            {% for sensor in site %}
+                {% if sensor != 'station_id' %}
+                {% if data.selected == site.station_id+' : '+sensor %}
+                <option value="{{site.station_id}} : {{sensor}}" selected>{{site.station_id}} : {{sensor}}</option>
+                {% else %}
+                <option value="{{site.station_id}} : {{sensor}}">{{site.station_id}} : {{sensor}}</option>
+                {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% endfor %}
+            </select>
+        </td>
+        <td rowspan="2"><input class="form-control" name="cur_weight" id="cur_weight" style="font-size:60px" value="ממתין לקריאה" readonly></td>
+        <td><input class="form-control" name="cur_tare" id="cur_tare" value="טארה" ondblclick="location.href='/weights?func=tare0'" readonly></td>
+        <td>
+            <button class="btn btn-primary btn-lg" onclick="location.href='/weights?func=tare'">טארה</button>
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><input class="form-control" name="cur_gross" id="cur_gross" value="ברוטו" readonly></td>
+        <td>
+            <button class="btn btn-success btn-lg" onclick="location.href='/weights?func=new'">חדש</button>
+        </td>
+
+    </tr>
+</table>
+<br>
+<form method="POST">
+    <table class="table table-stripped" style="vertical-align: middle;" dir="rtl" width="80%" align="center">
+        <tr class="form-floating">
+            <td>
+                <label for="driver">נהג:</label>
+                <input class="form-control" list="drv_l" id="driver" name="driver" value="{{data.driver}}" placeholder="שם נהג" onchange="update_drv(this.value);">
+            </td>
+            <td>
+                <label for="costumer">שם לקוח:</label>
+                <input class="form-control" id="costumer" name="costumer" value="{{data.costumer}}" placeholder="שם לקוח">
+            </td>
+            <td colspan="2">
+                <label for="order_id">מספר הזמנה:</label>
+                <input class="form-control" id="order_id" name="order_id" value="{{data.order_id}}" placeholder="מספר הזמנה">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="plate">מס רכב:</label>
+                <input class="form-control" id="plate" name="plate" value="{{data.plate}}" placeholder="מספר רכב">
+            </td>
+            <td>
+                <label for="site">אתר לקוח:</label>
+                <input class="form-control" id="site" name="site" value="{{data.site}}" placeholder="אתר לקוח">
+            </td>
+            <td colspan="2">
+                <label for="order_total">משקל תיאורטי:</label>
+                <input class="form-control" id="order_total" name="order_total" value="{{data.order_total}}" readonly>
+            </td>
+        </tr>
+        </tr>
+        <tr>
+            <th>סוג מוצר</th>
+            <th>משקל ברוטו</th>
+            <th>משקל טארה</th>
+            <th>משקל נטו</th>
+        </tr>
+        {% if data.doc %}
+        {% for line in data.doc.lines %}
+        <tr ondblclick="split({{loop.index0}}, {{line.net}})">
+            <td align="center" width="300px"><input name="product{{loop.index0}}" class="form-control" list="product" value="{{line.type}}"></td>
+            <td>{{line.gross}}</td>
+            <td>{{line.tare}}</td>
+            <td>{{line.net}}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{% if data.doc %} סהכ: {{data.doc.total}} {% endif %}</td>
+        </tr>
+        <tr>
+            <td align="center" width="300px"><input name="product" class="form-control" list="product"></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td><button class="btn btn-primary bt-lg">עדכן</button></td>
+            <td><button class="btn btn-success bt-lg" type="button" onclick="location.href='/weights?func=weight'" id="weight_btn" disabled>הוסף שקילה</button></td>
+            <td>{% if data.doc.lines %}<button type="button" id="print_td" onclick='openNewWindow("/weights?func=print&doc={{data.doc.id}}")'>הדפס</button>{% endif %}</td>
+            <td></td>
+        </tr>
+    </table>
+</form>
+<datalist id="product">
+    {% for product in products_list %}
+    <option>{{ product }}</option>
+    {% endfor %}
+</datalist>
+<datalist id="drv_l">
+    {% for drv in drv_l %}
+    <option>{{ drv }}</option>
+    {% endfor %}
+</datalist>
+<script>
+const drv_l = {{drv_l|tojson|safe}};
+
+function update_drv(drv){
+    if (drv in drv_l){
+        document.getElementById('plate').value = drv_l[drv]['vehicle'];
+    }
+}
+
+function read_weights(){
+    var data
+    let cur_sen = document.getElementById('sensor').value;
+    if (cur_sen){
+        $.getJSON('/scaling_weight?new', function(data) {
+            $('#result').text(data);
+            if (!data.info){
+                update_weight(data);
+                document.getElementById('weight_btn').removeAttribute('disabled');
+            }
+            else{
+                document.getElementById('weight_btn').setAttribute('disabled', '');
+            }
+        });
+    }
+}
+
+function update_weight(data){
+    document.getElementById('cur_weight').value = 'משקל: ' + (data.actual - data.tare)
+    document.getElementById('cur_tare').value = 'טארה: ' + data.tare
+    document.getElementById('cur_gross').value = 'ברוטו: ' + data.actual
+}
+
+function split(idx, max_weight){
+    let split_weight = prompt("הזן כמות משקל לפיצול. מקסימום: "+max_weight);
+    // ensure legal value
+    if (split_weight < max_weight){
+        window.location.href='/weights?func=split&line='+idx+'&weight='+split_weight
+    }
+}
+
+var intervalID = setInterval(read_weights,500);
+</script>
+{% endblock %}

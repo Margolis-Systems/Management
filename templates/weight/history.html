@@ -1,0 +1,39 @@
+{% extends "layout/layout.html" %}
+{% block body %}
+<script src="\static\js\shapes.js" ></script>
+<table class="table">
+    <tr>
+        <th>תאריך שקילה</th>
+        <th>מס תעודה</th>
+        <th>שם נהג</th>
+        <th>מס רכב</th>
+        <th>שם לקוח</th>
+        <th>אתר לקוח</th>
+        <th>משקל כולל</th>
+        <th>מס הזמנה</th>
+    </tr>
+    {% for h in data %}
+    <tr id="print_btn" ondblclick="print_doc({{h.doc.id}})">
+        <td>{{h.doc.lines[0].ts}}</td>
+        <td>{{h.doc.id}}</td>
+        <td>{{h.driver}}</td>
+        <td>{{h.plate}}</td>
+        <td>{{h.costumer}}</td>
+        <td>{{h.site}}</td>
+        <td><b>{{h.doc.total}}</b></td>
+        <td>{{h.order_id}}</td>
+    </tr>
+    {% endfor %}
+</table>
+<script>
+    var w = window.screen.width;
+    function print_doc(doc_id){
+        if (w <= 1400){
+            openNewWindow("/weights?func=print&bon=&doc="+doc_id);
+        }
+        else{
+            openNewWindow("/weights?func=print&doc="+doc_id);
+        }
+    }
+</script>
+{% endblock %}

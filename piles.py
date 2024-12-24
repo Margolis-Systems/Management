@@ -16,6 +16,8 @@ def calc_weight(data_dict):
             total_length += int(data_dict[k])
             _p = k.replace('spiral', 'pitch')
             if _p in data_dict:
+                if data_dict[_p] == '0':
+                    continue
                 weight['spiral'] += math.sqrt(math.pow(float(data_dict[_p]),2)+math.pow(math.pi*float(data_dict['pile_diam']),2))*\
                                     float(data_dict[k])/float(data_dict[_p])/100*configs.weights[data_dict['spiral_diam']]
     # Length * quantity * KG/M
