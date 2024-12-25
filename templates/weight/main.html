@@ -9,8 +9,6 @@
             {% for site in weights %}
             {% for sensor in site %}
                 {% if sensor != 'station_id' %}
-                {{ sensor }}
-                {{site}}
                 {% if data.selected == site.station_id+' : '+sensor %}
                 <option value="{{site.station_id}} : {{sensor}}" selected>{{site.station_id}} : {{sensor}}</option>
                 {% else %}
