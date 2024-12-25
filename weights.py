@@ -24,6 +24,7 @@ def main_page():
                     site, sensor = get_site_sensor()
                     tare(site, sensor, 0)
         elif func == 'select':
+            print(main.request.values)
             update_user_session({'selected': main.request.values['sensor']})
         elif func == 'weight':
             if 'weights' in main.session:
@@ -131,8 +132,8 @@ def get_weights_data(site='', sensor=''):
         query['station_id'] = site
     temp = main.mongo.read_collection_list('weights', query, 'Scaling')
     if sensor:
-        if ' + ' in sensor:
-            sensor = sensor.split(' + ')[0]
+        if ' | ' in sensor:
+            sensor = sensor.split(' | ')[0]
         data = temp[0]
         if 'dual' in data:
             s1 = data[sensor]
@@ -156,7 +157,7 @@ def get_weights_data(site='', sensor=''):
                 for s in sen['dual']:
                     if s not in ignore:
                         ignore.extend([s, sen['dual'][s]])
-                        name = '{} + {}'.format(s, sen['dual'][s])
+                        name = '{} | {}'.format(s, sen['dual'][s])
                         comb = {name: {'actual': sen[s]['actual'] + sen[sen['dual'][s]]['actual'], 'tare': 0},
                                 'station_id': sen['station_id']}
                         if 'tare' in sen[s]:
