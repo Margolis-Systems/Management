@@ -16,25 +16,19 @@ def main_page():
         elif func == 'tare':
             if 'weights' in main.session:
                 if 'selected' in main.session['weights']:
-                    selected = main.session['weights']['selected'].split(' : ')
-                    site = selected[0]
-                    sensor = selected[1]
+                    site, sensor = get_site_sensor()
                     tare(site, sensor)
         elif func == 'tare0':  # todo: disable?
             if 'weights' in main.session:
                 if 'selected' in main.session['weights']:
-                    selected = main.session['weights']['selected'].split(' : ')
-                    site = selected[0]
-                    sensor = selected[1]
+                    site, sensor = get_site_sensor()
                     tare(site, sensor, 0)
         elif func == 'select':
             update_user_session({'selected': main.request.values['sensor']})
         elif func == 'weight':
             if 'weights' in main.session:
                 if 'selected' in main.session['weights']:
-                    selected = main.session['weights']['selected'].split(' : ')
-                    site = selected[0]
-                    sensor = selected[1]
+                    site, sensor = get_site_sensor()
                     weight = get_weights_data(site, sensor)
                     if weight['actual']-weight['tare'] <= 0:
                         return main.redirect('/weights')
@@ -51,9 +45,7 @@ def main_page():
         elif func == 'remove':
             if 'weights' in main.session:
                 if 'selected' in main.session['weights']:
-                    selected = main.session['weights']['selected'].split(' : ')
-                    site = selected[0]
-                    sensor = selected[1]
+                    site, sensor = get_site_sensor()
                     doc = main.session['weights']['doc']
                     if doc['lines']:
                         doc['total'] -= doc['lines'][-1]['net']
@@ -119,6 +111,8 @@ def main_page():
                 main.mongo.update_one('documents', {'doc.id': data['doc']['id']}, data, '$set', True, 'Scaling')
     else:
         return main.redirect('/weights?func=new')
+    if main.session['username'] == 'baruch':
+        return main.render_template('weight/mobile.html', weights=weights_data, drv_l=drv_l, products_list=products_list, data=data)
     return main.render_template('weight/main.html', weights=weights_data, drv_l=drv_l, products_list=products_list, data=data)
 
 
@@ -131,16 +125,47 @@ def update_user_session(data):
 
 
 def get_weights_data(site='', sensor=''):
+    # todo: validate TS
     query = {'station_id': {'$exists': True}}
     if site:
         query['station_id'] = site
-    data = main.mongo.read_collection_list('weights', query, 'Scaling')
+    temp = main.mongo.read_collection_list('weights', query, 'Scaling')
     if sensor:
-        data = data[0]
-        if sensor in data:
+        if ' + ' in sensor:
+            sensor = sensor.split(' + ')[0]
+        data = temp[0]
+        if 'dual' in data:
+            s1 = data[sensor]
+            if 'tare' not in s1:
+                s1['tare'] = 0
+            s2 = data[data['dual'][sensor]]
+            if 'tare' not in s2:
+                s2['tare'] = 0
+            data = {'actual': s1['actual'] + s2['actual'], 'tare': int(s1['tare']) + int(s2['tare'])}
+        elif sensor in data:
             data = data[sensor]
+            if 'tare' not in data:
+                data['tare'] = 0
         else:
             return {}
+    else:
+        data = []
+        for sen in temp:
+            if 'dual' in sen:
+                ignore = []
+                for s in sen['dual']:
+                    if s not in ignore:
+                        ignore.extend([s, sen['dual'][s]])
+                        name = '{} + {}'.format(s, sen['dual'][s])
+                        comb = {name: {'actual': sen[s]['actual'] + sen[sen['dual'][s]]['actual'], 'tare': 0},
+                                'station_id': sen['station_id']}
+                        if 'tare' in sen[s]:
+                            comb[name]['tare'] += int(sen[s]['tare'])
+                        if 'tare' in sen[sen['dual'][s]]:
+                            comb[name]['tare'] += int(sen[sen['dual'][s]]['tare'])
+                        data.append(comb)
+            else:
+                data.append(sen)
     return data
 
 
@@ -161,3 +186,9 @@ def tare(site, sensor, val=None):
 def gen_doc_id():
     return datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
+
+def get_site_sensor():
+    selected = main.session['weights']['selected'].split(' : ')
+    site = selected[0]
+    sensor = selected[1]
+    return site, sensor
