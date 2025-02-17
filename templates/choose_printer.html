@@ -55,7 +55,7 @@
 
         </td></tr>
         {% endif %}
-        <tr><td><button class="w-100 btn btn-lg btn-primary" id="submit" type="submit">אישור</button>
+        <tr><td><button class="w-100 btn btn-lg btn-primary" id="submit" type="submit" onclick="form.submit();this.disabled=true;">אישור</button>
         <input type="hidden" name="sub_type" value="{{sub_type}}"></td></tr>
         <tr><td><button type="button" class="w-100 btn btn-lg btn-primary" onclick="closeWindow();">סגור</button></td></tr>
         <tr><td><input type="checkbox" name="disable_weight" class="form-check-input"><label>  הסתר משקל  </label></td></tr>

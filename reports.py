@@ -98,7 +98,7 @@ class Images:
                 text[1] = 'R = {}'.format(text[1])
                 text[2] = 'PtP = {}'.format(text[2])
                 positions = [(15,10),(100,10),(185,10),(50,90)]
-            elif shape == '400': # todo:
+            elif shape == '400':
                 draw.line(positions, fill="black", width=3)
                 draw.arc([(15, 30), (185, 50)], 170, 360, fill='black', width=3)
                 draw.line(positions, fill="black", width=3)
@@ -108,6 +108,18 @@ class Images:
                 draw.arc([(15, 30), (185, 50)], 170, 360, fill='black', width=3)
                 draw.line(positions, fill="black", width=3)
                 positions = []
+            elif shape == '150':
+                positions = [(40,50),(15,50),(0,0),(185,50),(50,50),(50,30)]
+                draw.line(positions[0:2], fill="black", width=3)
+                draw.arc((15, 5, 185, 100), 180, 360, fill='black', width=3)
+                draw.line(positions[3:6], fill="black", width=3)
+                positions = [(40,50),(15,50),(185,-10),(0,110),(100,-30)]
+            elif shape == '151':
+                positions = [(40,50),(15,50),(15,30),(0,0),(185,30),(185,50),(50,50),(50,30)]
+                draw.line(positions[0:3], fill="black", width=3)
+                draw.arc((15, 5, 185, 60), 180, 360, fill='black', width=3)
+                draw.line(positions[4:8], fill="black", width=3)
+                positions = [(40,50),(15,50),(15,30),(185,-10),(185,90),(0,10),(100,70)]
             else:
                 draw.line(positions, fill="black", width=3)
         if enable_text_plot:
@@ -559,7 +571,7 @@ class Bartender:
                         row[el] = round(float(row[el]))
                 if 'element' not in row:
                     row['element'] = ''
-                if row['element'] and print_type != 'test_page':
+                if row['element'] and print_type == 'label':
                     if row['element'][0] == 'ק' and row['element'] not in el_buf:
                         for r in rows:
                             if 'element' in r:
@@ -743,7 +755,7 @@ class Bartender:
                 r['img_dir'] = Images.create_pile_plot(r)
         else:
             table_data = {}
-            spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
+            spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'אלמנט מיוחד חלק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
                    'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
             special_sum = {}
             for i in spec_keys:
@@ -779,12 +791,16 @@ class Bartender:
                         special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
                     special_sum['ספירלים']['qnt'] += quantity
                     special_sum['ספירלים']['weight'] += row['weight']
-                if row['shape'] in ['200', '201', '202', '203', '204', '205', '206', '64'] \
-                        or (row['shape'] == '34' and row['bar_type'] == 'חלק'):
+                if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
                     if 'חישוק מיוחד' not in special_sum.keys():
                         special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
                     special_sum['חישוק מיוחד']['qnt'] += quantity
                     special_sum['חישוק מיוחד']['weight'] += row['weight']
+                elif row['shape'] in ['34', '64'] and row['bar_type'] == 'חלק':
+                    if 'אלמנט מיוחד חלק' not in special_sum.keys():
+                        special_sum['אלמנט מיוחד חלק'] = {'qnt': 0, 'weight': 0}
+                    special_sum['אלמנט מיוחד חלק']['qnt'] += quantity
+                    special_sum['אלמנט מיוחד חלק']['weight'] += row['weight']
                 elif row['shape'] in ['49','59']:
                     if 'ספסלים' not in special_sum.keys():
                         special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
@@ -889,7 +905,8 @@ class Bartender:
         # Bar tender btw
         header = '%BTW% /AF=H:\\NetCode\\margolisys\\' + btw_file + '.btw /D="%Trigger File Name%" /PRN=' \
                  + printer.upper() + ' /R=3 /P /DD\n%END%\n'
-        file_dir = configs.net_print_dir + print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".tmp"
+        file_name = print_data[0]['order_id'] + "_" + functions.ts(mode="file_name") + ".tmp"
+        file_dir = os.path.join(configs.net_print_dir, 'temp', file_name)
         # --------- for testing ----------
         testing = False
         if testing:
@@ -915,8 +932,7 @@ class Bartender:
                 print_file.write(print_line + "\n")
             functions.log('bt_print', '{} : {}'.format(printer, print_data[0]['order_id']))
         if main.session['username'] not in ['baruch', 'Baruch']:
-            shutil.copyfile(file_dir, file_dir.replace('.tmp', '.txt'))
-            # os.rename(file_dir, file_dir.replace('.tmp', '.txt'))
+            shutil.copyfile(file_dir, file_dir.replace('\\temp', '').replace('.tmp', '.txt'))
         return file_dir
 
 

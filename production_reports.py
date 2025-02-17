@@ -59,6 +59,8 @@ def report(query, detaile=True):
                                  'machine_name': line['machine_name'],
                                  'username': line['username'], 'operator': line['operator'], 'work_time': time0,
                                  'lines': 0, 'work_days': []}
+            if 'Finished_ts' not in line:
+                line['Finished_ts'] = line['Start_ts']
             line['work_time'] = datetime.strptime(line['Finished_ts'], '%Y-%m-%d %H:%M:%S') - datetime.strptime(
                 line['Start_ts'], '%Y-%m-%d %H:%M:%S')
             if line['Start_ts'][:10] not in machine_total['work_days']:

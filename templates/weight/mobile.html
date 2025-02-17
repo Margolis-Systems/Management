@@ -3,44 +3,78 @@
 <script src="\static\js\shapes.js" ></script>
 <table>
     <tr>
-        <td>
-            <select title="בחר משקל" id="sensor" class="form-control" onchange="location.href='/weights?func=select&sensor='+this.value">
+        <td colspan="3">
+            <select title="בחר משקל" id="sensor" class="form-control" onchange="location.href='/weights?func=select&sensor='+this.value" style="font-size:40px;width:250px;">
                 <option style="display:none" value="" selected>בחר משקל</option>
             {% for site in weights %}
             {% for sensor in site %}
                 {% if sensor != 'station_id' %}
+                {% set name = site.station_id+' : '+sensor %}
                 {% if data.selected == site.station_id+' : '+sensor %}
-                <option value="{{site.station_id}} : {{sensor}}" selected>{{site.station_id}} : {{sensor}}</option>
+                <option value="{{site.station_id}} : {{sensor}}" selected>
+                    {% if name in dictionary %}
+                    {{dictionary[name]}}
+                    {% else %}
+                    {{name}}
+                    {% endif %}
+                </option>
                 {% else %}
-                <option value="{{site.station_id}} : {{sensor}}">{{site.station_id}} : {{sensor}}</option>
+                <option value="{{site.station_id}} : {{sensor}}">
+                    {% if name in dictionary %}
+                    {{dictionary[name]}}
+                    {% else %}
+                    {{name}}
+                    {% endif %}
+                </option>
                 {% endif %}
                 {% endif %}
             {% endfor %}
             {% endfor %}
             </select>
         </td>
-        <td rowspan="2"><input class="form-control" name="cur_weight" id="cur_weight" style="font-size:60px" value="ממתין לקריאה" readonly></td>
-        <td><input class="form-control" name="cur_tare" id="cur_tare" value="טארה" ondblclick="location.href='/weights?func=tare0'" readonly></td>
         <td>
-            <button class="btn btn-primary btn-lg" onclick="location.href='/weights?func=tare'">טארה</button>
+            <button class="btn btn-warning" type="button" onclick="location.href='/weights?func=new'" style="height:60px">תעודה חדשה</button>
         </td>
     </tr>
     <tr>
-        <td></td>
-        <td><input class="form-control" name="cur_gross" id="cur_gross" value="ברוטו" readonly></td>
-        <td>
-            <button class="btn btn-success btn-lg" onclick="location.href='/weights?func=new'">חדש</button>
-        </td>
-
+        <td colspan="4"><input class="form-control" name="cur_weight" id="cur_weight" style="font-size:60px" value="ממתין לקריאה" readonly></td>
+    </tr>
+    <tr>
+        <td colspan="2"><input class="form-control" name="cur_tare" id="cur_tare" value="טארה" ondblclick="location.href='/weights?func=tare0'" readonly></td>
+        <td colspan="2"><input class="form-control" name="cur_gross" id="cur_gross" value="ברוטו" readonly></td>
     </tr>
 </table>
 <br>
 <form method="POST">
     <table class="table table-stripped" style="vertical-align: middle;" dir="rtl" width="80%" align="center">
+        <tr>
+            <td align="center" width="300px" colspan="5">
+                <select name="product" class="form-control">
+                    <option style="display:none" value="" selected>בחר מוצר</option>
+                    {% for product in products_list %}
+                    <option value="{{ product }}">{{ product }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="l">אורך</label>
+                <input type="number" class="form-control" id="l" name="l" placeholder="אורך">
+            </td>
+            <td>
+                <label for="q">כמות</label>
+                <input type="number" class="form-control" id="q" name="q" placeholder="כמות">
+            </td>
+            <td colspan="2">
+                <label for="d">קוטר</label>
+                <input type="number" class="form-control" id="d" name="d" placeholder="קוטר">
+            </td>
+        </tr>
         <tr class="form-floating">
             <td>
                 <label for="driver">נהג:</label>
-                <input class="form-control" list="drv_l" id="driver" name="driver" value="{{data.driver}}" placeholder="שם נהג" onchange="update_drv(this.value);">
+                <input class="form-control" list="drv_l" id="driver" name="driver" value="{{data.driver}}" placeholder="שם נהג" onchange="update_drv(this.value);this.form.submit();">
             </td>
             <td>
                 <label for="costumer">שם לקוח:</label>
@@ -65,7 +99,6 @@
                 <input class="form-control" id="order_total" name="order_total" value="{{data.order_total}}" readonly>
             </td>
         </tr>
-        </tr>
         <tr>
             <th>סוג מוצר</th>
             <th>משקל ברוטו</th>
@@ -88,15 +121,19 @@
             <td></td>
             <td>{% if data.doc %} סהכ: {{data.doc.total}} {% endif %}</td>
         </tr>
-        <tr>
-            <td align="center" width="300px"><input name="product" class="form-control" list="product"></td>
-            <td colspan="3"></td>
+        <tr style="height:80px;">
+            <td colspan="5"><p style="color:white;">-</p></td>
         </tr>
-        <tr>
-            <td><button class="btn btn-primary bt-lg">עדכן</button></td>
-            <td><button class="btn btn-success bt-lg" type="button" onclick="location.href='/weights?func=weight'" id="weight_btn" disabled>הוסף שקילה</button></td>
-            <td>{% if data.doc.lines %}<button type="button" id="print_td" onclick='openNewWindow("/weights?func=print&doc={{data.doc.id}}")'>הדפס</button>{% endif %}</td>
-            <td></td>
+        <tr style="position:fixed;bottom:0;text-align:center;">
+            <td>
+                <button class="btn btn-primary" type="button" onclick="location.href='/weights?func=tare'" style="height:60px">טארה</button>
+            </td>
+            <td colspan="2">
+                <button class="btn btn-success" type="button" onclick="weight_func()" id="weight_btn" style="height:60px;width:200px;" disabled>הוסף שקילה</button>
+            </td>
+            <td>
+                <button class="btn btn-info" type="button" id="print_td" style="height:60px" onclick='openNewWindow("/weights?func=print&doc={{data.doc.id}}");location.href="/weights?func=new";' {% if not data.doc.lines %}disabled{%endif%}>הדפס</button>
+            </td>
         </tr>
     </table>
 </form>
@@ -125,8 +162,8 @@ function read_weights(){
     if (cur_sen){
         $.getJSON('/scaling_weight?new', function(data) {
             $('#result').text(data);
+            update_weight(data);
             if (!data.info){
-                update_weight(data);
                 document.getElementById('weight_btn').removeAttribute('disabled');
             }
             else{
@@ -148,6 +185,21 @@ function split(idx, max_weight){
     if (split_weight < max_weight){
         window.location.href='/weights?func=split&line='+idx+'&weight='+split_weight
     }
+}
+
+function weight_func(){
+    url = '/weights?func=weight';
+    note = '';
+    l = document.getElementById('l').value;
+    d = document.getElementById('d').value;
+    q = document.getElementById('q').value;
+    if (l) { note += ' אורך: '+l };
+    if (d) { note += ' קוטר: '+d };
+    if (q) { note += ' כמות: '+q };
+    if (note) {
+        url += '&note='+note;
+    }
+    window.location.href = url;
 }
 
 var intervalID = setInterval(read_weights,500);

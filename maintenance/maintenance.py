@@ -156,6 +156,6 @@ def move_rows(orig_ord, dest_ord, row_num):
 
 
 if __name__ == '__main__':
-    mongo_backup()
-    restore_order('C:\\DB_backup\\30-10-2024_20-00-04-269121', '9867')
+    # mongo_backup()
+    restore_order('C:\\DB_backup\\04-02-2025_20-00-04-198126 - Copy', '12577')
     # mongo.restore('C:\\DB_backup\\18-07-2024_08-07-07-483181')#, col='data_lists.bson')

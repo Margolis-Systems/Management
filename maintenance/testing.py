@@ -1,11 +1,6 @@
 import csv
 import math
 import sys
-from datetime import datetime
-
-import os
-import piles
-import reports
 
 sys.path.insert(1, 'C:\\Server')
 import configs
@@ -141,5 +136,6 @@ def prod_lod_dbl_label_id():
         else:
             if ll['machine_id'] not in [17, 18, 34]:
                 print(ll['label_id'], ll['machine_id'])
+
 
 

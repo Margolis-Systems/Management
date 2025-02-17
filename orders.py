@@ -47,7 +47,15 @@ def orders(_all=False):
                             query[k] = str(main.session['user_config']['search'][k])
                     elif k not in exclude:
                         defaults[k] = main.session['user_config']['search'][k]
-                        query[k] = {'$regex': str(main.session['user_config']['search'][k])}
+                        val = str(main.session['user_config']['search'][k])
+                        if '(' in val or ')' in val:
+                            val = val.split(' ')
+                            arr = []
+                            for v in val:
+                                arr.append({k: {'$regex': v.replace(')', '').replace('(', '')}})
+                            query['$and'] = arr
+                        else:
+                            query[k] = {'$regex': val}
                     elif k == 'reverse':
                         rev = False
     # Read all orders data with Info, mean that it's not including order rows

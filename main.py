@@ -19,6 +19,7 @@ import scale
 import plot_edit
 import weights
 import scan as scans
+import hashav_api as hashav
 from operator import itemgetter
 
 mongo = db_handler.DBHandle()
@@ -40,7 +41,7 @@ def index():
         elif login_user['group'] > 10:
             return render_template('main.html', user=user)
         elif login_user['group'] == 2:
-            return redirect('/scale')
+            return redirect('/weights')
         elif login_user['group'] == 3:
             return redirect('/scaleov')
         else:
@@ -253,6 +254,8 @@ def scaling():
 
 @app.route('/weights', methods=['POST', 'GET'])
 def weights_page():
+    if 'username' not in session:
+        return redirect('/')
     return weights.main_page()
 
 
