@@ -7,7 +7,7 @@ import configs
 
 mongo = configs.mongo
 # all_orders = list(mongo.read_collection_list('orders', {'order_id': '9341'}))
-all_orders = list(mongo.read_collection_list('orders', {}))
+all_orders = list(mongo.read_collection_list('orders', {'info.date_created':{'$gte': '2025-02-01 00:00:00'}, 'info.type':'regular'}))
 # order = mongo.read_collection_one('orders', {'order_id': '4304'})
 
 
@@ -137,5 +137,10 @@ def prod_lod_dbl_label_id():
             if ll['machine_id'] not in [17, 18, 34]:
                 print(ll['label_id'], ll['machine_id'])
 
-
-
+ordd = []
+for o in all_orders:
+    for r in o['rows']:
+        if r['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
+            ordd.append(o['order_id'])
+            break
+print(ordd)

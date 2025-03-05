@@ -419,6 +419,13 @@ def data_req():
     return ret
 
 
+@app.route('/hashav', methods=['POST', 'GET'])
+def hashav_export():
+    client_list = hashav.costumers
+    items = hashav.items
+    return render_template('hashav.html', costumers=client_list, items=items, client='8320', drivers=hashav.drv_list)
+
+
 production = False
 if len(sys.argv) > 1:
     if sys.argv[1] == 'True':
@@ -426,6 +433,7 @@ if len(sys.argv) > 1:
 
 
 if __name__ == '__main__':
+    # hashav.export_order('12939')
     # 054200076
 
     app.secret_key = 'dffd$%23E3#@1FG'

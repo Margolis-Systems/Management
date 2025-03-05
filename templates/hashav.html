@@ -1,0 +1,15 @@
+{% extends "layout/layout.html" %}
+{% block body %}
+<select>
+    <option value="">בחר לקוח</option>
+    {% for c in costumers %}
+    <option value="{{c.id}}" {% if c.id == client %}selected{%endif%}>{{c.description+" "+c.id}}</option>
+    {% endfor %}
+</select>
+<select>
+    <option value="">בחר נהג</option>
+    {% for d in drivers %}
+    <option value="{{d.id}}">{{d.id+" "+d.description}}</option>
+    {% endfor %}
+</select>
+{% endblock %}

@@ -1,5 +1,6 @@
 import orders
 import csv
+import reports
 from functions import ts
 
 
@@ -16,6 +17,7 @@ def hashav_csv_read(file):
 # todo: mongo
 costumers = hashav_csv_read('lists\\לקוחות.csv')
 items = hashav_csv_read('lists\\פריטים.csv')
+drv_list = hashav_csv_read('lists\\נהגים.csv')
 header = ['doc_length', 'costumer_id', 'verify_id', 'doc_type', 'costumer_name', 'adr1', 'adr2', 'verify_id2',
           'date1', 'date2', 'agent', 'storage', 'details', 'white_storage', 'white_agent', 'white_pricing',
           'main_discount', 'nds', 'copies', 'curency', 'chnge_rate', 'item_id', 'quantity', 'price', 'item_curency',
@@ -43,17 +45,26 @@ def save_doc(data, file_name=''):
         file_name = 'R:\\REP\\api\\IMOVEIN_{}.doc'.format(ts('s'))
     with open(file_name, 'w', encoding='utf8', newline='') as f:
         for r in data:
-            f.write(r)
+            f.write(r+'\n')
     return file_name
 
 
-def export_order(order_id, jobs=None):
-    rows, info = orders.get_order_data(order_id)
+def export_order(order_id, client_id, driver, split=''):
+    rows, info = orders.get_order_data(order_id, split=split)
+    summary = reports.spec_sum(rows, info)
     data = []
-    for r in rows:
-        if not jobs or r['job_id'] in jobs:
-            # new = {'verify_id': r['order_id'], 'doc_type': 31, 'agent': 2, 'storage': 1, 'item_id': '100010', 'quantity': 100.00, }
-            new = ''
-            data.append(new)
+    qnt_code = {'חישוק': 91258, 'חישוק מיוחד': 91259, 'אלמנט מיוחד חלק': 91269, 'מדרגה': 0, 'ספסלים': 91260}  # todo: מדרגה
+    weight_code = {'חיתוך': 91255, 'כיפוף': 91256, 'ספירלים': 91267, 'תוספת_ברזל_עגול_עד_12_ממ': 91257,
+                 'תוספת_ברזל_עגול_מעל_14_ממ': 91262, 'ברזל_ארוך': 1007, 'תוספת_ברזל_28_ממ_ומעלה': 91263}
+    for r in summary:
+        if r in weight_code:
+            q = int(summary[r]['weight'])
+            item_id = weight_code[r]
+        else:
+            q = int(summary[r]['qnt'])
+            item_id = qnt_code[r]
+        new = '{:5s} {:6s} 31 {:3d} 1 {:9d} {:9.2f}'.format(client_id, order_id, driver, item_id, q)
+        data.append(new)
     save_doc(data)
+    # todo: call bat file
 

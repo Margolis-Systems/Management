@@ -2,38 +2,81 @@
 {% block body %}
 <tbody>
 {% for r in order_data.rows %}
-<tr>
-  <td>{{r.job_id}}</td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
+<tr style="white-space: pre;font-size:10px;">
+  <td style="border: 1px solid;">    מס שורה:              {{r.job_id}}
+    כמות:                    {{r.quantity}}
+    משקל כלונס ק"ג:  {{(r.pile_weight /r.quantity|int)|round|int}}
+    משקל כלונסאות:  {{r.pile_weight|int}}
+    משקל כולל:          {{r.weight}}</td>
+  <td style="border: 1px solid;">    קוטר קידוח ס"מ: {{r.drill_diam}}
+    קוטר כלונס ס"מ: {{r.pile_diam}}
+    אורך כלונס ס"מ:  {{r.length}}
+    קוטר ברזל מלפף:   {{r.spiral_diam}}
+    כיפוף:                  {{r.bend}}</td>
+  <td style="border: 1px solid;">    חוטי אורך כמות:  {{r.bars}}
+    חוטי אורך קוטר:  {{r.bars_diam}}
+
+    טבעות כמות:        {{r.rings}}
+    טבעות קוטר:        {{r.rings_diam}}</td>
+  <td style="border: 1px solid;">    כמות צינורות:        {{r.pipes}}
+    קוטר צינור:              {{r.pipe_diam}}
+    אורך צינור ס"מ:{{r.pipe_len}}
+    עובי דופן:{{r.pipe_thick}}
+    משקל צינורות ק"ג:   {{r.pipe_weight}}</td>
+  <td style="border: 1px solid;text-align: center;"><img src="{{r.pdf417_dir}}" width="100px"></td>
 </tr>
 {% endfor %}
+<tr style="text-align:left;"><td colspan="10">סה"כ משקל ק"ג: {{order_data.info.total_weight}}</td></tr>
 {% for r in order_data.rows %}
-  <tr class="pagebreak">
-    <td style="border: 1px solid;text-align: center;">
-      <b>נתונים כלליים</b><br>
-      מס' שורה: {{order}}
-    </td>
-    <td style="border: 1px solid;text-align: center;">
-      <b>מידות הכלונס</b><br>
-    </td>
-    <td style="border: 1px solid;text-align: center;">
-      <b>חוטי אורך</b><br>
-    </td>
-    <td style="border: 1px solid;text-align: center;">
-      <b>טבעות</b><br>
-    </td>
-    <td style="border: 1px solid;text-align: center;">
-      <b>צינורות</b><br>
-    </td>
-  </tr>
+<tr class="pagebreak" style="white-space: pre;font-size:10px;">
+  <td style="border: 1px solid;"><b style="font-size:14px;">          נתונים כליים</b>
+    מס שורה:              {{r.job_id}}
+    כמות:                    {{r.quantity}}
+    משקל כלונס ק"ג:  {{(r.pile_weight /r.quantity|int)|round|int}}
+    משקל צינורות:       {{r.pipe_weight}}
+    משקל כולל:          {{r.weight}}</td>
+  <td style="border: 1px solid;"><b style="font-size:14px;">          מידות הכלונס</b>
+    קוטר קידוח ס"מ: {{r.drill_diam}}
+    קוטר כלונס ס"מ: {{r.pile_diam}}
+    אורך כלונס ס"מ:  {{r.length}}
+
+    כיפוף:                  {{r.bend}}</td>
+  <td style="border: 1px solid;"><b style="font-size:14px;">          חוטי אורך</b>
+
+    חוטי אורך כמות:  {{r.bars}}
+    חוטי אורך קוטר:  {{r.bars_diam}}
+
+
+</td>
+  <td style="border: 1px solid;"><b style="font-size:14px;">          טבעות</b>
+
+    טבעות כמות:        {{r.rings}}
+    טבעות קוטר:        {{r.rings_diam}}
+
+  </td>
+  <td style="border: 1px solid;;"><b style="font-size:14px;">          צינורות</b>
+    כמות צינורות:        {{r.pipes}}
+    קוטר צינור:              {{r.pipe_diam}}
+    אורך צינור ס"מ:{{r.pipe_len}}
+    עובי דופן:{{r.pipe_thick}}
+
+</td>
+</tr>
   <tr>
     <td style="border: 1px solid;text-align: center;">
-      <b>מקטעים</b><br>
+  <table>
+    <tr><th colspan="2">מקטעים</th></tr>
+    <tr><td colspan="2">    קוטר ברזל מלפף:   {{r.spiral_diam}}</td></tr>
+    <tr><td>מקטעים</td><td>פסיעות</td></tr>
+    <tr><td>{{r.spiral}}</td><td>{{r.pitch}}</td></tr>
+    <tr><td>{{r.spiral_1}}</td><td>{{r.pitch_1}}</td></tr>
+    <tr><td>{{r.spiral_2}}</td><td>{{r.pitch_2}}</td></tr>
+    <tr><td>{{r.spiral_3}}</td><td>{{r.pitch_3}}</td></tr>
+  </table>
     </td>
-    <td colspan="3" style="border: 1px solid;text-align: center;">הערות</td>
+    <td colspan="3" style="border: 1px solid;text-align: center;white-space: pre;"><b>הערות</b>
+
+    {{r.comment}}</td>
     <td><img src="{{r.pdf417_dir}}" width="200px"></td>
   </tr>
   <tr>

@@ -324,6 +324,8 @@ def new_order_row():
             new_row['weight'] = float(cat['unit_weight']) * int(new_row['quantity'])
             new_row['unit_weight'] = cat['unit_weight']
     elif 'shape' in req_form_data:
+        if new_row['shape'] not in configs.shapes:
+            return '', 204
         new_row['description'] = ""
         if float(new_row['diam']) < 7:
             new_row['bar_type'] = "חלק"
@@ -627,7 +629,7 @@ def update_order_status(new_status, order_id, job_id="", force=False):
                     order['info']['history'].append('canceled: '+order['info']['cancel_reason'])
                     del order['info']['cancel_reason']
             functions.log('order_status_change', {'order_id': order_id, 'status': new_status})
-            if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות']:
+            if new_status == 'Processed' and order['info']['costumer_name'] not in ['צומת ברזל', 'טסטים \ בדיקות', 'מלאי חצר']:
                 dictionary = pages.get_dictionary()
                 msg = 'הודפסה הזמנה לקוח מס. {order_id}\nמתאריך: {date_created}\n לתאריך אספקה:{date_delivery}\nלקוח: {costumer_name}\nאתר: {costumer_site}\nמשקל: {total_weight} \nשורות: {rows} [{type}] \n{username} ' \
                     .format(order_id=order_id, date_created=order['info']['date_created'], date_delivery=order['info']['date_delivery'],

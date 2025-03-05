@@ -64,7 +64,19 @@
 
 <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-
+<!--<script>
+(function(seconds) {
+    var refresh,
+        intvrefresh = function() {
+            clearInterval(refresh);
+            refresh = setTimeout(function() {
+               location.href = location.href;
+            }, seconds * 1000 * 60);
+        };
+    $(document).on('keypress click', function() { intvrefresh() });
+    intvrefresh();
+}(1));
+</script>-->
 </body>
 
 </html>

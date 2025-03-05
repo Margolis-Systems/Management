@@ -175,6 +175,8 @@ def choose_printer():
         # ------------------------------------------------
         if print_type == 'pdf':
             return reports.Print.print_template(order['order_id'], disable_weight, select_jobs=select_jobs, split=split)
+        elif print_type == 'label':
+            orders.update_order_status('Processed', main.session['order_id'])
         for r in range(copies):
             # If not asked for specific split, print all parts
             if not split:
@@ -195,8 +197,6 @@ def choose_printer():
             else:
                 reports.Bartender.net_print(main.session['order_id'], printer, print_type, disable_weight,
                                                 select_jobs=select_jobs, split=split)
-        if print_type == 'label':
-            orders.update_order_status('Processed', main.session['order_id'])
         return '', 204
     else:
         split = []

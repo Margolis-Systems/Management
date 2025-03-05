@@ -19,6 +19,85 @@ from docx2pdf import convert
 from PIL import Image, ImageDraw, ImageFont
 
 
+def spec_sum(rows, info, disable_weight=False):
+    spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'אלמנט מיוחד חלק', 'מדרגה', 'ספסלים', 'ספירלים',
+                 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
+                 'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
+    special_sum = {}
+    # for i in spec_keys:
+    #     special_sum[i] = {'qnt': 0, 'weight': 0}
+    for row in rows:
+        quantity = int(row['quantity'])
+        # Special summary data
+        if row['shape'] not in ["905"]:
+            if 'חיתוך' not in special_sum.keys():
+                special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
+            special_sum['חיתוך']['qnt'] += quantity
+            special_sum['חיתוך']['weight'] += row['weight']
+        if row['shape'] not in ["1", "905"]:
+            if 'כיפוף' not in special_sum.keys():
+                special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
+            special_sum['כיפוף']['qnt'] += quantity
+            special_sum['כיפוף']['weight'] += row['weight']
+        if row['shape'] in ['332']:
+            if 'ספירלים' not in special_sum.keys():
+                special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
+            special_sum['ספירלים']['qnt'] += quantity
+            special_sum['ספירלים']['weight'] += row['weight']
+        if row['shape'] in ['55']:
+            if 'מדרגה' not in special_sum.keys():
+                special_sum['מדרגה'] = {'qnt': 0, 'weight': 0}
+            special_sum['מדרגה']['qnt'] += quantity
+            special_sum['מדרגה']['weight'] += row['weight']
+        if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
+            if 'חישוק מיוחד' not in special_sum.keys():
+                special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
+            special_sum['חישוק מיוחד']['qnt'] += quantity
+            special_sum['חישוק מיוחד']['weight'] += row['weight']
+        elif row['shape'] in ['34', '64'] and row['bar_type'] == 'חלק':
+            if 'אלמנט מיוחד חלק' not in special_sum.keys():
+                special_sum['אלמנט מיוחד חלק'] = {'qnt': 0, 'weight': 0}
+            special_sum['אלמנט מיוחד חלק']['qnt'] += quantity
+            special_sum['אלמנט מיוחד חלק']['weight'] += row['weight']
+        elif row['shape'] in ['49', '59']:
+            if 'ספסלים' not in special_sum.keys():
+                special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
+            special_sum['ספסלים']['qnt'] += quantity
+            special_sum['ספסלים']['weight'] += row['weight']
+        elif ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) and info[
+            'costumer_id'] not in ['143']) \
+                or row['shape'] in configs.circle:
+            if 'חישוק' not in special_sum.keys():
+                special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
+            special_sum['חישוק']['qnt'] += quantity
+            special_sum['חישוק']['weight'] += row['weight']
+        if int(float(row['length'])) > 1600:
+            if 'ברזל_ארוך' not in special_sum.keys():
+                special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
+            special_sum['ברזל_ארוך']['qnt'] += quantity
+            special_sum['ברזל_ארוך']['weight'] += row['weight']
+        if float(row['diam']) >= 28:
+            if 'תוספת_ברזל_28_ממ_ומעלה' not in special_sum.keys():
+                special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
+            special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
+            special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
+        if row['bar_type'] == 'חלק':
+            if float(row['diam']) <= 12:
+                if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
+                    special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
+                special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
+                special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
+            elif float(row['diam']) >= 14:
+                if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
+                    special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
+                special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
+                special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
+    if disable_weight:
+        for k in special_sum:
+            special_sum[k]['weight'] = ''
+    return special_sum
+
+
 class Images:
     @staticmethod
     def gen_pdf417(data):
@@ -215,6 +294,8 @@ class Images:
             draw.line([(break_line, 45), (break_line, 55)], fill="black", width=3)
 
             if pitch[i]:
+                if pitch[i] == '#':
+                    pitch[i] = '#0'
                 s = pos
                 ptch = int(pitch[i][1:])
                 while s < break_line-2*ptch:
@@ -618,7 +699,7 @@ class Bartender:
             index = 0
             for row in rows:
                 if 'status' in row:
-                    if row['status'] in ['Canceled', 'canceled']:
+                    if row['status'] in ['Canceled', 'canceled'] or row['quantity'] == 0:
                         continue
                 if row['job_id'] == "0":
                     break
@@ -685,13 +766,14 @@ class Bartender:
                         line['z19'] = 1
                 index += 1
                 print_data.append(line.copy())
-        if not print_data:
+        if not print_data or not bt_format:
             return
         Bartender.bt_create_print_file(printer, bt_format[0], print_data)
         # Print additional summary info
         if len(bt_format) > 1:
             summary_data = Bartender.gen_summary_data(rows, info, disable_weight)
-            Bartender.bt_create_print_file(printer, bt_format[1], summary_data)
+            if summary_data:
+                Bartender.bt_create_print_file(printer, bt_format[1], summary_data)
 
     @staticmethod
     def gen_summary_data(rows, info, disable_weight):
@@ -755,11 +837,7 @@ class Bartender:
                 r['img_dir'] = Images.create_pile_plot(r)
         else:
             table_data = {}
-            spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'אלמנט מיוחד חלק', 'ספסלים', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
-                   'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
-            special_sum = {}
-            for i in spec_keys:
-                special_sum[i] = {'qnt': 0, 'weight': 0}
+            special_sum = spec_sum(rows, info)
             total_weight = 0
             summary_data.append(info)
             for row in rows:
@@ -775,64 +853,7 @@ class Bartender:
                 else:
                     table_data[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
                                                'weight_per_M': configs.weights[row['diam']], 'type': row['bar_type']}
-                # Special summary data
-                if row['shape'] not in ["905"]:
-                    if 'חיתוך' not in special_sum.keys():
-                        special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
-                    special_sum['חיתוך']['qnt'] += quantity
-                    special_sum['חיתוך']['weight'] += row['weight']
-                if row['shape'] not in ["1", "905"]:
-                    if 'כיפוף' not in special_sum.keys():
-                        special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
-                    special_sum['כיפוף']['qnt'] += quantity
-                    special_sum['כיפוף']['weight'] += row['weight']
-                if row['shape'] in ['332']:
-                    if 'ספירלים' not in special_sum.keys():
-                        special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
-                    special_sum['ספירלים']['qnt'] += quantity
-                    special_sum['ספירלים']['weight'] += row['weight']
-                if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
-                    if 'חישוק מיוחד' not in special_sum.keys():
-                        special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
-                    special_sum['חישוק מיוחד']['qnt'] += quantity
-                    special_sum['חישוק מיוחד']['weight'] += row['weight']
-                elif row['shape'] in ['34', '64'] and row['bar_type'] == 'חלק':
-                    if 'אלמנט מיוחד חלק' not in special_sum.keys():
-                        special_sum['אלמנט מיוחד חלק'] = {'qnt': 0, 'weight': 0}
-                    special_sum['אלמנט מיוחד חלק']['qnt'] += quantity
-                    special_sum['אלמנט מיוחד חלק']['weight'] += row['weight']
-                elif row['shape'] in ['49','59']:
-                    if 'ספסלים' not in special_sum.keys():
-                        special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
-                    special_sum['ספסלים']['qnt'] += quantity
-                    special_sum['ספסלים']['weight'] += row['weight']
-                elif ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) and info['costumer_id'] not in ['143']) \
-                        or row['shape'] in configs.circle:
-                    if 'חישוק' not in special_sum.keys():
-                        special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
-                    special_sum['חישוק']['qnt'] += quantity
-                    special_sum['חישוק']['weight'] += row['weight']
-                if int(row['length']) > 1600:
-                    if 'ברזל_ארוך' not in special_sum.keys():
-                        special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
-                    special_sum['ברזל_ארוך']['qnt'] += quantity
-                    special_sum['ברזל_ארוך']['weight'] += row['weight']
-                if float(row['diam']) >= 28:
-                    if 'תוספת_ברזל_28_ממ_ומעלה' not in special_sum.keys():
-                        special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
-                    special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
-                    special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
-                if row['bar_type'] == 'חלק':
-                    if float(row['diam']) <= 12:
-                        if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
-                            special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
-                        special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
-                        special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
-                    elif float(row['diam']) >= 14:
-                        if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
-                            special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
-                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
-                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
+
             # Reorder diam summary list
             # table_data = OrderedDict(table_data.items(), key=lambda t: t[0])
             li = list(table_data.keys())
@@ -943,7 +964,7 @@ class Print:
         order_summary = []
         rows_to_print = []
         if info['type'] == 'regular':
-            order_summary = Print.gen_summary_data(rows, disable_weight, info['costumer_id'])
+            order_summary = Print.gen_summary_data(rows, disable_weight, info)
         for r in rows:
             if r['job_id'] in select_jobs or not select_jobs:
                 if 'status' in r:
@@ -970,6 +991,11 @@ class Print:
                         elif len(bends) == 3:
                             r['bend_img_dir'] = Images.create_shape_plot('404', bends, html=True)
                 elif info['type'] == 'piles':
+                    if 'CFA' in r:
+                        if 'bend' in r:
+                            r['bend'] += '+ CFA'
+                        else:
+                            r['bend'] = 'CFA'
                     r['img_dir'] = Images.create_pile_plot(r, html=True)
                 elif info['type'] == 'girders':
                     r['img_dir'] = Images.create_shape_plot(r['shape'], [r['shape']], html=True)
@@ -985,16 +1011,9 @@ class Print:
         return main.render_template('/print/page/{}.html'.format(info['type']), order_data=order, summary=order_summary, print_ts=functions.ts())
 
     @staticmethod
-    def gen_summary_data(rows, disable_weight, costumer_id):
+    def gen_summary_data(rows, disable_weight, info):
         diams = {}
-        spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'ספסלים', 'מדרגה', 'ספירלים', 'תוספת_ברזל_עגול_עד_12_ממ',
-                     'תוספת_ברזל_עגול_מעל_14_ממ',
-                     'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
-        special_sum = {}
-        for i in spec_keys:
-            special_sum[i] = {'qnt': 0, 'weight': 0}
-            if disable_weight:
-                special_sum[i]['weight'] = ''
+        special_sum = spec_sum(rows, info, disable_weight)
         total_weight = 0
         for row in rows:
             if not disable_weight:
@@ -1014,75 +1033,6 @@ class Print:
                 if disable_weight:
                     diams[row['diam']]['weight'] = ''
                     diams[row['diam']]['kgm'] = ''
-            # Special summary data
-            if row['shape'] not in ["905"]:
-                if 'חיתוך' not in special_sum.keys():
-                    special_sum['חיתוך'] = {'qnt': 0, 'weight': 0}
-                special_sum['חיתוך']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['חיתוך']['weight'] += row['weight']
-            if row['shape'] not in ["1", "905"]:
-                if 'כיפוף' not in special_sum.keys():
-                    special_sum['כיפוף'] = {'qnt': 0, 'weight': 0}
-                special_sum['כיפוף']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['כיפוף']['weight'] += row['weight']
-            if row['shape'] in ['332']:
-                if 'ספירלים' not in special_sum.keys():
-                    special_sum['ספירלים'] = {'qnt': 0, 'weight': 0}
-                special_sum['ספירלים']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['ספירלים']['weight'] += row['weight']
-            if row['shape'] in ['55']:
-                if 'מדרגה' not in special_sum.keys():
-                    special_sum['מדרגה'] = {'qnt': 0, 'weight': 0}
-                special_sum['מדרגה']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['ספירלים']['weight'] += row['weight']
-            if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
-                if 'חישוק מיוחד' not in special_sum.keys():
-                    special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
-                special_sum['חישוק מיוחד']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['חישוק מיוחד']['weight'] += row['weight']
-            elif row['shape'] in ['49', '59']:
-                if 'ספסלים' not in special_sum.keys():
-                    special_sum['ספסלים'] = {'qnt': 0, 'weight': 0}
-                special_sum['ספסלים']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['ספסלים']['weight'] += row['weight']
-            elif ((len(row['shape_data']) > 2) and (int(row['weight']) / int(row['quantity']) <= 2) and costumer_id not in ['143']) \
-                    or row['shape'] in configs.circle:
-                if 'חישוק' not in special_sum.keys():
-                    special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
-                special_sum['חישוק']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['חישוק']['weight'] += row['weight']
-            if int(row['length']) > 1600:
-                if 'ברזל_ארוך' not in special_sum.keys():
-                    special_sum['ברזל_ארוך'] = {'qnt': 0, 'weight': 0}
-                special_sum['ברזל_ארוך']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['ברזל_ארוך']['weight'] += row['weight']
-            if float(row['diam']) >= 28:
-                if 'תוספת_ברזל_28_ממ_ומעלה' not in special_sum.keys():
-                    special_sum['תוספת_ברזל_28_ממ_ומעלה'] = {'qnt': 0, 'weight': 0}
-                special_sum['תוספת_ברזל_28_ממ_ומעלה']['qnt'] += quantity
-                if not disable_weight:
-                    special_sum['תוספת_ברזל_28_ממ_ומעלה']['weight'] += row['weight']
-            if row['bar_type'] == 'חלק':
-                if int(row['diam']) <= 12:
-                    if 'תוספת_ברזל_עגול_עד_12_ממ' not in special_sum.keys():
-                        special_sum['תוספת_ברזל_עגול_עד_12_ממ'] = {'qnt': 0, 'weight': 0}
-                    special_sum['תוספת_ברזל_עגול_עד_12_ממ']['qnt'] += quantity
-                    if not disable_weight:
-                        special_sum['תוספת_ברזל_עגול_עד_12_ממ']['weight'] += row['weight']
-                elif int(row['diam']) >= 14:
-                    if 'תוספת_ברזל_עגול_מעל_14_ממ' not in special_sum.keys():
-                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ'] = {'qnt': 0, 'weight': 0}
-                    special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['qnt'] += quantity
-                    if not disable_weight:
-                        special_sum['תוספת_ברזל_עגול_מעל_14_ממ']['weight'] += row['weight']
         li = list(diams.keys())
         sort_keys = list(map(float, li))
         sort_keys.sort()
