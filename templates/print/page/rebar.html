@@ -11,7 +11,9 @@
     </tr>
     {% set weight=namespace(total=0) %}
     {% for row in order_data.rows %}
+    {% if row['weight'] %}
     {% set weight.total=weight.total+row['weight'] %}
+    {% endif %}
     <tr style="text-align: center;font-size: 12px;">
         <td style="border: 1px solid;text-align: center;">{{row.job_id}}</td>
         <td style="border: 1px solid;text-align: center;" width="50%">
@@ -24,15 +26,17 @@
         <td style="border: 1px solid;text-align: center;" width="15%">{{row.mkt}}</td>
         <td style="border: 1px solid;text-align: center;">{{row.quantity}}</td>
         <td style="border: 1px solid;text-align: center;" width="25%">
+            {% if row.weight %}
             יחידה: {{row.unit_weight}} ק"ג<br>
             כולל: {{row.weight}} ק"ג
+            {% endif %}
         </td>
         <!--<td style="border: 1px solid;text-align: center;">{{row.weight}}</td>-->
     </tr>
     {% endfor %}
     <tr>
         <td colspan="4"></td>
-        <td style="border: 1px solid;text-align: center;font-weight: bold;">סה"כ: {{weight.total}} ק"ג</td>
+        <td style="border: 1px solid;text-align: center;font-weight: bold;">{% if weight.total %}סה"כ: {{weight.total}} ק"ג{% endif %}</td>
     </tr>
     {% if order_data.info.type == 'rebar_special' %}
     {% for row in order_data.rows %}

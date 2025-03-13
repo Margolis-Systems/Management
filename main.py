@@ -423,7 +423,12 @@ def data_req():
 def hashav_export():
     client_list = hashav.costumers
     items = hashav.items
-    return render_template('hashav.html', costumers=client_list, items=items, client='8320', drivers=hashav.drv_list)
+    drivers = hashav.drv_list
+    if request.form:
+        rf = dict(request.form)
+        hashav.export_order(rf['order_id'], rf['client'], rf['driver'], rf['split'])
+        return redirect('/hashav')
+    return render_template('hashav.html', costumers=client_list, items=items, client='', drivers=drivers)
 
 
 production = False

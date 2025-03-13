@@ -199,6 +199,16 @@ class Images:
                 draw.arc((15, 5, 185, 60), 180, 360, fill='black', width=3)
                 draw.line(positions[4:8], fill="black", width=3)
                 positions = [(40,50),(15,50),(15,30),(185,-10),(185,90),(0,10),(100,70)]
+            elif shape == '152':
+                draw.arc((15, 5, 100, 55), 90, 270, fill='black', width=3)
+                draw.arc((100, 5, 185, 50), 270, 90, fill='black', width=3)
+                draw.line([(50,5),(150,5)], fill="black", width=3)
+                draw.line([(50,55),(110,55)], fill="black", width=3)
+                draw.line([(90,50),(150,50)], fill="black", width=3)
+            elif shape == '153':
+                draw.arc((15, 5, 100, 55), 90, 270, fill='black', width=3)
+                draw.line([(185, 25), (185, 55), (50,55)], fill="black", width=3)
+                draw.line([(50, 5), (175, 5), (175, 40), (145, 40)], fill="black", width=3)
             else:
                 draw.line(positions, fill="black", width=3)
         if enable_text_plot:
@@ -1008,7 +1018,7 @@ class Print:
                             r[k] = ''
                 rows_to_print.append(r)
         order = {'order_id': order_id, 'rows': rows_to_print, 'info': info}
-        return main.render_template('/print/page/{}.html'.format(info['type']), order_data=order, summary=order_summary, print_ts=functions.ts())
+        return main.render_template('/print/page/{}.html'.format(info['type']), order_data=order, summary=order_summary, print_ts=functions.ts(), split=split)
 
     @staticmethod
     def gen_summary_data(rows, disable_weight, info):

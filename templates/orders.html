@@ -115,9 +115,9 @@
     <tr bgcolor="{{dictionary.html_colors[order.status]}}">
         {% for item in display_items %}
         {% if order['linked_orders_tot_w'] %}
-        <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'" title="TOTAL: {{order['linked_orders_tot_w']}} KG">
+        <td height="50" width="8%" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'" title="TOTAL: {{order['linked_orders_tot_w']}} KG">
         {% else %}
-        <td height="50" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'"{% if item == 'rows' and order['finished'] > 0 %}title="משקל מוכן: {{order['finished_weight']}}"{%endif%}>
+        <td height="50" width="8%" style="outline: thin solid;text-align: center"  ondblclick="location.href='/edit_order?{{ order['order_id'] }}'"{% if item == 'rows' and order['finished'] > 0 %}title="משקל מוכן: {{order['finished_weight']}}"{%endif%}>
         {% endif %}
         {% if dictionary[order[item]] %}
             {{dictionary[order[item]]}}

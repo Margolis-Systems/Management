@@ -1,15 +1,44 @@
 {% extends "layout/layout.html" %}
 {% block body %}
-<select>
-    <option value="">בחר לקוח</option>
-    {% for c in costumers %}
-    <option value="{{c.id}}" {% if c.id == client %}selected{%endif%}>{{c.description+" "+c.id}}</option>
-    {% endfor %}
-</select>
-<select>
-    <option value="">בחר נהג</option>
-    {% for d in drivers %}
-    <option value="{{d.id}}">{{d.id+" "+d.description}}</option>
-    {% endfor %}
-</select>
+<form method="POST">
+<table style="text-align:center;width:100%;">
+    <tr>
+        <td>
+            <input type="number" name="order_id" placeholder="מספר הזמנה">
+            <input type="number" name="split" placeholder="פיצול">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <input type="number" name="weight" placeholder="משקל תעודה" disabled>
+            <input type="number" name="weight" placeholder="משקל ברזל מעל 28" disabled>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <select name="client">
+                <option value="">בחר לקוח</option>
+                {% for c in costumers %}
+                <option value="{{c.id}}" {% if c.id == client %}selected{%endif%}>{{c.description+" "+c.id}}</option>
+                {% endfor %}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <select name="driver">
+                <option value="">בחר נהג</option>
+                {% for d in drivers %}
+                <option value="{{d.id}}">{{d.id+" "+d.description}}</option>
+                {% endfor %}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button class="btn btn-success btn-lg" type="submit">יצוא</button>
+        </td>
+    </tr>
+</table>
+</form>
 {% endblock %}
