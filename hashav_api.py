@@ -50,9 +50,19 @@ def save_doc(data, file_name=''):
     return file_name
 
 
-def export_order(order_id, client_id, driver, split=''):
-    rows, info = orders.get_order_data(order_id, split=split)
-    summary = reports.spec_sum(rows, info)
+def format_data(order_ids, client_id, driver, split=''):
+    if not order_ids:
+        return
+    summary = {}
+    for order_id in order_ids:
+        rows, info = orders.get_order_data(order_id, split=split)
+        temp = reports.spec_sum(rows, info)
+        for k in temp:
+            if k in summary:
+                summary[k]['qnt'] += temp[k]['qnt']
+                summary[k]['weight'] += temp[k]['weight']
+            else:
+                summary[k] = temp[k]
     data = []
     qnt_code = {'חישוק': 91258, 'חישוק מיוחד': 91259, 'אלמנט מיוחד חלק': 91269, 'מדרגה': 8254, 'ספסלים': 91260}
     weight_code = {'חיתוך': 91255, 'כיפוף': 91256, 'ספירלים': 91267, 'תוספת_ברזל_עגול_עד_12_ממ': 91257,
@@ -64,8 +74,12 @@ def export_order(order_id, client_id, driver, split=''):
         else:
             q = int(summary[r]['qnt'])
             item_id = qnt_code[r]
-        new = '{:5s} {:6s} 31 {:3s} 1 {:9d} {:9.2f}'.format(client_id, order_id, driver, item_id, q, )
+        new = '{:5s} {:6s} 31 {:3s} 1 {:9d} {:9.2f}'.format(client_id, order_ids[0], driver, item_id, q, )
         data.append(new)
+    return data
+
+
+def export_order(data):
     save_doc(data)
     run_bat('C:\\Hash7\\hashavapi.bat')
 

@@ -421,14 +421,28 @@ def data_req():
 
 @app.route('/hashav', methods=['POST', 'GET'])
 def hashav_export():
+    if 'clear' in request.values:
+        if 'hashav' in session:
+            del session['hashav']
+        return redirect('/hashav')
     client_list = hashav.costumers
     items = hashav.items
     drivers = hashav.drv_list
     if request.form:
         rf = dict(request.form)
-        hashav.export_order(rf['order_id'], rf['client'], rf['driver'], rf['split'])
+        ord_ids = []
+        for k in rf:
+            if 'order_id' in k and rf[k]:
+                ord_ids.append(rf[k])
+        if ord_ids:
+            session['hashav'] = {'data': hashav.format_data(ord_ids, rf['client'], rf['driver'], rf['split']),
+                                 'ids': ord_ids}
         return redirect('/hashav')
-    return render_template('hashav.html', costumers=client_list, items=items, client='', drivers=drivers)
+    if 'hashav' in session:
+        data = session['hashav']
+    else:
+        data = []
+    return render_template('hashav/hashav.html', costumers=client_list, items=items, client='', drivers=drivers, data=data)
 
 
 production = False
@@ -438,7 +452,6 @@ if len(sys.argv) > 1:
 
 
 if __name__ == '__main__':
-    # hashav.export_order('12939')
     # 054200076
 
     app.secret_key = 'dffd$%23E3#@1FG'

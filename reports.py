@@ -308,14 +308,15 @@ class Images:
                     pitch[i] = '#0'
                 s = pos
                 ptch = int(pitch[i][1:])
-                while s < break_line-2*ptch:
-                    draw.line([(s, 80+ch_diam), (s + ptch, 200-ch_diam)], fill="black", width=3)
-                    if s+2*ptch > break_line:
-                        draw.line([(s + ptch, 200-ch_diam), (break_line, 80+ch_diam)], fill="black", width=3)
-                    else:
-                        draw.line([(s + ptch, 200-ch_diam), (s + 2*ptch, 80+ch_diam)], fill="black", width=3)
-                    s += 2*ptch
-                draw.line([(s, 80+ch_diam), (break_line, 200-ch_diam)], fill="black", width=3)
+                if ptch > 0:
+                    while s < break_line-2*ptch:
+                        draw.line([(s, 80+ch_diam), (s + ptch, 200-ch_diam)], fill="black", width=3)
+                        if s+2*ptch > break_line:
+                            draw.line([(s + ptch, 200-ch_diam), (break_line, 80+ch_diam)], fill="black", width=3)
+                        else:
+                            draw.line([(s + ptch, 200-ch_diam), (s + 2*ptch, 80+ch_diam)], fill="black", width=3)
+                        s += 2*ptch
+                    draw.line([(s, 80+ch_diam), (break_line, 200-ch_diam)], fill="black", width=3)
 
             pos = break_line
         if cfa:
@@ -438,6 +439,7 @@ class Images:
         else:
             file_name = configs.net_print_dir + "Picture\\" + file_name
             im.save(file_name)
+
         return file_name
 
     @staticmethod

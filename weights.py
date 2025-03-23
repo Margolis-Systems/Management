@@ -12,6 +12,8 @@ def main_page():
             if 'weights' in main.session:
                 if 'selected' in main.session['weights']:
                     doc['selected'] = main.session['weights']['selected']
+                    site, sensor = get_site_sensor()
+                    tare(site, sensor, 0)
             update_user_session({})
             update_user_session(doc)
         elif func == 'tare':
@@ -98,7 +100,8 @@ def main_page():
                     if 'selected' in main.session['weights']:
                         doc = main.session['weights']['doc']
                         doc['lines'][int(item.replace('product', ''))]['type'] = req[item]
-                        update_user_session({'doc': doc})
+                        # update_user_session({'doc': doc})
+                        data = {'doc': doc}
             elif item == 'order_id':
                 data[item] = req[item]
                 rows, info = orders.get_order_data(req[item])
@@ -207,6 +210,8 @@ def tare(site, sensor, val=None):
         cur_gross = val
     else:
         if 'actual' in cur and 'info' not in cur:
+            cur_gross = cur['actual']
+        elif 'actual' in cur and not cur['info']:
             cur_gross = cur['actual']
         else:
             return

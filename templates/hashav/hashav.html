@@ -10,10 +10,30 @@
     </tr>
     <tr>
         <td>
-            <input type="number" name="weight" placeholder="משקל תעודה" disabled>
-            <input type="number" name="weight" placeholder="משקל ברזל מעל 28" disabled>
+            <input type="number" name="order_id1" placeholder="מספר הזמנה">
+            <input type="number" name="split1" placeholder="פיצול">
         </td>
     </tr>
+    <tr>
+        <td>
+            <input type="number" name="order_id2" placeholder="מספר הזמנה">
+            <input type="number" name="split2" placeholder="פיצול">
+        </td>
+    </tr>
+    {% if data %}
+    <tr>
+        <td>
+            <input type="number" name="weight" placeholder="משקל תעודה" disabled>
+            <input type="number" name="weight28" placeholder="משקל ברזל מעל 28" disabled>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <input type="number" name="weight" placeholder="משקל תעודה" disabled>
+            <input type="number" name="weight28" placeholder="משקל ברזל מעל 28" disabled>
+        </td>
+    </tr>
+    {% endif %}
     <tr>
         <td>
             <select name="client">
@@ -41,4 +61,5 @@
     </tr>
 </table>
 </form>
+{{data}}
 {% endblock %}

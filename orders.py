@@ -203,6 +203,8 @@ def new_order(client="", order_type=""):
 
 def new_order_row():
     # new_row new row
+    if 'order_id' not in main.session:
+        return
     order_id = main.session['order_id']
     if 'R' in order_id or 'K' in order_id:
         return

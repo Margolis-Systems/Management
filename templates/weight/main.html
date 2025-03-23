@@ -4,7 +4,7 @@
 <table>
     <tr>
         <td>
-            <select title="בחר משקל" id="sensor" class="form-control" onchange="location.href='/weights?func=select&sensor='+this.value">
+            <select title="בחר משקל" id="sensor" class="form-control" onchange="location.href='/weights?func=select&sensor='+this.value" style="font-size:40px;margin-top:20px;">
                 <option style="display:none" value="" selected>בחר משקל</option>
             {% for site in weights %}
             {% for sensor in site %}
@@ -36,22 +36,24 @@
 </table>
 <br>
 <form method="POST">
-    <table class="table table-stripped" style="vertical-align: middle;" dir="rtl" width="80%" align="center">
+    <table class="table table-stripped" style="vertical-align: middle;" dir="rtl" align="center">
         <tr class="form-floating">
+            <td></td>
             <td>
                 <label for="driver">נהג:</label>
-                <input class="form-control" list="drv_l" id="driver" name="driver" value="{{data.driver}}" placeholder="שם נהג" onchange="update_drv(this.value);">
+                <input class="form-control" list="drv_l" id="driver" name="driver" value="{{data.driver}}" placeholder="שם נהג" onchange="update_drv(this.value);form.submit()">
             </td>
             <td>
                 <label for="costumer">שם לקוח:</label>
                 <input class="form-control" id="costumer" name="costumer" value="{{data.costumer}}" placeholder="שם לקוח">
-            </td>
+            </td><!--
             <td colspan="2">
                 <label for="order_id">מספר הזמנה:</label>
                 <input class="form-control" id="order_id" name="order_id" value="{{data.order_id}}" placeholder="מספר הזמנה">
-            </td>
+            </td>-->
         </tr>
         <tr>
+            <td></td>
             <td>
                 <label for="plate">מס רכב:</label>
                 <input class="form-control" id="plate" name="plate" value="{{data.plate}}" placeholder="מספר רכב">
@@ -59,11 +61,11 @@
             <td>
                 <label for="site">אתר לקוח:</label>
                 <input class="form-control" id="site" name="site" value="{{data.site}}" placeholder="אתר לקוח">
-            </td>
+            </td><!--
             <td colspan="2">
                 <label for="order_total">משקל תיאורטי:</label>
                 <input class="form-control" id="order_total" name="order_total" value="{{data.order_total}}" readonly>
-            </td>
+            </td>-->
         </tr>
         </tr>
         <tr>
@@ -75,7 +77,7 @@
         {% if data.doc %}
         {% for line in data.doc.lines %}
         <tr ondblclick="split({{loop.index0}}, {{line.net}})">
-            <td align="center" width="300px"><input name="product{{loop.index0}}" class="form-control" list="product" value="{{line.type}}"></td>
+            <td align="center" width="300px"><input name="product{{loop.index0}}" class="form-control" list="product" value="{{line.type}}" onchange="form.submit()"></td>
             <td>{{line.gross}}</td>
             <td>{{line.tare}}</td>
             <td>{{line.net}}</td>
@@ -87,16 +89,16 @@
             <td></td>
             <td></td>
             <td>{% if data.doc %} סהכ: {{data.doc.total}} {% endif %}</td>
-        </tr>
+        </tr><!--
         <tr>
             <td align="center" width="300px"><input name="product" class="form-control" list="product"></td>
             <td colspan="3"></td>
-        </tr>
+        </tr>-->
         <tr>
-            <td><button class="btn btn-primary bt-lg">עדכן</button></td>
-            <td><button class="btn btn-success bt-lg" type="button" onclick="location.href='/weights?func=weight'" id="weight_btn" disabled>הוסף שקילה</button></td>
-            <td>{% if data.doc.lines %}<button type="button" id="print_td" onclick='openNewWindow("/weights?func=print&doc={{data.doc.id}}")'>הדפס</button>{% endif %}</td>
             <td></td>
+            <td><button class="btn btn-success bt-lg" type="button" onclick="location.href='/weights?func=weight'" id="weight_btn" disabled>הוסף שקילה</button></td>
+            <td><button type="button" onclick="get_permit()" class="btn btn-primary bt-lg">אישור מנהל</button></td>
+            <td>{% if data.doc.lines %}<button type="button" id="print_td" onclick='openNewWindow("/weights?func=print&doc={{data.doc.id}}")'>הדפס</button>{% endif %}</td>
         </tr>
     </table>
 </form>
@@ -112,6 +114,10 @@
 </datalist>
 <script>
 const drv_l = {{drv_l|tojson|safe}};
+var permit = getCookie("weightspermit");
+if (permit){
+    document.getElementById('w_man_rep').style.visibility = "visible";
+}
 
 function update_drv(drv){
     if (drv in drv_l){
@@ -143,11 +149,42 @@ function update_weight(data){
 }
 
 function split(idx, max_weight){
+    if (!permit) {return}
     let split_weight = prompt("הזן כמות משקל לפיצול. מקסימום: "+max_weight);
     // ensure legal value
     if (split_weight < max_weight){
         window.location.href='/weights?func=split&line='+idx+'&weight='+split_weight
     }
+}
+
+function get_permit(){
+    let pas = prompt("סיסמת מנהל:");
+    if (pas == "1235"){
+        permit = true;
+        window.alert("מאושר");
+        minutes = 2;
+        const d = new Date();
+        d.setTime(d.getTime() + (minutes*60*1000));
+        let expires = "expires="+ d.toUTCString();
+        document.cookie = "weightspermit=true;" + expires + ";path=/";
+         window.location.reload();
+    }
+}
+
+function getCookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
 }
 
 var intervalID = setInterval(read_weights,500);
