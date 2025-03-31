@@ -265,6 +265,11 @@ def weights_history():
     return render_template('/weight/history.html', data=history)
 
 
+@app.route('/drivers', methods=['POST', 'GET'])
+def drivers():
+    return weights.drivers()
+
+
 @app.route('/scaleov', methods=['POST', 'GET'])
 def scale_overview():
     return scale.overview()

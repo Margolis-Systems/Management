@@ -227,3 +227,29 @@ def get_site_sensor():
     site = selected[0]
     sensor = selected[1]
     return site, sensor
+
+
+def drivers():
+    drv_l = main.mongo.read_collection_one('data_lists', {'name': 'trucks_list'}, 'Scaling')['data']
+    ks = list(drv_l.keys())
+    ks.sort()
+    sd = {i: drv_l[i] for i in ks}
+    if main.request.form:
+        name = ''
+        rf = dict(main.request.form)
+        if rf['name'] in ks:
+            name = rf['name']
+        else:
+            for k in ks:
+                if rf['vehicle'] == drv_l[k]['vehicle']:
+                    main.mongo.update_one('data_lists', {'name': 'trucks_list'}, {'data.{}'.format(k): 'data.{}'.format(rf['name'])}, '$rename',
+                                          db_name='Scaling')
+                    name = rf['name']
+                    break
+        if name:
+            del rf['name']
+            rf['tare'] = int(rf['tare'])
+            main.mongo.update_one('data_lists', {'name': 'trucks_list'}, {'data.{}'.format(name): rf}, '$set', db_name='Scaling')
+        return main.redirect('/drivers')
+    return main.render_template('weight/drivers_list.html', drv_l=sd)
+

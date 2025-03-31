@@ -1,0 +1,36 @@
+{% extends "layout/layout.html" %}
+{% block body %}
+<script src="\static\js\shapes.js" ></script>
+<table class="table tbl">
+    <tr>
+      <th></th>
+      <th>שם נהג</th>
+      <th>מס רכב</th>
+      <th>טארה</th>
+      <th>מס סוכן</th>
+      <th></th>
+    </tr>
+    {% for d in drv_l %}
+    <form method="POST">
+    <tr>
+      <td><input type="checkbox"></td>
+      <td><input name="name" value="{{d}}"></td>
+      <td><input name="vehicle" value="{{drv_l[d].vehicle}}"></td>
+      <td><input name="tare" value="{{drv_l[d].tare}}"></td>
+      <td><input name="id" value="{{drv_l[d].id}}"></td>
+      <td><button type="submit">עדכן</button></td>
+    </tr>
+    </form>
+    {% endfor %}
+    <form method="POST">
+    <tr>
+      <td><input type="checkbox"></td>
+      <td><input name="name" required></td>
+      <td><input name="vehicle" required></td>
+      <td><input name="tare"></td>
+      <td><input name="id"></td>
+      <td><button type="submit">הוסף</button></td>
+    </tr>
+    </form>
+</table>
+{% endblock %}
