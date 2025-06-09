@@ -6,10 +6,10 @@
                 {% set focus_index = order_data.data_to_display|length %}
                     <td id="spiral_container">
                         מקטעי ליפוף
-                        <input type="number" name="spiral" id="spiral" class="form-control" placeholder="אורך" value="{{defaults['spiral']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>
-                        <input type="number" name="spiral_1" id="spiral_1" class="form-control" placeholder="אורך" value="{{defaults['spiral_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+2}})' >
-                        <input type="number" name="spiral_2" id="spiral_2" class="form-control" placeholder="אורך" value="{{defaults['spiral_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+4}})' >
-                        <input type="number" name="spiral_3" id="spiral_3" class="form-control" placeholder="אורך" value="{{defaults['spiral_3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+6}})' >
+                        <input type="number" name="spiral" id="spiral" class="form-control" placeholder="אורך" value="{{defaults['spiral']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}});' onchange="calc_length()" required>
+                        <input type="number" name="spiral_1" id="spiral_1" class="form-control" placeholder="אורך" value="{{defaults['spiral_1']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+2}});' onchange="calc_length()">
+                        <input type="number" name="spiral_2" id="spiral_2" class="form-control" placeholder="אורך" value="{{defaults['spiral_2']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+4}});' onchange="calc_length()">
+                        <input type="number" name="spiral_3" id="spiral_3" class="form-control" placeholder="אורך" value="{{defaults['spiral_3']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index+6}});' onchange="calc_length()">
                         <!--<input type="number" name="spiral_diam" id="spiral_diam" class="form-control" placeholder="קוטר" value="{{defaults['spiral_diam']}}" onkeydown="return event.key != 'Enter';" onkeyup='focusNext({{focus_index}})' required>-->
                     </td>
                     <td id="pitch_container">

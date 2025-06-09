@@ -259,6 +259,13 @@ def weights_page():
     return weights.main_page()
 
 
+@app.route('/weights_manual', methods=['POST', 'GET'])
+def weights_manual():
+    if 'username' not in session:
+        return redirect('/')
+    return weights.weights_manual_page()
+
+
 @app.route('/weights_history', methods=['POST', 'GET'])
 def weights_history():
     history = mongo.read_collection_list('documents', {'doc.id': {'$exists': True}, 'doc.lines.0': {'$exists': True}}, 'Scaling')

@@ -45,7 +45,6 @@ setTimeout("window.close()",1000)
 };
 
 window.addEventListener('message', (event) => {
-    console.log(event.data)
     shapeData.value = event.data.shapedt;
     formInput.value = event.data.shp;
     lengInput.value = event.data.len;
@@ -175,8 +174,6 @@ function focusNext(inputIndex) {
 
             }
             element = document.getElementById(inputNames[inputIndex])
-
-            console.log(element)
             if (datatodisp[inputNames[inputIndex]] != 2 && element !== null && element.hidden == false){
                 inputName = inputNames[inputIndex];
                 break
@@ -256,4 +253,21 @@ function getCookie(cname) {
     }
   }
   return "";
+}
+
+function calc_length(){
+    s1 = document.getElementById('spiral').value
+    s2 = document.getElementById('spiral_1').value
+    s3 = document.getElementById('spiral_2').value
+    s4 = document.getElementById('spiral_3').value
+    sum = 0;
+    if (s1){sum=sum+parseInt(s1)}
+    if (s2){sum=sum+parseInt(s2)}
+    if (s3){sum=sum+parseInt(s3)}
+    if (s4){sum=sum+parseInt(s4)}
+    bars_len = document.getElementById('bars_len')
+    if (sum>0){
+        bars_len.value = sum;
+        bars_len.min = sum;
+    }
 }
