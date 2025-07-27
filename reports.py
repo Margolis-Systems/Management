@@ -20,9 +20,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def spec_sum(rows, info, disable_weight=False):
-    spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'חישוק מיוחד', 'אלמנט מיוחד חלק', 'מדרגה', 'ספסלים', 'ספירלים',
-                 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ',
-                 'ברזל_ארוך', 'תוספת_ברזל_28_ממ_ומעלה']
+    spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'אלמנט מיוחד חלק', 'ספסלים', 'חישוק מיוחד', 'מדרגה', 'ספירלים',
+                 'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ', 'תוספת_ברזל_28_ממ_ומעלה', 'ברזל_ארוך']
     special_sum = {}
     # for i in spec_keys:
     #     special_sum[i] = {'qnt': 0, 'weight': 0}
@@ -223,7 +222,7 @@ class Images:
                 draw.text(position, str(text[i]), fill="black", font=ImageFont.truetype(font_dir, font_size))
                 text_pos.append(position)
         if html:
-            file_name = "C:\\Server\\static\\img\\{}.png".format(functions.ts(mode="file_name"))
+            file_name = "{}\\static\\img\\{}.png".format(os.getcwd(), functions.ts(mode="file_name"))
             # im.save({}'.format(file_name))
         elif not file_name:
             file_name = configs.net_print_dir + "Picture\\{}.png".format(functions.ts(mode="file_name"))
@@ -859,23 +858,22 @@ class Bartender:
                     row['bar_type'] = "מצולע"
                 # Summary data
                 quantity = int(row['quantity'])
-                if row['diam'] in table_data.keys():
+                if '{}_{}'.format(row['diam'], row['bar_type']) in table_data.keys():
                     table_data[row['diam']]['weight'] += row['weight']
                     table_data[row['diam']]['length'] += int(row['length']) * quantity
                 else:
                     table_data[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
-                                               'weight_per_M': configs.weights[row['diam']], 'type': row['bar_type']}
+                                               'weight_per_M': configs.weights[row['diam']]}
 
             # Reorder diam summary list
-            # table_data = OrderedDict(table_data.items(), key=lambda t: t[0])
-            li = list(table_data.keys())
-            sort_keys = list(map(float, li))
-            sort_keys.sort()
-
+            diams = list(configs.weights.keys())
+            order_list = []
+            for diam in diams:
+                order_list.extend(['{}_מצולע'.format(diam), '{}_חלק'.format(diam)])
             temp = {}
-            for key in sort_keys:
-                temp[str(key).replace('.0', '')] = table_data[str(key).replace('.0', '')]
-            table_data = temp
+            for diam in order_list:
+                if diam in table_data:
+                    temp[diam] = table_data[diam]
             to_del = []
             for key in special_sum:
                 if special_sum[key]['qnt'] == 0:
@@ -889,11 +887,12 @@ class Bartender:
             table_selector = 2
             for row in range(math.ceil(len(table_data.keys()) / table_rows)):
                 template_row = {'temp_select': table_selector}
+                keys = list(table_data.keys())
                 for indx in range(table_rows):
                     if table_rows * row + indx >= len(table_data.keys()):
                         break
-                    diam = list(table_data.keys())[table_rows * row + indx]
-                    template_row["tb" + str(1 + table_cells * indx)] = table_data[diam]['type']
+                    diam, bar_type = keys[table_rows * row + indx].split('_')
+                    template_row["tb" + str(1 + table_cells * indx)] = bar_type
                     template_row["tb" + str(2 + table_cells * indx)] = diam
                     template_row["tb" + str(3 + table_cells * indx)] = table_data[diam]['length']
                     if disable_weight:
@@ -1035,22 +1034,20 @@ class Print:
                 row['bar_type'] = "מצולע"
             # Summary data
             quantity = int(row['quantity'])
-            if row['diam'] in diams.keys():
-                if not disable_weight:
-                    diams[row['diam']]['weight'] += row['weight']
-                diams[row['diam']]['length'] += int(row['length']) * quantity
+            if '{}_{}'.format(row['diam'], row['bar_type']) in diams.keys():
+                diams['{}_{}'.format(row['diam'], row['bar_type'])]['weight'] += row['weight']
+                diams['{}_{}'.format(row['diam'], row['bar_type'])]['length'] += int(row['length']) * quantity
             else:
-                diams[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
-                                           'kgm': configs.weights[row['diam']], 'type': row['bar_type']}
-                if disable_weight:
-                    diams[row['diam']]['weight'] = ''
-                    diams[row['diam']]['kgm'] = ''
-        li = list(diams.keys())
-        sort_keys = list(map(float, li))
-        sort_keys.sort()
+                diams['{}_{}'.format(row['diam'], row['bar_type'])] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
+                                           'weight_per_M': configs.weights[row['diam']]}
 
+        # Reorder diam summary list
+        diams_l = list(configs.weights.keys())
+        order_list = []
+        for diam in diams_l:
+            order_list.extend(['{}_מצולע'.format(diam), '{}_חלק'.format(diam)])
         temp = {}
-        for key in sort_keys:
-            temp[str(key).replace('.0', '')] = diams[str(key).replace('.0', '')]
-        diams = temp
-        return {'diams': diams, 'work': special_sum}
+        for diam in order_list:
+            if diam in diams:
+                temp[diam] = diams[diam]
+        return {'diams': temp, 'work': special_sum}

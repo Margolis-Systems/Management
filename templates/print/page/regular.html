@@ -45,13 +45,13 @@
         <td style="border: 1px solid;">משקל למטר</td>
         <td style="border: 1px solid;">משקל תיאורטי ק"ג</td>
     </tr>
-    {% for t in summary.diams %}
+    {% for diam in summary.diams %}
     <tr style="text-align: center;">
-        <td style="border: 1px solid;">{{summary.diams[t].type}}</td>
-        <td style="border: 1px solid;">{{t}}</td>
-        <td style="border: 1px solid;">{{summary.diams[t].length}}</td>
-        <td style="border: 1px solid;">{{summary.diams[t].kgm}}</td>
-        <td style="border: 1px solid;">{{summary.diams[t].weight}}</td>
+        <td style="border: 1px solid;">{{diam.split('_')[1]}}</td>
+        <td style="border: 1px solid;">{{diam.split('_')[0]}}</td>
+        <td style="border: 1px solid;">{{summary.diams[diam].length}}</td>
+        <td style="border: 1px solid;">{{summary.diams[diam].kgm}}</td>
+        <td style="border: 1px solid;">{{summary.diams[diam].weight}}</td>
     </tr>
     {% endfor %}
     {% if weight.total %}
