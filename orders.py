@@ -746,6 +746,9 @@ def copy_order():
                 order['info']['costumer_name'] = req_form['client']
                 order['info']['costumer_id'] = main.mongo.read_collection_one('costumers', {'name': req_form['client']})['id']
                 order['info']['costumer_site'] = req_form['site']
+                if 'split' in order['info']:
+                    del order['info']['split']
+                    del order['info']['split_reason']
                 for row in order['rows']:
                     row['order_id'] = new_id
                     row['status'] = 'NEW'
