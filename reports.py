@@ -23,8 +23,8 @@ def spec_sum(rows, info, disable_weight=False):
     spec_keys = ['חיתוך', 'כיפוף', 'חישוק', 'אלמנט מיוחד חלק', 'ספסלים', 'חישוק מיוחד', 'מדרגה', 'ספירלים',
                  'תוספת_ברזל_עגול_עד_12_ממ', 'תוספת_ברזל_עגול_מעל_14_ממ', 'תוספת_ברזל_28_ממ_ומעלה', 'ברזל_ארוך']
     special_sum = {}
-    # for i in spec_keys:
-    #     special_sum[i] = {'qnt': 0, 'weight': 0}
+    for i in spec_keys:
+        special_sum[i] = {'qnt': 0, 'weight': 0}
     for row in rows:
         quantity = int(row['quantity'])
         # Special summary data
@@ -859,10 +859,10 @@ class Bartender:
                 # Summary data
                 quantity = int(row['quantity'])
                 if '{}_{}'.format(row['diam'], row['bar_type']) in table_data.keys():
-                    table_data[row['diam']]['weight'] += row['weight']
-                    table_data[row['diam']]['length'] += int(row['length']) * quantity
+                    table_data['{}_{}'.format(row['diam'], row['bar_type'])]['weight'] += row['weight']
+                    table_data['{}_{}'.format(row['diam'], row['bar_type'])]['length'] += int(row['length']) * quantity
                 else:
-                    table_data[row['diam']] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
+                    table_data['{}_{}'.format(row['diam'], row['bar_type'])] = {'weight': row['weight'], 'length': int(float(row['length'])) * quantity,
                                                'weight_per_M': configs.weights[row['diam']]}
 
             # Reorder diam summary list
@@ -874,6 +874,7 @@ class Bartender:
             for diam in order_list:
                 if diam in table_data:
                     temp[diam] = table_data[diam]
+            table_data = temp
             to_del = []
             for key in special_sum:
                 if special_sum[key]['qnt'] == 0:
@@ -894,13 +895,13 @@ class Bartender:
                     diam, bar_type = keys[table_rows * row + indx].split('_')
                     template_row["tb" + str(1 + table_cells * indx)] = bar_type
                     template_row["tb" + str(2 + table_cells * indx)] = diam
-                    template_row["tb" + str(3 + table_cells * indx)] = table_data[diam]['length']
+                    template_row["tb" + str(3 + table_cells * indx)] = table_data[keys[table_rows * row + indx]]['length']
                     if disable_weight:
                         template_row["tb" + str(4 + table_cells * indx)] = '---'
                         template_row["tb" + str(5 + table_cells * indx)] = '---'
                     else:
-                        template_row["tb" + str(4 + table_cells * indx)] = table_data[diam]['weight_per_M']
-                        template_row["tb" + str(5 + table_cells * indx)] = int(table_data[diam]['weight'])
+                        template_row["tb" + str(4 + table_cells * indx)] = table_data[keys[table_rows * row + indx]]['weight_per_M']
+                        template_row["tb" + str(5 + table_cells * indx)] = int(table_data[keys[table_rows * row + indx]]['weight'])
                 summary_data.append(template_row.copy())
             # Bartender Table filler
             # Special summary

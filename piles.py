@@ -30,7 +30,7 @@ def calc_weight(data_dict):
         weight['bars'] += int(data_dict['bars_len_1']) * int(data_dict['bars_1']) * configs.weights[data_dict['bars_diam_1']]/100
     weight['rings'] = (int(data_dict['pile_diam'])/100 * 3.14 + 0.2) * int(data_dict['rings']) * configs.weights[data_dict['rings_diam']]
     for k in weight:
-        if '3%' in data_dict or True:
+        if '3%' in data_dict:
             weight[k] *= 1.03
         weight[k] = round(weight[k]*int(data_dict['quantity']),2)
     weight['pipes'] = 0

@@ -27,7 +27,7 @@ def clean_reports_temp():
 
 
 def mongo_backup():
-    mongo.dump("C:\\DB_backup")
+    mongo.dump("C:\\DB_backup", db_name="Scaling")
 
 
 def mongo_restore(backup_dir):
@@ -156,6 +156,6 @@ def move_rows(orig_ord, dest_ord, row_num):
 
 
 if __name__ == '__main__':
-    # mongo_backup()
-    restore_order('C:\\DB_backup\\04-02-2025_20-00-04-198126 - Copy', '12577')
+    mongo_backup()
+    # restore_order('C:\\DB_backup\\04-02-2025_20-00-04-198126 - Copy', '12577')
     # mongo.restore('C:\\DB_backup\\18-07-2024_08-07-07-483181')#, col='data_lists.bson')
