@@ -155,7 +155,28 @@ def move_rows(orig_ord, dest_ord, row_num):
     mongo.update_one('orders', {'order_id': dest_ord}, {'rows': rows_to_move}, '$set')
 
 
+def split_fix():
+    all_orders = mongo.read_collection_list("orders", {"rows.0.order_split":{"$exists":True}})
+    for order in all_orders:
+        splits = []
+        for row in order["rows"]:
+            if "order_split" in row:
+                if row["order_split"] not in splits:
+                    splits.append(row["order_split"])
+        if splits:
+            if "split" not in order["info"]:
+                #mongo.update_one("orders", {"order_id": order["order_id"]}, {"info.split": len(splits),"split_reason":"fix 25.8.25"}, "$set")
+                print(order["order_id"], len(splits))
+            elif len(splits) != order["info"]["split"]:
+
+                print(order["order_id"],len(splits),order["info"]["split"])
+                #mongo.update_one("orders", {"order_id":order["order_id"]}, {"info.split":len(splits)},"$set")
+
+
+
+
 if __name__ == '__main__':
-    mongo_backup()
+    #mongo_backup()
+    split_fix()
     # restore_order('C:\\DB_backup\\04-02-2025_20-00-04-198126 - Copy', '12577')
     # mongo.restore('C:\\DB_backup\\18-07-2024_08-07-07-483181')#, col='data_lists.bson')

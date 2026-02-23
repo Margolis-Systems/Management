@@ -53,7 +53,7 @@ def spec_sum(rows, info, disable_weight=False):
                 special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
             special_sum['חישוק מיוחד']['qnt'] += quantity
             special_sum['חישוק מיוחד']['weight'] += row['weight']
-        elif row['shape'] in ['34', '64'] and row['bar_type'] == 'חלק':
+        elif row['shape'] in ['34', '64', '30', '113'] and row['bar_type'] == 'חלק':
             if 'אלמנט מיוחד חלק' not in special_sum.keys():
                 special_sum['אלמנט מיוחד חלק'] = {'qnt': 0, 'weight': 0}
             special_sum['אלמנט מיוחד חלק']['qnt'] += quantity
@@ -510,7 +510,7 @@ class Images:
         for i in range(len(data['y_length'])):
             leng = int(data['y_length'][i])
             pitch = int(data['y_pitch'][i])
-            for x in range(int(leng/pitch)):
+            for x in range(int(leng/pitch)): #todo: לבדוק שגיאה
                 # if x+i == 0:
                 #     draw.line([(590, y_start), (620, 270)], fill="black", width=2)
                 #     draw.line([(620, 270), (720, 270)], fill="black", width=2)

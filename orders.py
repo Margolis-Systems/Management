@@ -748,6 +748,7 @@ def copy_order():
                 order['info']['costumer_site'] = req_form['site']
                 if 'split' in order['info']:
                     del order['info']['split']
+                if 'split_reason' in order['info']:
                     del order['info']['split_reason']
                 for row in order['rows']:
                     row['order_id'] = new_id
