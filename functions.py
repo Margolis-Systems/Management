@@ -35,6 +35,7 @@ def log(title, operation):
 
 
 def send_sms(msg, _dist_numbers=[]):
+    resp = None
     target_url = 'http://port2sms.com/Scripts/mgrqispi.dll'
     dist_numbers = ''
     if not _dist_numbers:
@@ -43,5 +44,8 @@ def send_sms(msg, _dist_numbers=[]):
         dist_numbers += num + ';'
     post_data = {'Appname': 'Port2SMS', 'prgname': 'HTTP_SimpleSMS1', 'AccountID': '1008',
                  'UserID': '10096', 'UserPass': 'Zo2486!', 'Phone': dist_numbers, 'Text': msg, 'Sender': 'ERP'}
-    resp = requests.post(target_url, data=post_data)
+    try:
+        resp = requests.post(target_url, data=post_data)
+    except Exception as e:
+        print(f'SMS send error\n{e}')
     return resp
