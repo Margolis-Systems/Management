@@ -137,10 +137,5 @@ def prod_lod_dbl_label_id():
             if ll['machine_id'] not in [17, 18, 34]:
                 print(ll['label_id'], ll['machine_id'])
 
-ordd = []
-for o in all_orders:
-    for r in o['rows']:
-        if r['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
-            ordd.append(o['order_id'])
-            break
-print(ordd)
+
+

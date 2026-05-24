@@ -11,6 +11,8 @@ def login():
     if main.request.method == 'POST':
         msg = "סיסמה שגויה"  # todo: web dictionary
         username_input = main.request.form['username'].lower()
+        if 'operator' not in username_input and username_input[0:2] == 'op':
+            username_input = 'operator'+username_input[2:]
         login_user = get_user_data(username_input)
         if login_user:
             if bcrypt.hashpw(main.request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:

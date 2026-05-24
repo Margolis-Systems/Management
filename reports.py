@@ -64,7 +64,7 @@ def spec_sum(rows, info, disable_weight=False):
             special_sum['ספסלים']['qnt'] += quantity
             special_sum['ספסלים']['weight'] += row['weight']
         elif ((len(row['shape_data']) > 2) and (row['weight'] / int(row['quantity']) <= 2) and info[
-            'costumer_id'] not in ['143']) \
+            'costumer_id'] not in ['143', '186']) \
                 or row['shape'] in configs.circle:
             if 'חישוק' not in special_sum.keys():
                 special_sum['חישוק'] = {'qnt': 0, 'weight': 0}
@@ -962,7 +962,7 @@ class Bartender:
                         print_line += str(line[item]) + '~'
                     else:
                         print_line += '~'
-                print_file.write(print_line + "\n") #clean_string = s.encode('ascii', errors='ignore').decode('ascii') todo: unicode protection
+                print_file.write(print_line + "\n") #clean_string = s.encode('ascii', errors='ignore').decode('ascii') .encode('charmap', errors='ignore').decode('charmap') todo: unicode protection
             functions.log('bt_print', '{} : {}'.format(printer, print_data[0]['order_id']))
         if main.session['username'] not in ['baruch', 'Baruch']:
             shutil.copyfile(file_dir, file_dir.replace('\\temp', '').replace('.tmp', '.txt'))

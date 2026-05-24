@@ -1,0 +1,20 @@
+{% extends "layout/layout.html" %}
+{% block body %}
+<form method=POST id="input_form" autocomplete="off" action="{{ url_for('girders_weight') }}" onsubmit="input_form.disabled = true; return true;">
+    <table dir="rtl" align="center" width="80%">
+        <tr>
+            <th>מקט</th>
+            <th>משקל</th>
+        </tr>
+        {% for item in data %}
+        <tr>
+            <td>{{item}}</td>
+            <td><input name="{{item}}.unit_weight" class="form-control" type="number" step="0.01" value="{{data[item].unit_weight}}"></td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td colspan="4"><button class="btn btn-success" type="submit">OK</button> </td>
+        </tr>
+    </table>
+</form>
+{% endblock %}

@@ -431,6 +431,19 @@ def data_req():
     return ret
 
 
+@app.route('/girders_weight', methods=['POST', 'GET'])
+def girders_weight():
+    if users.validate_user() < 98:
+        return redirect('/')
+    if request.form:
+        rf = dict(request.form)
+        for item in rf:
+            mongo.update_one('data_lists', {'name': "girders_catalog"}, {f'data.{item}': rf[item]},'$set')
+        configs.read_mongo_conf()
+        return redirect('/girders_weight')
+    return render_template('girders_weights.html', data=configs.girders_catalog)
+
+
 @app.route('/hashav', methods=['POST', 'GET'])
 def hashav_export():
     if 'clear' in request.values:
