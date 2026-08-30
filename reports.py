@@ -48,7 +48,7 @@ def spec_sum(rows, info, disable_weight=False):
                 special_sum['מדרגה'] = {'qnt': 0, 'weight': 0}
             special_sum['מדרגה']['qnt'] += quantity
             special_sum['מדרגה']['weight'] += row['weight']
-        if row['shape'] in ['200', '201', '202', '203', '204', '205', '206']:
+        if row['shape'] in ['200', '201', '202', '203', '204', '205', '206', '207']:
             if 'חישוק מיוחד' not in special_sum.keys():
                 special_sum['חישוק מיוחד'] = {'qnt': 0, 'weight': 0}
             special_sum['חישוק מיוחד']['qnt'] += quantity

@@ -92,11 +92,11 @@ if __name__ == '__main__':
     # print(next_available_key())
     # inp = input()
     # pos = [[90, 15], [60, 15], [60, 50], [185, 50], [185, 5], [15, 5], [15, 40], [80, 40]]
-    pos = []
+    pos = [(15,25),(15,50),(40,50),(70,40),(130,40),(160,50),(185,50),(185,5),(160,5),(130,20),(80,20),(50,5),(30,5),(30,35),(60,35)]
     # pos = []
     for i in range(len(pos)):
         pos[i] = (pos[i][0],pos[i][1])
     # [(40,5),(20,5), (20,50), (180,50)]
-    name = next_available_key()
+    name = "207"#next_available_key()
     print(name)
     shape_plot(pos, os.getcwd() + '\\shapes\\' + name + '.png', descript='')

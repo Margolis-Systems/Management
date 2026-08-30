@@ -176,7 +176,9 @@ def split_fix():
 
 
 if __name__ == '__main__':
-    #mongo_backup()
-    split_fix()
+    # mongo_backup()
+    # split_fix()
     # restore_order('C:\\DB_backup\\04-02-2025_20-00-04-198126 - Copy', '12577')
     # mongo.restore('C:\\DB_backup\\18-07-2024_08-07-07-483181')#, col='data_lists.bson')
+    mongo.create_index('orders', 'order_id')
+    # mongo.delete_many('orders',{'info.date_created':{'$lt':'2025-06-01 00:00:00'}})

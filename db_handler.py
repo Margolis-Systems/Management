@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 from datetime import datetime
 import pandas as pd
 import configs
@@ -8,8 +8,7 @@ import os
 
 
 class DBHandle:
-    @staticmethod
-    def con_to_mongo_default(db_name):
+    def con_to_mongo_default(self, db_name):
         if db_name:
             db = MongoClient(configs.mongo_adr)[db_name]
         else:
@@ -21,19 +20,17 @@ class DBHandle:
         db = MongoClient(mongo_adr)[db_name]
         return db
 
-    @staticmethod
-    def read_collection_df(collect, db_name="", query=dict({})):
+    def read_collection_df(self, collect, db_name="", query=dict({})):
         gc.collect()
-        db = DBHandle.con_to_mongo_default(db_name)
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         cur = db[collect].find(query, {'_id': False})
         df = pd.DataFrame(list(cur))
         return df
 
-    @staticmethod
-    def read_collection_df_sort(collect, sort_by, db_name="", query=dict({}), limit=0):
+    def read_collection_df_sort(self, collect, sort_by, db_name="", query=dict({}), limit=0):
         gc.collect()
-        db = DBHandle.con_to_mongo_default(db_name)
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         if limit:
             cur = db[collect].find(query, {'_id': False}).sort([(sort_by, -1)]).limit(limit)
@@ -42,9 +39,8 @@ class DBHandle:
         df = pd.DataFrame(list(cur))
         return df
 
-    @staticmethod
-    def read_collection_one_sort(collect, sort_by, db_name="", query=dict({}), limit=0):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def read_collection_one_sort(self, collect, sort_by, db_name="", query=dict({}), limit=0):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         if limit:
             cur = db[collect].find(query, {'_id': False}).sort([(sort_by, -1)]).limit(limit)
@@ -57,28 +53,24 @@ class DBHandle:
             return ret
         return {}
 
-    @staticmethod
-    def read_uniq(collection, fields, query={}, db_name=''):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def read_uniq(self, collection, fields, query={}, db_name=''):
+        db = self.con_to_mongo_default(db_name)
         return db[collection].distinct(fields, query)
 
-    @staticmethod
-    def read_collection_one_var(collect, var_name, query=dict({}), db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def read_collection_one_var(self, collect, var_name, query=dict({}), db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False})
         return dic[var_name]
 
-    @staticmethod
-    def read_collection_one(collect, query=dict({}), db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def read_collection_one(self, collect, query=dict({}), db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         dic = db[collect].find_one(query, {'_id': False})
         return dic
 
-    @staticmethod
-    def read_collection_list(collect, query=dict({}), db_name="", limit=0):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def read_collection_list(self, collect, query=dict({}), db_name="", limit=0):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         if limit:
             dic = db[collect].find(query, {'_id': False}).sort([('_id', -1)]).limit(limit)
@@ -90,68 +82,59 @@ class DBHandle:
             return []
         return dic
 
-    @staticmethod
-    def read_collection_last(collect, sort_by, query=dict({}), db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def read_collection_last(self, collect, sort_by, query=dict({}), db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         query[sort_by] = {'$exists': True}
         dic = db[collect].find_one(query, {'_id': False}, sort=[(sort_by, -1)])
         return dic
 
-    @staticmethod
-    def insert_collection_one(collect, doc, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def insert_collection_one(self, collect, doc, db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.insert_one(doc)
 
-    @staticmethod
-    def upsert_collection_one(collect, key, doc, db_name="", upsert=True):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def upsert_collection_one(self, collect, key, doc, db_name="", upsert=True):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.replace_one(key, doc, upsert=upsert)
 
-    @staticmethod
-    def insert_collection_many(collect, df, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def insert_collection_many(self, collect, df, db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         res = df.to_dict('records')
         collection.insert_many(res)
 
-    @staticmethod
-    def truncate_collection(collect, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def truncate_collection(self, collect, db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.delete_many({})
 
-    @staticmethod
-    def delete_many(collect, query=dict({}), db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def delete_many(self, collect, query=dict({}), db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         collection.delete_many(query)
 
-    @staticmethod
-    def update_one(collect, key, doc, query, upsert=False, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def update_one(self, collect, key, doc, query, upsert=False, db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         # print(query,':', doc)
         return collection.update_one(key, {query: doc}, upsert=upsert)
 
-    @staticmethod
-    def update_many(collect, key, doc, query, upsert=False, db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def update_many(self, collect, key, doc, query, upsert=False, db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         return collection.update_many(key, {query: doc}, upsert=upsert)
 
-    @staticmethod
-    def dump(path, collections=[], db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def dump(self, path, collections=[], db_name=""):
+        db = self.con_to_mongo_default(db_name)
         ts = datetime.now().strftime('%d-%m-%Y_%H-%M-%S-%f')
         path = os.path.join(path, ts)
         os.mkdir(path)
@@ -162,9 +145,8 @@ class DBHandle:
                 for doc in db[coll].find():
                     f.write(bson.BSON.encode(doc))
 
-    @staticmethod
-    def restore(path, db_name="", col=''):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def restore(self, path, db_name="", col=''):
+        db = self.con_to_mongo_default(db_name)
         for coll in os.listdir(path):
             if coll.endswith('.bson') and (not col or col == coll):
                 try:
@@ -173,16 +155,20 @@ class DBHandle:
                         if data:
                             db[coll.split('.')[0]].insert_many(bson.decode_all(data))
                 except Exception as e:
-                    DBHandle.delete_many(coll.split('.')[0])
+                    self.delete_many(coll.split('.')[0])
                     try:
                         with open(os.path.join(path, coll), 'rb+') as f:
                             db[coll.split('.')[0]].insert_many(bson.decode_all(data))
                     except Exception as e:
                         print(e)
 
-    @staticmethod
-    def count_docs(collect, query=dict({}), db_name=""):
-        db = DBHandle.con_to_mongo_default(db_name)
+    def count_docs(self, collect, query=dict({}), db_name=""):
+        db = self.con_to_mongo_default(db_name)
         db.validate_collection(collect)
         collection = db[collect]
         return collection.count_documents(query)
+
+    def create_index(self, collect, filed_name, db_name=""):
+        db = self.con_to_mongo_default(db_name)
+        db.validate_collection(collect)
+        db[collect].create_index([(filed_name, ASCENDING)])
